@@ -16,6 +16,6 @@ num_molecules=2
 
 # List of (enzyme, rate) for each molecule
 Metabolizers = [
-    (Enzymes.GLUTAMATE,1),
-    (Enzymes.GABA,1)
+    (Enzymes.GLUTAMATE,1.0),
+    (Enzymes.GABA,1.0)
 ]

@@ -11,17 +11,22 @@
 
 from molecule import Molecules, Metabolizers, num_molecules
 from enzyme import Enzymes, metabolize, num_enzymes
+from random import random
 
 class Synapse:
-    def __init__(self):
+    def __init__(self, baseline_concentration, verbose=False):
         """
         A synapse contains a list of molecule concentrations by id and
             a list of enzyme concentrations by id.
+        |baseline_concentration| is the intial enzyme concentration.
         """
-        self.concentrations = [0] * num_molecules
-        self.enzymes = [1] * num_enzymes
+        if baseline_concentration > 1.0: raise ValueError
 
-    def step(self):
+        self.concentrations = [0.0] * num_molecules
+        self.enzymes = [baseline_concentration] * num_enzymes
+        self.verbose = verbose
+
+    def step(self, time):
         """
         Runs a time step.
         Molecules are cleared from the synapse every time step.
@@ -33,9 +38,11 @@ class Synapse:
             enzyme_count = self.enzymes[enz_id]
 
             destroyed = metabolize(enzyme_count, mol_count, rate)
-            #print("Destroyed %f molecules" % destroyed)
             self.concentrations[mol_id] -= \
                 metabolize(enzyme_count, mol_count, rate)
+            if self.verbose:
+                print("Destroyed %f" % destroyed)
+                print("Concentration: %f" % self.concentrations[mol_id])
 
     def insert(self, mol_id, mol_count):
         """
@@ -49,4 +56,10 @@ class Synapse:
         The number of molecules returned is based on the concentration.
         Returns between 80 and 100 percent of the concentration.
         """
-        return self.concentrations[mol_id] * (1 - (random.random() * 0.2))
+        return self.concentrations[mol_id] * (1 - (random() * 0.2))
+
+    def remove(self, mol_id, mol_count):
+        """
+        Removes |mol_count| molecules of the molecule specified by |mol_id|.
+        """
+        self.concentrations[mol_id] -= mol_count
