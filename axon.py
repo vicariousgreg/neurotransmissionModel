@@ -1,17 +1,17 @@
-# Vesicle Model
+# Axon Model
 #
-# Models the vesicles of presynaptic neurons, which pump neurotransmitters 
-#     into the synapse.
+# Models the axon of a presynaptic neurons, which pumps and reuptakes
+#     neurotransmitters into and out of the synapse.
 #
 # Release follows strength * (1 - e^(-time_factor * age))
 
 from math import exp
 
-class Vesicle:
+class Axon:
     def __init__(self, mol_id, synapse, baseline_concentration=1.0,
                     release_time_factor=5, replenish_time_factor=10, verbose=False):
         """
-        Vesicles keep track of activation and release neurotransmitters over
+        Axon keep track of activation and release neurotransmitters over
             time.
 
         |mol_id| is the identifier for the neurotransmitter to be released.
@@ -103,4 +103,13 @@ class Vesicle:
         self.concentration += new_molecules
         if self.verbose:
             print("Regenerated %f molecules" % new_molecules)
-            print("Vesicle: %f" % self.concentration)
+            print("Axon: %f" % self.concentration)
+
+    def reuptake(self):
+        """
+        Reuptakes neurotransmitters from the synapse.
+        """
+        sample = self.synapse.get(self.mol_id)
+        bound = sample * self.size
+        self.synapse.remove(self.mol_id, bound)
+        self.concentration += bound
