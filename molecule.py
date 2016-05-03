@@ -12,6 +12,8 @@ Molecules = enum(
     GABA = 1
 )
 
+num_molecules=2
+
 # List of (enzyme, rate) for each molecule
 Metabolizers = [
     (Enzymes.GLUTAMATE,1),

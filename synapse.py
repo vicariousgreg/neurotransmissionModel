@@ -9,8 +9,8 @@
 # Synaptic neurotransmitters bind stochastically to postsynaptic neuron
 #     receptors.
 
-from molecule import Molecules, Metabolizers
-from enzyme import Enzymes, metabolize
+from molecule import Molecules, Metabolizers, num_molecules
+from enzyme import Enzymes, metabolize, num_enzymes
 
 class Synapse:
     def __init__(self):
@@ -18,8 +18,8 @@ class Synapse:
         A synapse contains a list of molecule concentrations by id and
             a list of enzyme concentrations by id.
         """
-        self.concentrations = [0] * len(Molecules)
-        self.enzymes = [0] * len(Enzymes)
+        self.concentrations = [0] * num_molecules
+        self.enzymes = [1] * num_enzymes
 
     def step(self):
         """
@@ -32,14 +32,16 @@ class Synapse:
             enz_id,rate = Metabolizers[mol_id]
             enzyme_count = self.enzymes[enz_id]
 
+            destroyed = metabolize(enzyme_count, mol_count, rate)
+            #print("Destroyed %f molecules" % destroyed)
             self.concentrations[mol_id] -= \
                 metabolize(enzyme_count, mol_count, rate)
 
-    def insert(self, mol_id, count):
+    def insert(self, mol_id, mol_count):
         """
-        Inserts |count| molecules of the molecule specified by |mol_id|.
+        Inserts |mol_count| molecules of the molecule specified by |mol_id|.
         """
-        self.concentrations[mol_id] += count
+        self.concentrations[mol_id] += mol_count
 
     def get(self, mol_id):
         """
