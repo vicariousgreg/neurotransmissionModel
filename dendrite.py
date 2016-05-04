@@ -4,26 +4,26 @@
 #     from the synapse bind, modifying the membrane potential of the cell.
 
 from math import exp
-from random import betavariate
+from stochastic import beta
 
 from molecule import Molecules
 
 class Dendrite:
     def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
-                    release_time_factor=1, verbose=False):
+                    release_rate=1, verbose=False):
         """
         Dendrites get neurotransmitters from a synapse and release them back
             over time.
 
         |mol_id| is the identifier for the neurotransmitter to be bound.
         |initial_size| is the initial size of the receptor pool.
-        |release_time_factor| controls the release of neurotransmitter back
+        |release_rate| controls the release of neurotransmitter back
             into the synapse.  Higher values increase the rate of release.
         """
         if initial_size > 1.0: raise ValueError
         self.mol_id = mol_id
         self.size = initial_size
-        self.release_time_factor = release_time_factor 
+        self.release_rate = release_rate 
         self.concentration = 0.0
         self.verbose = verbose
         self.synapse = None
@@ -51,9 +51,11 @@ class Dendrite:
 
         if available <= 0: return
 
+        missing = self.size - self.concentration
+
         # Sample available molecules
-        sample = min(1.0, available, available*(1-betavariate(2,20)))
-        bound = sample * (self.size - self.concentration)
+        sample = beta(available, noise=0.0, rate=10)
+        bound = sample * missing
 
         if self.verbose:
             print("Dendrite: %f" % self.concentration)
@@ -68,8 +70,7 @@ class Dendrite:
         Releases some neurotransmitters back into the synapse.
         """
         # Stochastically sample bound molecules
-        sample = min(self.concentration,
-            self.concentration*(betavariate(2,2+self.release_time_factor)))
+        sample = beta(self.concentration, noise=0.0, rate=self.release_rate)
 
         # Release sampled molecules
         self.concentration -= sample

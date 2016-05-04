@@ -6,30 +6,30 @@
 # Release follows strength * (1 - e^(-time_factor * age))
 
 from math import exp
-from random import gauss, betavariate
+from stochastic import beta
 
 from molecule import Molecules
 
 class Axon:
-    def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_size=1.0, baseline_concentration=1.0,
-                    release_time_factor=1, replenish_time_factor=5, verbose=False):
+    def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_rate=1.0, baseline_concentration=1.0,
+                    release_time_factor=1, replenish_rate=5, verbose=False):
         """
         Axon keep track of activation and release neurotransmitters over
             time.
 
         |mol_id| is the identifier for the neurotransmitter to be released.
-        |reuptake_size| is the number of reuptake receptors.
+        |reuptake_rate| is the number of reuptake receptors.
         |baseline_concentration| is the maximum concentration of
             neurotransmitter.
         |release_time_factor| controls the release of neurotransmitter over
             time.  Higher values delay release.
-        |replenish_time_factor| controls the regeneration of neurotransmitter 
+        |replenish_rate| controls the regeneration of neurotransmitter 
             over time.  Higher values increase rate of restoration.
         """
         # Cell attributes
         self.mol_id = mol_id
         self.synapse = None
-        self.reuptake_size = reuptake_size
+        self.reuptake_rate = reuptake_rate
         self.verbose = verbose
 
         # Concentration
@@ -37,7 +37,7 @@ class Axon:
         self.concentration = baseline_concentration
 
         # Time factors
-        self.replenish_time_factor = replenish_time_factor
+        self.replenish_rate = replenish_rate
         self.release_time_factor = release_time_factor 
         self.release_multiple = 5.0 / release_time_factor 
 
@@ -61,8 +61,8 @@ class Axon:
         Molecules are also replenished based on the concentration available.
         """
         if self.concentration < self.baseline_concentration:
-            self.reuptake()
-            self.replenish()
+            if self.reuptake_rate > 0.0: self.reuptake()
+            if self.replenish_rate > 0.0: self.replenish()
         to_remove = []
         total_released = 0.0
 
@@ -76,12 +76,10 @@ class Axon:
             age = time - time_tag
             expected = strength*(1 - exp(self.release_multiple * -float(age)))
             self.potential_released[i] = expected
+            difference = expected - released
 
             # Determine how many molecules to actually release.
-            difference = expected - released
-            difference = min(self.concentration, difference, difference*(1-betavariate(2,20)))
-
-            mol_count = max(0, difference)
+            mol_count = beta(difference, noise=0.0, rate=10)
             self.concentration -= mol_count
             self.synapse.insert(self.mol_id, mol_count)
 
@@ -117,7 +115,7 @@ class Axon:
         Replenishes some neurotransmitters.
         """
         missing = self.baseline_concentration - self.concentration
-        sample = min(missing, missing*(betavariate(2,2+self.replenish_time_factor)))
+        sample = beta(missing, noise=0.0, rate=self.replenish_rate)
         self.concentration += sample
         if self.verbose:
             print("Regenerated %f" % sample)
@@ -131,9 +129,12 @@ class Axon:
         available = self.synapse.get(self.mol_id)
         if available <= 0: return
 
+        missing = self.baseline_concentration - self.concentration
+
         # Sample available molecules
-        sample = min(1.0, available, available*(1-betavariate(2,20)))
-        reuptaken = (self.baseline_concentration-self.concentration) * sample * self.reuptake_size
+        sample = beta(available, noise=0.0, rate=10)
+        reuptaken = sample * self.reuptake_rate
+        print(missing,sample,reuptaken)
 
         if self.verbose:
             print("Reuptake %f" % reuptaken)

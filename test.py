@@ -8,7 +8,7 @@ from synapse import Synapse
 from dendrite import Dendrite
 
 def run_simulation(axon=None, syn=None, dendrite=None,
-        iterations=50, spike_rate=1000, spike_strength=1.0,
+        iterations=100, spike_rate=10, spike_strength=1.0,
         mol_id=Molecules.GLUTAMATE, graded=True, verbose=False):
     if syn is None:
         syn = Synapse(0.25)
@@ -45,20 +45,91 @@ def run_simulation(axon=None, syn=None, dendrite=None,
 
     return axon_data,synapse_data,dendrite_data
 
+def axon_release(r=1):
+    axon_data,synapse_data,dendrite_data = run_simulation(
+        iterations = 50, spike_rate=50,
+        axon = Axon(release_time_factor=r, replenish_rate=0.0, reuptake_rate=0.0, verbose=True),
+        syn = Synapse(0.0, verbose=False),
+        dendrite = Dendrite(release_rate=0.0, initial_size=0.0, verbose=False),
+        graded=False, verbose=True)
+    data = []
+    data.append(("axon " + str(r), axon_data))
+    data.append(("synapse " + str(r), synapse_data))
+    plot(data)
+
+def axon_reuptake(r=0.1):
+    syn = Synapse(0.0)
+    syn.insert(Molecules.GLUTAMATE, 0.5)
+
+    axon = Axon(release_time_factor=1, replenish_rate=0.0, reuptake_rate=r, verbose=True)
+    axon.concentration = 0.5
+
+    axon_data,synapse_data,dendrite_data = run_simulation(
+        iterations = 50, spike_rate=50,
+        axon = axon,
+        syn = syn,
+        dendrite = Dendrite(release_rate=0.0, initial_size=0.0, verbose=False),
+        graded=False, verbose=True, spike_strength=0.0)
+    data = []
+    data.append(("axon " + str(r), axon_data))
+    data.append(("synapse " + str(r), synapse_data))
+    plot(data)
+
+def axon_replenish(r=0.1):
+    syn = Synapse(0.0)
+
+    axon = Axon(release_time_factor=1, replenish_rate=r, reuptake_rate=0.0, verbose=True)
+    axon.concentration = 0.5
+
+    axon_data,synapse_data,dendrite_data = run_simulation(
+        iterations = 50, spike_rate=50,
+        axon = axon,
+        syn = syn,
+        dendrite = Dendrite(release_rate=0.0, initial_size=0.0, verbose=False),
+        graded=False, verbose=True, spike_strength=0.0)
+    data = []
+    data.append(("axon " + str(r), axon_data))
+    plot(data)
+
+def synapse_metabolize(r=0.1):
+    syn = Synapse(r)
+    syn.insert(Molecules.GLUTAMATE, 0.5)
+
+    axon = Axon(release_time_factor=1, replenish_rate=0.0, reuptake_rate=0.0, verbose=True)
+
+    axon_data,synapse_data,dendrite_data = run_simulation(
+        iterations = 50, spike_rate=50,
+        axon = axon,
+        syn = syn,
+        dendrite = Dendrite(release_rate=0.0, initial_size=0.0, verbose=False),
+        graded=False, verbose=True, spike_strength=0.0)
+    data = []
+    data.append(("synapse " + str(r), synapse_data))
+    plot(data)
+
+
 def main():
+    #axon_release()
+    #axon_reuptake()
+    #axon_replenish()
+    synapse_metabolize()
+    return
     args = set_options()
 
     data = []
-    for r in [0, 5, 10, 100]:
-    #for r in [5]:
+    #for r in [1, 5, 10, 100]:
+    for r in [1]:
+    #for r in [0.0, 0.5, 1.0]:
         axon_data,synapse_data,dendrite_data = run_simulation(
-            dendrite = Dendrite(release_time_factor=r, initial_size=0.0),
-            axon = Axon(release_time_factor=10, replenish_time_factor=r, reuptake_size=0.5, verbose=True),
-            iterations=args.iterations, graded=False, verbose=args.verbose)
+            iterations = args.iterations, spike_rate=50,
+            axon = Axon(release_time_factor=1, replenish_rate=0.0, reuptake_rate=0.0, verbose=True),
+            syn = Synapse(0.2, verbose=False),
+            dendrite = Dendrite(release_rate=1, initial_size=0.0, verbose=False),
+            graded=False, verbose=args.verbose)
 
         # Plot data
-        if args.all or args.axon: data.append(("axon", axon_data))
-        if args.all or args.synapse: data.append(("synapse", synapse_data))
+        if args.all or args.axon: data.append(("axon " + str(r), axon_data))
+        if args.all or args.synapse: data.append(("synapse " + str(r), synapse_data))
         if args.all or args.dendrite: data.append(("dendrite " + str(r), dendrite_data))
     plot(data, args.filename)
 
