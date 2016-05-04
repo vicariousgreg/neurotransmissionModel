@@ -6,16 +6,18 @@
 # Release follows strength * (1 - e^(-time_factor * age))
 
 from math import exp
+from random import gauss
 
 class Axon:
-    def __init__(self, mol_id, synapse, baseline_concentration=1.0,
-                    release_time_factor=5, replenish_time_factor=10, verbose=False):
+    def __init__(self, mol_id, synapse, reuptake_size=1.0, baseline_concentration=1.0,
+                    release_time_factor=1, replenish_time_factor=1, verbose=False):
         """
         Axon keep track of activation and release neurotransmitters over
             time.
 
         |mol_id| is the identifier for the neurotransmitter to be released.
         |synapse| is the synapse to release into.
+        |reuptake_size| is the number of reuptake receptors.
         |baseline_concentration| is the maximum concentration of
             neurotransmitter.
         |release_time_factor| controls the release of neurotransmitter over
@@ -26,6 +28,7 @@ class Axon:
         # Cell attributes
         self.mol_id = mol_id
         self.synapse = synapse
+        self.reuptake_size = reuptake_size
         self.verbose = verbose
 
         # Concentration
@@ -50,7 +53,10 @@ class Axon:
             and their corresponding enzymes.
         Molecules are also replenished based on the concentration available.
         """
+        self.reuptake()
+        self.replenish()
         to_remove = []
+        total_released = 0.0
 
         for i in xrange(len(self.potential_times)):
             strength = self.potential_strengths[i]
@@ -64,10 +70,12 @@ class Axon:
             self.potential_released[i] = expected
 
             # Determine how many molecules to actually release.
-            difference = expected - released
-            mol_count = min(difference, self.concentration)
+            difference = gauss(expected - released,0.01)
+            mol_count = max(0, min(difference, self.concentration))
             self.concentration -= mol_count
             self.synapse.insert(self.mol_id, mol_count)
+
+            total_released += mol_count
 
             # Expiration of activity
             if age > self.release_time_factor and difference < 0.000001:
@@ -76,14 +84,13 @@ class Axon:
             if self.verbose:
                 print("Released %f molecules (%d)" % (mol_count, i))
                 #print("Total released: %f" % self.potential_released[i])
+        #print(total_released)
 
         # Remove expired activations
         for i in reversed(to_remove):
             del self.potential_strengths[i]
             del self.potential_times[i]
             del self.potential_released[i]
-
-        self.replenish()
 
     def fire(self, potential, time):
         """
@@ -100,9 +107,10 @@ class Axon:
         Replenishes some neurotransmitters.
         """
         new_molecules = (self.baseline_concentration - self.concentration) / self.replenish_time_factor
+        new_molecules = gauss(new_molecules, 0.01)
         self.concentration += new_molecules
         if self.verbose:
-            print("Regenerated %f molecules" % new_molecules)
+            print("Regenerated %f" % new_molecules)
             print("Axon: %f" % self.concentration)
 
     def reuptake(self):
@@ -110,6 +118,8 @@ class Axon:
         Reuptakes neurotransmitters from the synapse.
         """
         sample = self.synapse.get(self.mol_id)
-        bound = sample * self.size
-        self.synapse.remove(self.mol_id, bound)
-        self.concentration += bound
+        reuptaken = sample * self.reuptake_size
+        self.synapse.remove(self.mol_id, reuptaken)
+        self.concentration += reuptaken
+        if self.verbose:
+            print("Reuptake %f" % reuptaken)
