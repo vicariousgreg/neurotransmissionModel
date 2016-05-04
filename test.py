@@ -7,69 +7,61 @@ from axon import Axon
 from synapse import Synapse
 from dendrite import Dendrite
 
-def main():
-    args = set_options()
+def run_simulation(axon=None, syn=None, dendrite=None,
+        iterations=50, spike_rate=1000, spike_strength=1.0,
+        mol_id=Molecules.GLUTAMATE, graded=True, verbose=False):
+    if syn is None:
+        syn = Synapse(0.25)
+    if axon is None:
+        axon = Axon(mol_id=mol_id, verbose=True)
+    if dendrite is None:
+        dendrite = Dendrite(mol_id=mol_id, initial_size=0.25)
 
-    mol_id = Molecules.GLUTAMATE
-
-    syn = Synapse(0.25, verbose=False)
-    axon = Axon(mol_id, syn, verbose=False)
-    dendrite = Dendrite(mol_id, syn, 0.25, verbose=False)
-
-    output = []
-    spikes = dict([
-        (0, 0.1),
-        (25, 0.25),
-        (50, 0.30),
-        (75, 0.5),
-        (100, 0.9),
-        (150, 0.25),
-        (200, 0.1)]
-    )
-
-    #spikes = dict([(0,0.1)])
-    #spikes = dict([(0,1.0)])
-    #spikes = dict([(0,0.5)])
+    axon.set_synapse(syn)
+    dendrite.set_synapse(syn)
 
     axon_data = []
     synapse_data = []
     dendrite_data = []
 
     rate = 0.0
-    for time in xrange(args.iterations):
-        if time in spikes:
-            rate = spikes[time]
-            #print("\nRate changed to: %f\n" % rate)
+    for time in xrange(iterations):
+        if time % spike_rate == 0:
+            rate = spike_strength
+            if not graded:
+                axon.fire(rate, time)
 
         syn.step(time)
-        #if time % 25 == 0: axon.fire(rate, time)
-        axon.fire(rate, time)
+        if graded: axon.fire(rate, time)
         axon.step(time)
         dendrite.step(time)
-
-        if time == 50:
-            dendrite.size = 0.5
-            #print("\nSize changed to 0.5")
-        if time == 100:
-            dendrite.size = 0.75
-            #print("\nSize changed to 0.75")
-        if time == 150:
-            dendrite.size = 1.0
-            #print("\nSize changed to 1.0")
 
         axon_data.append(axon.concentration)
         synapse_data.append(syn.concentrations[mol_id])
         dendrite_data.append(dendrite.concentration)
-        output = (time,rate,axon.concentration,syn.concentrations[mol_id],dendrite.concentration)
-        #print(",".join("%-20s" % str(x) for x in output))
+        if verbose:
+            output = (time,rate,axon.concentration,syn.concentrations[mol_id],dendrite.concentration)
+            print(",".join("%-20s" % str(x) for x in output))
 
-    # Plot data
+    return axon_data,synapse_data,dendrite_data
+
+def main():
+    args = set_options()
+
     data = []
-    if args.all or args.axon: data.append(("axon", axon_data))
-    if args.all or args.synapse: data.append(("synapse", synapse_data))
-    if args.all or args.dendrite: data.append(("dendrite", dendrite_data))
+    for r in [0, 5, 10, 100]:
+    #for r in [5]:
+        axon_data,synapse_data,dendrite_data = run_simulation(
+            dendrite = Dendrite(release_time_factor=r, initial_size=0.0),
+            axon = Axon(release_time_factor=10, replenish_time_factor=r, reuptake_size=0.5, verbose=True),
+            iterations=args.iterations, graded=False, verbose=args.verbose)
 
-    plot(data)
+        # Plot data
+        if args.all or args.axon: data.append(("axon", axon_data))
+        if args.all or args.synapse: data.append(("synapse", synapse_data))
+        if args.all or args.dendrite: data.append(("dendrite " + str(r), dendrite_data))
+    plot(data, args.filename)
+
 
 def set_options():
     """
@@ -89,6 +81,9 @@ def set_options():
     """print table""")
     parser.add_argument("-i", "--iterations", type = int, default = 1, help =
     """number of iterations""")
+
+    parser.add_argument("-f", "--filename", type = str, default = None, help =
+    """name of location to save plot to""")
 
     return parser.parse_args()
 

@@ -6,15 +6,16 @@
 from math import exp
 from random import betavariate
 
+from molecule import Molecules
+
 class Dendrite:
-    def __init__(self, mol_id, synapse, initial_size,
-                    release_time_factor=0.1, verbose=False):
+    def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
+                    release_time_factor=1, verbose=False):
         """
         Dendrites get neurotransmitters from a synapse and release them back
             over time.
 
         |mol_id| is the identifier for the neurotransmitter to be bound.
-        |synapse| is the synapse to retrieve from.
         |initial_size| is the initial size of the receptor pool.
         |release_time_factor| controls the release of neurotransmitter back
             into the synapse.  Higher values increase the rate of release.
@@ -23,9 +24,15 @@ class Dendrite:
         self.mol_id = mol_id
         self.size = initial_size
         self.release_time_factor = release_time_factor 
-        self.synapse = synapse
         self.concentration = 0.0
         self.verbose = verbose
+        self.synapse = None
+
+    def set_synapse(self, synapse):
+        """
+        Connects the dendrite to a synapse.
+        """
+        self.synapse = synapse
 
     def step(self, time):
         """
@@ -42,11 +49,10 @@ class Dendrite:
         #     simply rebind molecules immediately after they are released.
         self.release()
 
-        if available == 0: return
+        if available <= 0: return
 
         # Sample available molecules
-        sample = min(1.0, available, available*(1-betavariate(2,10)))
-        #print(available, sample)
+        sample = min(1.0, available, available*(1-betavariate(2,20)))
         bound = sample * (self.size - self.concentration)
 
         if self.verbose:
@@ -63,7 +69,7 @@ class Dendrite:
         """
         # Stochastically sample bound molecules
         sample = min(self.concentration,
-            self.concentration*(1-betavariate(2,2+self.release_time_factor)))
+            self.concentration*(betavariate(2,2+self.release_time_factor)))
 
         # Release sampled molecules
         self.concentration -= sample

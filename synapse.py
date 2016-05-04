@@ -14,7 +14,7 @@ from enzyme import Enzymes, metabolize, num_enzymes
 from random import gauss
 
 class Synapse:
-    def __init__(self, baseline_concentration, verbose=False):
+    def __init__(self, baseline_concentration=1.0, verbose=False):
         """
         A synapse contains a list of molecule concentrations by id and
             a list of enzyme concentrations by id.

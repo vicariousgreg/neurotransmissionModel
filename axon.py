@@ -6,17 +6,18 @@
 # Release follows strength * (1 - e^(-time_factor * age))
 
 from math import exp
-from random import gauss
+from random import gauss, betavariate
+
+from molecule import Molecules
 
 class Axon:
-    def __init__(self, mol_id, synapse, reuptake_size=1.0, baseline_concentration=1.0,
-                    release_time_factor=1, replenish_time_factor=1, verbose=False):
+    def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_size=1.0, baseline_concentration=1.0,
+                    release_time_factor=1, replenish_time_factor=5, verbose=False):
         """
         Axon keep track of activation and release neurotransmitters over
             time.
 
         |mol_id| is the identifier for the neurotransmitter to be released.
-        |synapse| is the synapse to release into.
         |reuptake_size| is the number of reuptake receptors.
         |baseline_concentration| is the maximum concentration of
             neurotransmitter.
@@ -27,7 +28,7 @@ class Axon:
         """
         # Cell attributes
         self.mol_id = mol_id
-        self.synapse = synapse
+        self.synapse = None
         self.reuptake_size = reuptake_size
         self.verbose = verbose
 
@@ -45,6 +46,12 @@ class Axon:
         self.potential_times = []
         self.potential_released = []
 
+    def set_synapse(self, synapse):
+        """
+        Connects the axon to a synapse.
+        """
+        self.synapse = synapse
+
     def step(self, time):
         """
         Runs a time step.
@@ -53,8 +60,9 @@ class Axon:
             and their corresponding enzymes.
         Molecules are also replenished based on the concentration available.
         """
-        self.reuptake()
-        self.replenish()
+        if self.concentration < self.baseline_concentration:
+            self.reuptake()
+            self.replenish()
         to_remove = []
         total_released = 0.0
 
@@ -70,8 +78,10 @@ class Axon:
             self.potential_released[i] = expected
 
             # Determine how many molecules to actually release.
-            difference = gauss(expected - released,0.01)
-            mol_count = max(0, min(difference, self.concentration))
+            difference = expected - released
+            difference = min(self.concentration, difference, difference*(1-betavariate(2,20)))
+
+            mol_count = max(0, difference)
             self.concentration -= mol_count
             self.synapse.insert(self.mol_id, mol_count)
 
@@ -84,7 +94,7 @@ class Axon:
             if self.verbose:
                 print("Released %f molecules (%d)" % (mol_count, i))
                 #print("Total released: %f" % self.potential_released[i])
-        #print(total_released)
+        #if self.verbose: print(total_released)
 
         # Remove expired activations
         for i in reversed(to_remove):
@@ -106,20 +116,28 @@ class Axon:
         """
         Replenishes some neurotransmitters.
         """
-        new_molecules = (self.baseline_concentration - self.concentration) / self.replenish_time_factor
-        new_molecules = gauss(new_molecules, 0.01)
-        self.concentration += new_molecules
+        missing = self.baseline_concentration - self.concentration
+        sample = min(missing, missing*(betavariate(2,2+self.replenish_time_factor)))
+        self.concentration += sample
         if self.verbose:
-            print("Regenerated %f" % new_molecules)
+            print("Regenerated %f" % sample)
             print("Axon: %f" % self.concentration)
 
     def reuptake(self):
         """
         Reuptakes neurotransmitters from the synapse.
         """
-        sample = self.synapse.get(self.mol_id)
-        reuptaken = sample * self.reuptake_size
-        self.synapse.remove(self.mol_id, reuptaken)
-        self.concentration += reuptaken
+        # Check available molecules
+        available = self.synapse.get(self.mol_id)
+        if available <= 0: return
+
+        # Sample available molecules
+        sample = min(1.0, available, available*(1-betavariate(2,20)))
+        reuptaken = (self.baseline_concentration-self.concentration) * sample * self.reuptake_size
+
         if self.verbose:
             print("Reuptake %f" % reuptaken)
+
+        # Bind sampled molecules
+        self.synapse.remove(self.mol_id, reuptaken)
+        self.concentration += reuptaken
