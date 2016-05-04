@@ -10,8 +10,7 @@
 #     receptors.
 
 from molecule import Molecules, Metabolizers, num_molecules
-from enzyme import Enzymes, metabolize, num_enzymes
-from random import gauss
+from enzyme import metabolize, num_enzymes
 
 class Synapse:
     def __init__(self, baseline_concentration=1.0, verbose=False):
@@ -50,14 +49,12 @@ class Synapse:
         """
         self.concentrations[mol_id] += mol_count
 
-    def get(self, mol_id):
+    def get(self, mol_id=Molecules.GLUTAMATE):
         """
         Retrieves a stochastic number of molecules with the given |mol_id|.
         The number of molecules returned is based on the concentration.
         Returns between 80 and 100 percent of the concentration.
         """
-        #return min(self.concentrations[mol_id],
-        #    gauss(0.5*self.concentrations[mol_id], 0.01))
         return self.concentrations[mol_id]
 
     def remove(self, mol_id, mol_count):
