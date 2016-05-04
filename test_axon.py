@@ -14,17 +14,21 @@ def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
     synapse_data = []
     rate = 0.0
 
-    for time in xrange(iterations):
-        if time == 0: axon.fire(spike_strength, time)
-        syn.step(time)
-        axon.step(time)
-
+    def record(time):
         axon_data.append(axon.concentration)
         synapse_data.append(syn.get())
 
         if args.verbose:
-            output = (time,rate,axon.concentration,syn.get())
+            output = (t,rate,axon.concentration,syn.get())
             print(",".join("%-20s" % str(x) for x in output))
+
+    axon.fire(spike_strength, 0)
+    for t in xrange(iterations):
+        record(t)
+        syn.step(t)
+        axon.step(t)
+    record(t)
+
     return axon_data,synapse_data
 
 def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synapse=False):
