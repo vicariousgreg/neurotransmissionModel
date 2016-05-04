@@ -44,7 +44,7 @@ class Synapse:
                 print("Destroyed %f" % destroyed)
                 print("Concentration: %f" % self.concentrations[mol_id])
 
-    def insert(self, mol_id, mol_count):
+    def insert(self, mol_count, mol_id=Molecules.GLUTAMATE):
         """
         Inserts |mol_count| molecules of the molecule specified by |mol_id|.
         """

@@ -2,10 +2,10 @@
 
 from random import betavariate
 
-def beta(maximum, noise=0.0, rate=1.0):
+def beta(maximum, noise=1.0, rate=1.0):
     """
     """
-    if rate < 0.0: raise ValueError
+    if rate < 0.0 or noise < 0.0: raise ValueError
     ratio = 1/(0.0001+rate)
     a = 1.0+(100.0*(1.0-noise))
     b = ratio * a

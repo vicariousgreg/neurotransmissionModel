@@ -54,7 +54,7 @@ class Dendrite:
         missing = self.size - self.concentration
 
         # Sample available molecules
-        sample = beta(available, noise=0.0, rate=10)
+        sample = beta(available, rate=10)
         bound = sample * missing
 
         if self.verbose:
@@ -70,11 +70,11 @@ class Dendrite:
         Releases some neurotransmitters back into the synapse.
         """
         # Stochastically sample bound molecules
-        sample = beta(self.concentration, noise=0.0, rate=self.release_rate)
+        sample = beta(self.concentration, rate=self.release_rate)
 
         # Release sampled molecules
         self.concentration -= sample
-        self.synapse.insert(self.mol_id, sample)
+        self.synapse.insert(sample, self.mol_id)
 
         if self.verbose:
             print("Removed %f molecules" % sample)

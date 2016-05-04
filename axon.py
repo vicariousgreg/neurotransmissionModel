@@ -64,26 +64,26 @@ class Axon:
             if self.reuptake_rate > 0.0: self.reuptake()
             if self.replenish_rate > 0.0: self.replenish()
         to_remove = []
-        total_released = 0.0
 
         for i in xrange(len(self.potential_times)):
             strength = self.potential_strengths[i]
             time_tag = self.potential_times[i]
-            released = self.potential_released[i]
+            already_released = self.potential_released[i]
 
             # Calculate the age and determine the expected number of
             #     released neurotransmitters.
             age = time - time_tag
             expected = strength*(1 - exp(self.release_multiple * -float(age)))
-            self.potential_released[i] = expected
-            difference = expected - released
+            difference = expected - already_released
 
             # Determine how many molecules to actually release.
-            mol_count = beta(difference, noise=0.0, rate=10)
+            mol_count = beta(difference, rate=2)
+            mol_count = min(mol_count, self.concentration)
             self.concentration -= mol_count
-            self.synapse.insert(self.mol_id, mol_count)
+            self.synapse.insert(mol_count, self.mol_id)
 
-            total_released += mol_count
+            # Decrement released
+            self.potential_released[i] = self.potential_released[i] + mol_count
 
             # Expiration of activity
             if age > self.release_time_factor and difference < 0.000001:
@@ -91,8 +91,6 @@ class Axon:
 
             if self.verbose:
                 print("Released %f molecules (%d)" % (mol_count, i))
-                #print("Total released: %f" % self.potential_released[i])
-        #if self.verbose: print(total_released)
 
         # Remove expired activations
         for i in reversed(to_remove):
@@ -115,7 +113,7 @@ class Axon:
         Replenishes some neurotransmitters.
         """
         missing = self.baseline_concentration - self.concentration
-        sample = beta(missing, noise=0.0, rate=self.replenish_rate)
+        sample = beta(missing, rate=self.replenish_rate)
         self.concentration += sample
         if self.verbose:
             print("Regenerated %f" % sample)
@@ -132,9 +130,8 @@ class Axon:
         missing = self.baseline_concentration - self.concentration
 
         # Sample available molecules
-        sample = beta(available, noise=0.0, rate=10)
+        sample = beta(available, rate=2)
         reuptaken = sample * self.reuptake_rate
-        print(missing,sample,reuptaken)
 
         if self.verbose:
             print("Reuptake %f" % reuptaken)
