@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from molecule import Molecules
 from synapse import Synapse
 from dendrite import Dendrite
 from simulation import run

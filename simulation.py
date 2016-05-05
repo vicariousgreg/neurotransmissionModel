@@ -35,7 +35,7 @@ def run(axon=None, synapse=None, dendrite=None, stagger=False, taper=False,
             if t == iterations*0.75: spike_strength /= 2
         record(t)
         if stagger:
-            components[t%3].step(t)
+            components[t%len(components)].step(t)
         else:
             [component.step(t) for component in components]
     record(t)

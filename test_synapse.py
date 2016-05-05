@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from molecule import Molecules
 from synapse import Synapse
 from axon import Axon
 from dendrite import Dendrite
@@ -17,7 +16,7 @@ def run_simulation(syn, axon=None, dendrite=None, iterations=100, verbose=False)
     synapse_data = []
 
     def record(time):
-        synapse_data.append(syn.get_concentration(Molecules.GLUTAMATE))
+        synapse_data.append(syn.get_concentration())
 
         if args.verbose:
             output = (time,

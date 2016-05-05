@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from molecule import Molecules
 from axon import Axon
 from synapse import Synapse
 from simulation import run
