@@ -5,10 +5,12 @@
 
 from math import exp
 from stochastic import beta
+from pool import Pool
+from membrane import stochastic_release
 
 from molecule import Molecules
 
-class Dendrite:
+class Dendrite(Pool):
     def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
                     release_rate=1, verbose=False):
         """
@@ -21,60 +23,24 @@ class Dendrite:
             into the synapse.  Higher values increase the rate of release.
         """
         if initial_size > 1.0: raise ValueError
-        self.mol_id = mol_id
+        super(Dendrite, self).__init__(baseline_concentration=0.0)
+
         self.size = initial_size
+        self.mol_id = mol_id
         self.release_rate = release_rate 
         self.concentration = 0.0
         self.verbose = verbose
-        self.synapse = None
+        self.destination = None
 
-    def set_synapse(self, synapse):
-        """
-        Connects the dendrite to a synapse.
-        """
-        self.synapse = synapse
+    def get_available_spots(self):
+        return self.size - self.get_concentration()
 
     def step(self, time):
         """
         Runs a time step.
-        First, molecules are released.
-        Then, molecules are retrieved from the synapse based on a sampled count
-            and the size of the receptor pool.
+        Releases molecules.
         """
-        # Check available molecules
-        available = self.synapse.get(self.mol_id)
-
-        # Release bound molecules
-        # This is done after bind sampling to ensure the receptors do not
-        #     simply rebind molecules immediately after they are released.
-        self.release()
-
-        if available <= 0: return
-
-        missing = self.size - self.concentration
-
-        # Sample available molecules
-        sample = beta(available, rate=10)
-        bound = sample * missing
-
-        if self.verbose:
-            print("Dendrite: %f" % self.concentration)
-            print("Bound %f molecules" % bound)
-
-        # Bind sampled molecules
-        self.synapse.remove(self.mol_id, bound)
-        self.concentration += bound
-
-    def release(self):
-        """
-        Releases some neurotransmitters back into the synapse.
-        """
-        # Stochastically sample bound molecules
-        sample = beta(self.concentration, rate=self.release_rate)
-
-        # Release sampled molecules
-        self.concentration -= sample
-        self.synapse.insert(sample, self.mol_id)
-
-        if self.verbose:
-            print("Removed %f molecules" % sample)
+        released = stochastic_release(self.get_concentration(), self.release_rate)
+        self.remove_concentration(released)
+        if self.destination:
+            self.destination.add_concentration(released, mol_id=self.mol_id)

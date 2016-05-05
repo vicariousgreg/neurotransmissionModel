@@ -9,17 +9,17 @@ from synapse import Synapse
 def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
     if syn is None: syn = Synapse(0.0)
 
-    axon.set_synapse(syn)
+    syn.connect(axon)
     axon_data = []
     synapse_data = []
     rate = 0.0
 
     def record(time):
-        axon_data.append(axon.concentration)
-        synapse_data.append(syn.get())
+        axon_data.append(axon.get_concentration())
+        synapse_data.append(syn.get_concentration())
 
         if args.verbose:
-            output = (t,rate,axon.concentration,syn.get())
+            output = (t,rate,axon.get_concentration(),syn.get_concentration())
             print(",".join("%-20s" % str(x) for x in output))
 
     axon.fire(spike_strength, 0)
@@ -52,13 +52,13 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synapse=False):
     data = []
     for r in rs:
         syn = Synapse(0.0)
-        syn.insert(0.5)
+        syn.add_concentration(0.5)
 
         axon = Axon(release_time_factor=1,
                     replenish_rate=0.0,
                     reuptake_rate=r,
                     verbose=args.verbose)
-        axon.concentration = 0.0
+        axon.set_concentration(0.0)
 
         axon_data,synapse_data = run_simulation(
             axon,
@@ -76,7 +76,7 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
                     replenish_rate=r,
                     reuptake_rate=0.0,
                     verbose=args.verbose)
-        axon.concentration = 0.0
+        axon.set_concentration(0.0)
 
         axon_data,synapse_data = run_simulation(
             axon,
