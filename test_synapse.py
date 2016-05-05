@@ -6,6 +6,7 @@ from molecule import Molecules
 from synapse import Synapse
 from axon import Axon
 from dendrite import Dendrite
+from simulation import run
 
 def run_simulation(syn, axon=None, dendrite=None, iterations=100, verbose=False):
     if dendrite:
@@ -42,7 +43,7 @@ def synapse_metabolize(rs=[0.01, 0.1, 0.5, 1.0]):
         syn = Synapse(r)
         syn.set_concentration(1.0)
 
-        synapse_data = run_simulation(syn, iterations=100)
+        axon_data,synapse_data,dendrite_data = run(synapse=syn, iterations=100)
         data.append(("metabolize " + str(r), synapse_data))
     plot(data, title="Metabolize (enzyme concentration)")
 
@@ -54,7 +55,7 @@ def synapse_bind(rs=[0.01, 0.1, 0.5, 1.0]):
         syn = Synapse(0.0)
         syn.set_concentration(1.0)
 
-        synapse_data = run_simulation(syn, dendrite=dendrite, iterations=50)
+        axon_data,synapse_data,dendrite_data = run(synapse=syn, dendrite=dendrite, iterations=50)
         data.append(("bind " + str(r), synapse_data))
     plot(data, title="Bind (dendrite density)")
 

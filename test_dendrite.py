@@ -5,36 +5,16 @@ from plot import plot
 from molecule import Molecules
 from synapse import Synapse
 from dendrite import Dendrite
-
-def run_simulation(dendrite, syn=None, iterations=100, verbose=False):
-    if syn: syn.connect(dendrite)
-    synapse_data = []
-    dendrite_data = []
-
-    def record(time):
-        if syn:synapse_data.append(syn.get_concentration(Molecules.GLUTAMATE))
-        dendrite_data.append(dendrite.get_concentration())
-
-        if args.verbose:
-            output = (time,syn.get_concentration() if syn else "", dendrite.get_concentration())
-            print(",".join("%-20s" % str(x) for x in output))
-
-    for t in xrange(iterations):
-        record(t)
-        if syn: syn.step(t)
-        dendrite.step(t)
-    record(t)
-
-    return synapse_data, dendrite_data
+from simulation import run
 
 def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synapse=False):
     data = []
-    dendrite = Dendrite(release_rate=0, initial_size=1.0, verbose=True)
+    dendrite = Dendrite(release_rate=0, initial_size=1.0, verbose=args.verbose)
     for r in rs:
         syn = Synapse(0.0)
         syn.set_concentration(r)
 
-        synapse_data, dendrite_data = run_simulation(dendrite, syn=syn, iterations=100)
+        axon_data,synapse_data, dendrite_data = run(dendrite=dendrite, synapse=syn, iterations=100, verbose=args.verbose)
         data.append(("bind " + str(r), dendrite_data))
         if print_synapse: data.append(("synapse " + str(r), synapse_data))
     plot(data, title="Bind (synapse concentration)")
@@ -42,10 +22,10 @@ def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synapse=False):
 def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synapse=False):
     data = []
     for r in rs:
-        dendrite = Dendrite(release_rate=r, initial_size=1.0, verbose=True)
+        dendrite = Dendrite(release_rate=r, initial_size=1.0, verbose=args.verbose)
         dendrite.set_concentration(1.0)
 
-        synapse_data, dendrite_data = run_simulation(dendrite, iterations=25)
+        axon_data,synapse_data, dendrite_data = run(dendrite=dendrite, iterations=25, verbose=args.verbose)
         data.append(("release " + str(r), dendrite_data))
         if print_synapse: data.append(("synapse " + str(r), synapse_data))
     plot(data, title="Release (release rate)")

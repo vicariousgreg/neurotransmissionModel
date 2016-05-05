@@ -5,6 +5,7 @@ from plot import plot
 from molecule import Molecules
 from axon import Axon
 from synapse import Synapse
+from simulation import run
 
 def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
     if syn is None: syn = Synapse(0.0)
@@ -38,9 +39,10 @@ def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synapse=Fa
                         replenish_rate=0.0,
                         reuptake_rate=0.0,
                         verbose=args.verbose)
-            axon_data,synapse_data = run_simulation(
-                axon,
+            axon_data,synapse_data,dendrite_data = run(
+                axon=axon,
                 iterations = 100,
+                frequency=0,
                 spike_strength=s)
             data.append(("release %s  rate: %s" % (str(r), str(s)), axon_data))
             if print_synapse:
@@ -59,10 +61,11 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synapse=False):
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synapse_data = run_simulation(
-            axon,
-            syn = syn,
+        axon_data,synapse_data,dendrite_data = run(
+            axon=axon,
+            synapse = syn,
             iterations = 50,
+            frequency=0,
             spike_strength=0.0)
         data.append(("reuptake " + str(r), axon_data))
         if print_synapse: data.append(("synapse " + str(r), synapse_data))
@@ -77,9 +80,10 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synapse_data = run_simulation(
-            axon,
+        axon_data,synapse_data,dendrite_data = run(
+            axon=axon,
             iterations = 50,
+            frequency=0,
             spike_strength=0.0)
         data.append(("replenish " + str(r), axon_data))
     plot(data, title="Replenish (replenish rate)")
