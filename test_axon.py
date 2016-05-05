@@ -45,7 +45,7 @@ def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synapse=Fa
             data.append(("release %s  rate: %s" % (str(r), str(s)), axon_data))
             if print_synapse:
                 data.append(("synapse %s  rate: %s" % (str(r), str(s)), synapse_data))
-    plot(data, title="Release")
+    plot(data, title="Release (release time factor)")
 
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synapse=False):
     data = []
@@ -66,7 +66,7 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synapse=False):
             spike_strength=0.0)
         data.append(("reuptake " + str(r), axon_data))
         if print_synapse: data.append(("synapse " + str(r), synapse_data))
-    plot(data, title="Reuptake")
+    plot(data, title="Reuptake (reuptake rate)")
 
 def axon_replenish(rs=[0.1, 0.5, 1.0]):
     data = []
@@ -82,7 +82,7 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
             iterations = 50,
             spike_strength=0.0)
         data.append(("replenish " + str(r), axon_data))
-    plot(data, title="Replenish")
+    plot(data, title="Replenish (replenish rate)")
 
 def main():
     axon_release([100], print_synapse=True)

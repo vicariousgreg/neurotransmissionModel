@@ -57,7 +57,7 @@ class Synapse:
             total_receptor_density = sum(receptor.size
                 for receptor in receptors)
 
-            if total_receptor_density == 0.0: return
+            if total_receptor_density == 0.0: continue
 
             available = self.get_concentration(mol_id)
 

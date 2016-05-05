@@ -56,7 +56,5 @@ def metabolize(enzyme_count, mol_count, rate):
     |mol_count| is the number of molecules in the pool.
     |rate| is the metabolic rate.
     """
-    try:
-        baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
-        return beta(baseline, rate=2)
-    except ZeroDivisionError: return 0
+    baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
+    return beta(baseline, rate=2)
