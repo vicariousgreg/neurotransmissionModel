@@ -1,12 +1,12 @@
 from stochastic import beta
 
-def stochastic_bind(available_mols, available_spots, verbose=False):
+def stochastic_bind(available_mols, available_spots, affinity=1.0, verbose=False):
     # Check available molecules
     if available_mols <= 0: return 0.0
 
     # Sample available molecules
     sample = beta(available_mols, rate=2)
-    bound = sample * available_spots
+    bound = sample * available_spots * affinity
 
     if verbose: print("Bound %f" % bound)
 

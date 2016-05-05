@@ -30,6 +30,18 @@ def run_simulation(dendrite, syn=None, iterations=100, verbose=False):
 
     return synapse_data, dendrite_data
 
+def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synapse=False):
+    data = []
+    dendrite = Dendrite(release_rate=0, initial_size=1.0, verbose=True)
+    for r in rs:
+        syn = Synapse(0.0)
+        syn.set_concentration(r)
+
+        synapse_data, dendrite_data = run_simulation(dendrite, syn=syn, iterations=100)
+        data.append(("bind " + str(r), dendrite_data))
+        if print_synapse: data.append(("synapse " + str(r), synapse_data))
+    plot(data, title="Bind")
+
 def dendrite_release(rs=[0.1, 1, 10, 100], print_synapse=False):
     data = []
     for r in rs:
@@ -43,6 +55,7 @@ def dendrite_release(rs=[0.1, 1, 10, 100], print_synapse=False):
     plot(data, title="Release")
 
 def main():
+    dendrite_bind(print_synapse=False)
     dendrite_release()
 
 def set_options():

@@ -9,25 +9,24 @@
 # Synaptic neurotransmitters bind stochastically to postsynaptic neuron
 #     receptors.
 
-from molecule import Molecules, Metabolizers, num_molecules
-from enzyme import metabolize, num_enzymes
+from molecule import Molecules, Enzymes, Metabolizers, metabolize
 from pool import Pool
 from membrane import stochastic_bind
 
 class Synapse:
-    def __init__(self, baseline_concentration=1.0, verbose=False):
+    def __init__(self, enzyme_concentration=1.0, verbose=False):
         """
         A synapse contains a list of molecule concentrations by id and
             a list of enzyme concentrations by id.
-        |baseline_concentration| is the intial enzyme concentration.
+        |enzyme_concentration| is the intial enzyme concentration.
         """
-        if baseline_concentration > 1.0: raise ValueError
+        if enzyme_concentration > 1.0: raise ValueError
 
-        self.pools = [Pool()] * num_molecules
-        self.enzymes = [baseline_concentration] * num_enzymes
+        self.pools = [Pool()] * Molecules.size
+        self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
-        self.receptors = [[]] * num_enzymes
+        self.receptors = [[]] * Enzymes.size
 
     def get_concentration(self, mol_id=Molecules.GLUTAMATE):
         return self.pools[mol_id].get_concentration()
@@ -53,7 +52,7 @@ class Synapse:
             and their corresponding enzymes.
         """
         # Distribute molecules to available membrane receptors.
-        for mol_id in xrange(num_molecules):
+        for mol_id in xrange(Molecules.size):
             receptors = self.receptors[mol_id]
             total_receptor_density = sum(receptor.size
                 for receptor in receptors)
@@ -69,7 +68,7 @@ class Synapse:
                 self.remove_concentration(bound)
 
         # Metabolize from remaining pool.
-        for mol_id,mol_count in enumerate(self.get_concentration(mol) for mol in xrange(num_molecules)):
+        for mol_id,mol_count in enumerate(self.get_concentration(mol) for mol in xrange(Molecules.size)):
             enz_id,rate = Metabolizers[mol_id]
             enzyme_count = self.enzymes[enz_id]
 
