@@ -2,7 +2,7 @@
 
 from random import betavariate
 
-def beta(maximum, noise=1.0, rate=1.0):
+def beta(maximum, noise=0.0, rate=1.0):
     """
     """
     if rate < 0.0 or noise < 0.0: raise ValueError

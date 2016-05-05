@@ -54,16 +54,16 @@ class Synapse:
         # Distribute molecules to available membrane receptors.
         for mol_id in xrange(Molecules.size):
             receptors = self.receptors[mol_id]
-            total_receptor_density = sum(receptor.size
-                for receptor in receptors)
+            empty_densities = [receptor.get_available_spots() for receptor in receptors]
+            total_empty_density = sum(empty_densities)
 
-            if total_receptor_density == 0.0: continue
+            if total_empty_density == 0.0: continue
 
             available = self.get_concentration(mol_id)
 
-            for receptor in receptors:
-                portion = available * (receptor.size / total_receptor_density)
-                bound = stochastic_bind(portion, receptor.get_available_spots())
+            for empty_density,receptor in zip(empty_densities, receptors):
+                portion = available * (empty_density / total_empty_density)
+                bound = stochastic_bind(portion, empty_density)
                 receptor.add_concentration(bound)
                 self.remove_concentration(bound)
 

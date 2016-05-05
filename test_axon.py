@@ -24,8 +24,8 @@ def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
     axon.fire(spike_strength, 0)
     for t in xrange(iterations):
         record(t)
-        syn.step(t)
         axon.step(t)
+        syn.step(t)
     record(t)
 
     return axon_data,synapse_data
