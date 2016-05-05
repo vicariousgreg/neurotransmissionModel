@@ -2,7 +2,7 @@ from stochastic import beta
 
 def stochastic_bind(available_mols, available_spots, verbose=False):
     # Check available molecules
-    if available_mols <= 0: return
+    if available_mols <= 0: return 0.0
 
     # Sample available molecules
     sample = beta(available_mols, rate=2)

@@ -28,7 +28,6 @@ class Dendrite(Pool):
         self.size = initial_size
         self.mol_id = mol_id
         self.release_rate = release_rate 
-        self.concentration = 0.0
         self.verbose = verbose
         self.destination = None
 

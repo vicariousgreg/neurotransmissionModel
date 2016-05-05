@@ -8,7 +8,6 @@ from synapse import Synapse
 
 def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
     if syn is None: syn = Synapse(0.0)
-
     syn.connect(axon)
     axon_data = []
     synapse_data = []
@@ -19,7 +18,7 @@ def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
         synapse_data.append(syn.get_concentration())
 
         if args.verbose:
-            output = (t,rate,axon.get_concentration(),syn.get_concentration())
+            output = (time,rate,axon.get_concentration(),syn.get_concentration())
             print(",".join("%-20s" % str(x) for x in output))
 
     axon.fire(spike_strength, 0)
