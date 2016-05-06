@@ -9,7 +9,7 @@
 # Synaptic neurotransmitters bind stochastically to postsynaptic neuron
 #     receptors.
 
-from molecule import Molecules, Enzymes, Metabolizers, metabolize
+from molecule import Molecules, Analogs, Enzymes, metabolize
 from pool import Pool
 from membrane import stochastic_bind
 
@@ -53,7 +53,9 @@ class SynapticCleft:
         """
         # Distribute molecules to available membrane receptors.
         for mol_id in xrange(Molecules.size):
-            receptors = self.receptors[mol_id]
+            native_mol_id,metab_rate,affinity = Analogs[mol_id]
+
+            receptors = self.receptors[native_mol_id]
             empty_densities = [receptor.get_available_spots() for receptor in receptors]
             total_empty_density = sum(empty_densities)
 
@@ -63,14 +65,14 @@ class SynapticCleft:
 
             for empty_density,receptor in zip(empty_densities, receptors):
                 portion = available * (empty_density / total_empty_density)
-                bound = stochastic_bind(portion, empty_density)
+                bound = stochastic_bind(portion, empty_density, affinity)
                 receptor.add_concentration(bound)
                 self.remove_concentration(bound)
 
         # Metabolize from remaining pool.
         for mol_id,mol_count in enumerate(self.get_concentration(mol) for mol in xrange(Molecules.size)):
-            if mol_count == 0.0: continue
-            enz_id,rate = Metabolizers[mol_id]
+            if mol_count <= 0.0: continue
+            enz_id,rate,affinity = Analogs[mol_id]
             enzyme_count = self.enzymes[enz_id]
 
             destroyed = metabolize(enzyme_count, mol_count, rate)

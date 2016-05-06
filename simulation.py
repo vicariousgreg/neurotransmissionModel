@@ -17,7 +17,7 @@ def run(synapse, taper=False,
 
         if verbose:
             output = (time,spike_strength,
-                synapse.axons[0].get_concentration() if len(synapse.axon)>0 else "",
+                synapse.axons[0].get_concentration() if len(synapse.axons)>0 else "",
                 synapse.synaptic_cleft.get_concentration(),
                 synapse.dendrites[0].get_concentration() if len(synapse.dendrites)>0 else "")
             print(",".join("%-20s" % str(x) for x in output))

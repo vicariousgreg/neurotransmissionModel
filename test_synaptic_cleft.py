@@ -13,8 +13,8 @@ def synaptic_cleft_metabolize(rs=[0.01, 0.1, 0.5, 1.0]):
 
     for r in rs:
         syn = Synapse(verbose=args.verbose)
-        synapse.set_enzyme_concentration(r)
-        synapse.synaptic_cleft.set_concentration(1.0)
+        syn.set_enzyme_concentration(r)
+        syn.synaptic_cleft.set_concentration(1.0)
 
         axon_data,synaptic_cleft_data,dendrite_data = run(syn, iterations=100)
         data.append(("metabolize " + str(r), synaptic_cleft_data))
@@ -26,7 +26,7 @@ def synaptic_cleft_bind(rs=[0.01, 0.1, 0.5, 1.0]):
     for r in rs:
         syn = Synapse(verbose=args.verbose)
         dendrite = syn.create_dendrite(release_rate=0, initial_size=r)
-        synapse.synaptic_cleft.set_concentration(1.0)
+        syn.synaptic_cleft.set_concentration(1.0)
 
         axon_data,synaptic_cleft_data,dendrite_data = run(syn, iterations=50)
         data.append(("bind " + str(r), synaptic_cleft_data))

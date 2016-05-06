@@ -48,6 +48,8 @@ class BatchEnvironment:
 
     def remove_concentration(self, pool_id, molecules):
         self.next_concentrations[pool_id] -= molecules
+        self.next_concentrations[pool_id] = \
+            max(0.0, self.next_concentrations[pool_id])
 
     def get_id(self):
         identity = len(self.prev_concentrations)

@@ -14,14 +14,14 @@ def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
         for s in spike_strengths:
             syn = Synapse(verbose=args.verbose)
             axon = syn.create_axon(release_time_factor=10,
-                        replenish_rate=0.05,
-                        reuptake_rate=0.05,
+                        replenish_rate=0.04,
+                        reuptake_rate=0.10,
                         capacity=0.25,
                         verbose=args.verbose)
-            dendrite = syn.create_dendrite(release_rate=0.25,
-                        initial_size=0.25,
+            dendrite = syn.create_dendrite(release_rate=0.5,
+                        initial_size=0.5,
                         verbose=args.verbose)
-            syn.set_enzyme_concentration(0.25)
+            syn.set_enzyme_concentration(0.75)
             axon_data,synaptic_cleft_data,dendrite_data = run(syn,
                 iterations = args.iterations,
                 frequency=r,
@@ -52,7 +52,7 @@ def set_options():
     """Tests basic neurotransmission from axon->synaptic_cleft->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
-    parser.add_argument("-i", "--iterations", type = int, default = 500, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 250, help = 
     """table""")
 
     return parser.parse_args()

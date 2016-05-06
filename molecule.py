@@ -14,7 +14,7 @@ from stochastic import beta
 
 Enzymes = enum(
     GLUTAMATE = 0,
-    GABA = 1
+    GABA      = 1
 )
 
 #################
@@ -23,13 +23,15 @@ Enzymes = enum(
 
 Molecules = enum(
     GLUTAMATE = 0,
-    GABA = 1
+    GABA      = 1
 )
 
-# Enzyme metabolizers by molecule.
-Metabolizers = [
-    (Enzymes.GLUTAMATE,1.0),
-    (Enzymes.GABA,1.0)
+# Maps molecules to native molecules.
+# Molecule: index
+# (Analog, metabolic rate, affinity)
+Analogs = [
+    (Molecules.GLUTAMATE, 1.0, 1.0),
+    (Molecules.GABA,      1.0, 1.0)
 ]
 
 
