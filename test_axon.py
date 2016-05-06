@@ -2,8 +2,6 @@ import argparse
 
 from plot import plot
 
-from axon import Axon
-from synaptic_cleft import SynapticCleft
 from simulation import run
 from synapse import Synapse
 

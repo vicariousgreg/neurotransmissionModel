@@ -2,8 +2,6 @@ import argparse
 
 from plot import plot
 
-from synaptic_cleft import SynapticCleft
-from dendrite import Dendrite
 from simulation import run
 from synapse import Synapse
 
