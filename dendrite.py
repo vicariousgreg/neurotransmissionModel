@@ -1,7 +1,7 @@
 # Dendrite Model
 #
 # Models a receptor pool of a postsynaptic neuron, to which neurotransmitters
-#     from the synapse bind, modifying the membrane potential of the cell.
+#     from the synaptic cleft bind, modifying the membrane potential of the cell.
 
 from math import exp
 from stochastic import beta
@@ -14,13 +14,13 @@ class Dendrite(Pool):
     def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
                     release_rate=1, environment=None, verbose=False):
         """
-        Dendrites get neurotransmitters from a synapse and release them back
-            over time.
+        Dendrites get neurotransmitters from a synaptic cleft and release them
+            back over time.
 
         |mol_id| is the identifier for the neurotransmitter to be bound.
         |initial_size| is the initial size of the receptor pool.
         |release_rate| controls the release of neurotransmitter back
-            into the synapse.  Higher values increase the rate of release.
+            into the synaptic cleft.  Higher values increase the rate of release.
         """
         if initial_size > 1.0: raise ValueError
         super(Dendrite, self).__init__(baseline_concentration=0.0, environment=environment)

@@ -1,7 +1,7 @@
 # Axon Model
 #
 # Models the axon of a presynaptic neurons, which pumps and reuptakes
-#     neurotransmitters into and out of the synapse.
+#     neurotransmitters into and out of the synaptic cleft.
 #
 # Release follows strength * (1 - e^(-time_factor * age))
 
@@ -54,7 +54,7 @@ class Axon(Pool):
     def step(self, time):
         """
         Runs a time step.
-        Molecules are cleared from the synapse every time step.
+        Molecules are cleared from the synaptic cleft every time step.
         The amount cleared depends on the concentrations of molecules
             and their corresponding enzymes.
         Molecules are also replenished based on the concentration available.

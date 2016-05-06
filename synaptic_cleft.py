@@ -1,10 +1,10 @@
-# Synapse Model
+# Synaptic Cleft Model
 #
 # Models the space between neurons, including concentration of various
 #     neurotransmitters, their corresponding enzymes, and the metabolic
 #     processes that affect neurotransmitter concentration.
 #
-# Presynpatic neurons pump neurotransmitters into the synapse.
+# Presynpatic neurons pump neurotransmitters into the synaptic cleft.
 #
 # Synaptic neurotransmitters bind stochastically to postsynaptic neuron
 #     receptors.
@@ -13,10 +13,10 @@ from molecule import Molecules, Enzymes, Metabolizers, metabolize
 from pool import Pool
 from membrane import stochastic_bind
 
-class Synapse:
+class SynapticCleft:
     def __init__(self, enzyme_concentration=1.0, environment=None, verbose=False):
         """
-        A synapse contains a list of molecule concentrations by id and
+        A synaptic cleft contains a list of molecule concentrations by id and
             a list of enzyme concentrations by id.
         |enzyme_concentration| is the intial enzyme concentration.
         """
@@ -47,7 +47,7 @@ class Synapse:
     def step(self, time):
         """
         Runs a time step.
-        Molecules are cleared from the synapse every time step.
+        Molecules are cleared from the synaptic cleft every time step.
         The amount cleared depends on the concentrations of molecules
             and their corresponding enzymes.
         """

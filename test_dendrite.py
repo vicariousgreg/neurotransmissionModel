@@ -2,45 +2,40 @@ import argparse
 
 from plot import plot
 
-from synapse import Synapse
+from synaptic_cleft import SynapticCleft
 from dendrite import Dendrite
 from simulation import run
 from neural_network import NeuralNetwork
 
-def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synapse=False):
+def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
     data = []
     for r in rs:
         nn = NeuralNetwork()
         dendrite = nn.create_dendrite(release_rate=0, initial_size=1.0, verbose=args.verbose)
-        syn = nn.create_synapse(enzyme_concentration=0.0, verbose=True)
-        syn.set_concentration(r)
-        print("*")
-        print(nn.environment.prev_concentrations)
-        print(nn.environment.next_concentrations)
-        print("*")
+        synaptic_cleft = nn.create_synaptic_cleft(enzyme_concentration=0.0, verbose=ags.verbose)
+        synaptic_cleft.set_concentration(r)
 
-        axon_data,synapse_data, dendrite_data = run(nn,
-            dendrite=dendrite, synapse=syn, iterations=100, verbose=args.verbose)
+        axon_data,synaptic_cleft_data, dendrite_data = run(nn,
+            dendrite=dendrite, synaptic_cleft=synaptic_cleft, iterations=100, verbose=args.verbose)
         data.append(("bind " + str(r), dendrite_data))
-        if print_synapse: data.append(("synapse " + str(r), synapse_data))
-    plot(data, title="Bind (synapse concentration)")
-    raw_input()
+        if print_synaptic_cleft: data.append(("synaptic_cleft " + str(r), synaptic_cleft_data))
+    plot(data, title="Bind (synaptic_cleft concentration)")
 
-def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synapse=False):
+def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synaptic_cleft=False):
     data = []
     for r in rs:
         nn = NeuralNetwork()
         dendrite = nn.create_dendrite(release_rate=r, initial_size=1.0, verbose=args.verbose)
         dendrite.set_concentration(1.0)
 
-        axon_data,synapse_data, dendrite_data = run(nn,
+        axon_data,synaptic_cleft_data, dendrite_data = run(nn,
             dendrite=dendrite, iterations=25, verbose=args.verbose)
         data.append(("release " + str(r), dendrite_data))
-        if print_synapse: data.append(("synapse " + str(r), synapse_data))
+        if print_synaptic_cleft: data.append(("synaptic_cleft " + str(r), synaptic_cleft_data))
     plot(data, title="Release (release rate)")
 
 def main():
-    dendrite_bind(print_synapse=False)
+    dendrite_bind(print_synaptic_cleft=False)
     dendrite_release()
 
 def set_options():
@@ -48,7 +43,7 @@ def set_options():
     Retrieve the user-entered arguments for the program.
     """
     parser = argparse.ArgumentParser(description = 
-    """Tests basic neurotransmission from axon->synapse->dendrite.""")
+    """Tests basic neurotransmission from axon->synaptic_cleft->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
 

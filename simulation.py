@@ -2,30 +2,31 @@ from plot import plot
 
 from neural_network import NeuralNetwork
 
-def run(network, axon=None, synapse=None, dendrite=None, taper=False,
+def run(network, axon=None, synaptic_cleft=None, dendrite=None, taper=False,
         iterations=100, frequency=None, spike_strength=1.0, verbose=False):
-    if synapse is None: synapse = network.create_synapse(enzyme_concentration=0.0)
+    if synaptic_cleft is None:
+        synaptic_cleft = network.create_synaptic_cleft(enzyme_concentration=0.0)
     if axon:
-        synapse.connect(axon)
+        synaptic_cleft.connect(axon)
     axon_data = []
     if dendrite:
-        synapse.connect(dendrite)
+        synaptic_cleft.connect(dendrite)
     dendrite_data = []
-    synapse_data = []
+    synaptic_cleft_data = []
 
     def record(time):
         if axon: axon_data.append(axon.get_concentration())
-        synapse_data.append(synapse.get_concentration())
+        synaptic_cleft_data.append(synaptic_cleft.get_concentration())
         if dendrite: dendrite_data.append(dendrite.get_concentration())
 
         if verbose:
             output = (time,spike_strength,
                 axon.get_concentration() if axon else "",
-                synapse.get_concentration(),
+                synaptic_cleft.get_concentration(),
                 dendrite.get_concentration() if dendrite else "")
             print(",".join("%-20s" % str(x) for x in output))
 
-    components = [x for x in (axon,synapse,dendrite) if x]
+    components = [x for x in (axon,synaptic_cleft,dendrite) if x]
     if frequency == 0: axon.fire(spike_strength, 0)
     for t in xrange(iterations):
         network.step(t)
@@ -37,4 +38,4 @@ def run(network, axon=None, synapse=None, dendrite=None, taper=False,
             if t == iterations*0.75: spike_strength /= 2
     record(t)
 
-    return axon_data,synapse_data,dendrite_data
+    return axon_data,synaptic_cleft_data,dendrite_data

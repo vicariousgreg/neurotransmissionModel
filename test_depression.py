@@ -4,12 +4,12 @@ from plot import plot
 
 from axon import Axon
 from dendrite import Dendrite
-from synapse import Synapse
+from synaptic_cleft import SynapticCleft
 from simulation import run
 from neural_network import NeuralNetwork
 
 def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
-        print_axon=False, print_synapse=False, print_dendrite=True):
+        print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     for r in rs:
         for s in spike_strengths:
             nn = NeuralNetwork()
@@ -21,10 +21,10 @@ def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
             dendrite = nn.create_dendrite(release_rate=0.25,
                         initial_size=0.25,
                         verbose=args.verbose)
-            synapse = nn.create_synapse(enzyme_concentration=0.25, verbose=args.verbose)
-            axon_data,synapse_data,dendrite_data = run(nn,
+            synaptic_cleft = nn.create_synaptic_cleft(enzyme_concentration=0.25, verbose=args.verbose)
+            axon_data,synaptic_cleft_data,dendrite_data = run(nn,
                 axon=axon,
-                synapse=synapse,
+                synaptic_cleft=synaptic_cleft,
                 dendrite=dendrite,
                 iterations = args.iterations,
                 frequency=r,
@@ -34,8 +34,8 @@ def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
             data = []
             if print_axon:
                 data.append(("axon %s  rate: %s" % (str(r), str(s)), axon_data))
-            if print_synapse:
-                data.append(("synapse %s  rate: %s" % (str(r), str(s)), synapse_data))
+            if print_synaptic_cleft:
+                data.append(("synaptic_cleft %s  rate: %s" % (str(r), str(s)), synaptic_cleft_data))
             if print_dendrite:
                 data.append(("dendrite %s  rate: %s" % (str(r), str(s)), dendrite_data))
             plot(data, title="Short Term Depression (firing rate, strength)")
@@ -44,7 +44,7 @@ def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
 def main():
     depression(rs=[25, 50, 100],
         print_axon=True,
-        print_synapse=True,
+        print_synaptic_cleft=True,
         print_dendrite=True)
 
 def set_options():
@@ -52,7 +52,7 @@ def set_options():
     Retrieve the user-entered arguments for the program.
     """
     parser = argparse.ArgumentParser(description = 
-    """Tests basic neurotransmission from axon->synapse->dendrite.""")
+    """Tests basic neurotransmission from axon->synaptic_cleft->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
     parser.add_argument("-i", "--iterations", type = int, default = 500, help = 

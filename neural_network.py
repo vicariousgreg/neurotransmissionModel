@@ -6,7 +6,7 @@
 
 from axon import Axon
 from dendrite import Dendrite
-from synapse import Synapse
+from synaptic_cleft import SynapticCleft
 from environment import Environment, BatchEnvironment
 
 class NeuralNetwork:
@@ -28,8 +28,8 @@ class NeuralNetwork:
     def create_axon(self, **args):
         return self.build(Axon, args)
 
-    def create_synapse(self, **args):
-        return self.build(Synapse, args)
+    def create_synaptic_cleft(self, **args):
+        return self.build(SynapticCleft, args)
 
     def create_dendrite(self, **args):
         return self.build(Dendrite, args)
