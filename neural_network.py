@@ -1,20 +1,17 @@
 # Neural Network
 #
 # The neural network is a factory used to create subcellular components, full
-#     neurons, and neural assemblies.  Components get assigned an identifier to
-#     aid in synchronizing activity over time steps.
-#
-# Neural Networks hold buffers for neurotransmitter concentration.
-# Computations are performed on the previous timestep's concentrations
+#     neurons, and neural assemblies.  Components get registered in an
+#     environment to aid in synchronizing activity over time steps.
 
 from axon import Axon
 from dendrite import Dendrite
 from synapse import Synapse
-from environment import Environment
+from environment import Environment, BatchEnvironment
 
 class NeuralNetwork:
     def __init__(self):
-        self.environment = Environment()
+        self.environment = BatchEnvironment()
         self.components = []
 
     def step(self, time):
@@ -36,15 +33,3 @@ class NeuralNetwork:
 
     def create_dendrite(self, **args):
         return self.build(Dendrite, args)
-
-def test():
-    nn = NeuralNetwork()
-    components = nn.create_axon(),nn.create_synapse(),nn.create_dendrite()
-
-    tuple(component.set_concentration(0.5) for component in components)
-    for time in xrange(5):
-        print("\n" + str(time))
-        nn.step(time)
-
-        print(tuple(component.get_concentration() for component in components))
-        print(nn.environment.prev_concentrations)
