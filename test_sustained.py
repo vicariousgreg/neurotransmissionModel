@@ -34,7 +34,8 @@ def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
                 data.append(("synapse %s  rate: %s" % (str(r), str(s)), synaptic_cleft_data))
             if print_dendrite:
                 data.append(("dendrite %s  rate: %s" % (str(r), str(s)), dendrite_data))
-            plot(data, title="Short Term Depression (firing rate, strength)")
+            if not args.silent:
+                plot(data, title="Short Term Depression (firing rate, strength)")
 
 def main():
     sustained(rs=[10, 25, 100],
@@ -50,6 +51,8 @@ def set_options():
     """Tests basic neurotransmission from axon->synaptic_cleft->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
+    parser.add_argument("-s", "--silent", action = "store_true", help = 
+    """do not display graphs""")
     parser.add_argument("-i", "--iterations", type = int, default = 1000, help = 
     """table""")
 

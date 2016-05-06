@@ -18,7 +18,8 @@ def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
             iterations=100, verbose=args.verbose)
         data.append(("bind " + str(r), dendrite_data))
         if print_synaptic_cleft: data.append(("synaptic_cleft " + str(r), synaptic_cleft_data))
-    plot(data, title="Bind (synaptic_cleft concentration)")
+    if not args.silent:
+        plot(data, title="Bind (synaptic_cleft concentration)")
 
 def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synaptic_cleft=False):
     data = []
@@ -31,7 +32,8 @@ def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synaptic_cleft=False):
             iterations=25, verbose=args.verbose)
         data.append(("release " + str(r), dendrite_data))
         if print_synaptic_cleft: data.append(("synaptic_cleft " + str(r), synaptic_cleft_data))
-    plot(data, title="Release (release rate)")
+    if not args.silent:
+        plot(data, title="Release (release rate)")
 
 def main():
     dendrite_bind(print_synaptic_cleft=False)
@@ -45,6 +47,8 @@ def set_options():
     """Tests basic neurotransmission from axon->synaptic_cleft->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
+    parser.add_argument("-s", "--silent", action = "store_true", help = 
+    """do not display graphs""")
 
     return parser.parse_args()
 

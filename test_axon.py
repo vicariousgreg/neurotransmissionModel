@@ -23,7 +23,7 @@ def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synaptic_c
             data.append(("release %s  rate: %s" % (str(r), str(s)), axon_data))
             if print_synaptic_cleft:
                 data.append(("synaptic cleft %s  rate: %s" % (str(r), str(s)), synaptic_cleft_data))
-    plot(data, title="Release (release time factor)")
+    if not args.silent: plot(data, title="Release (release time factor)")
 
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
     data = []
@@ -43,7 +43,7 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
             spike_strength=0.0)
         data.append(("reuptake " + str(r), axon_data))
         if print_synaptic_cleft: data.append(("synaptic cleft " + str(r), synaptic_cleft_data))
-    plot(data, title="Reuptake (reuptake rate)")
+    if not args.silent: plot(data, title="Reuptake (reuptake rate)")
 
 def axon_replenish(rs=[0.1, 0.5, 1.0]):
     data = []
@@ -60,7 +60,7 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
             frequency=0,
             spike_strength=0.0)
         data.append(("replenish " + str(r), axon_data))
-    plot(data, title="Replenish (replenish rate)")
+    if not args.silent: plot(data, title="Replenish (replenish rate)")
 
 def main():
     axon_release([100], print_synaptic_cleft=True)
@@ -80,6 +80,8 @@ def set_options():
     """Tests basic neurotransmission from axon->synaptic cleft->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
+    parser.add_argument("-s", "--silent", action = "store_true", help = 
+    """do not display graphs""")
 
     return parser.parse_args()
 
