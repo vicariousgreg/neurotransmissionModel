@@ -48,7 +48,7 @@ class Axon(Pool):
         self.potential_released = []
 
     def get_available_spots(self):
-        return min(self.capacity, self.size)
+        return min(self.capacity-self.get_concentration(), self.size)
 
     def step(self, time):
         """

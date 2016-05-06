@@ -22,7 +22,7 @@ class Synapse:
         """
         if enzyme_concentration > 1.0: raise ValueError
 
-        self.pools = [Pool()] * Molecules.size
+        self.pools = [Pool() for m in xrange(Molecules.size)]
         self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
@@ -69,6 +69,7 @@ class Synapse:
 
         # Metabolize from remaining pool.
         for mol_id,mol_count in enumerate(self.get_concentration(mol) for mol in xrange(Molecules.size)):
+            if mol_count == 0.0: continue
             enz_id,rate = Metabolizers[mol_id]
             enzyme_count = self.enzymes[enz_id]
 

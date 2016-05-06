@@ -57,4 +57,6 @@ def metabolize(enzyme_count, mol_count, rate):
     |rate| is the metabolic rate.
     """
     baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
-    return beta(baseline, rate=2)
+    destroyed = beta(baseline, rate=10)
+    print(destroyed, mol_count)
+    return destroyed

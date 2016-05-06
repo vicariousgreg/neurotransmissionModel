@@ -2,7 +2,7 @@ from plot import plot
 
 from synapse import Synapse
 
-def run(axon=None, synapse=None, dendrite=None, stagger=False, taper=False,
+def run(axon=None, synapse=None, dendrite=None, stagger=True, taper=False,
         iterations=100, frequency=None, spike_strength=1.0, verbose=False):
     if synapse is None: synapse = Synapse(0.0)
     if axon:

@@ -7,19 +7,19 @@ from dendrite import Dendrite
 from synapse import Synapse
 from simulation import run
 
-def short_term_depression(rs=[1,5,10, 15], spike_strengths=[0.5],
+def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
         print_axon=False, print_synapse=False, print_dendrite=True):
     for r in rs:
         for s in spike_strengths:
-            axon = Axon(release_time_factor=10,
-                        replenish_rate=0.5,
-                        reuptake_rate=1.0,
+            axon = Axon(release_time_factor=20,
+                        replenish_rate=0.1,
+                        reuptake_rate=0.5,
                         capacity=0.5,
                         verbose=args.verbose)
-            dendrite = Dendrite(release_rate=0.5,
-                        initial_size=0.5,
+            dendrite = Dendrite(release_rate=0.25,
+                        initial_size=1.0,
                         verbose=args.verbose)
-            synapse = Synapse(0.5)
+            synapse = Synapse(1.0)
             axon_data,synapse_data,dendrite_data = run(
                 axon=axon,
                 synapse=synapse,
@@ -38,7 +38,7 @@ def short_term_depression(rs=[1,5,10, 15], spike_strengths=[0.5],
             plot(data, title="Short Term Depression (firing rate, strength)")
 
 def main():
-    short_term_depression(rs=[10, 25, 100, 1000],
+    sustained(rs=[10, 25, 100],
         print_axon=True,
         print_synapse=True,
         print_dendrite=True)
@@ -51,7 +51,7 @@ def set_options():
     """Tests basic neurotransmission from axon->synapse->dendrite.""")
     parser.add_argument("-v", "--verbose", action = "store_true", help = 
     """print table""")
-    parser.add_argument("-i", "--iterations", type = int, default = 100, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 1000, help = 
     """table""")
 
     return parser.parse_args()
