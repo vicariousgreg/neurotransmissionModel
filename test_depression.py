@@ -6,26 +6,23 @@ from axon import Axon
 from dendrite import Dendrite
 from synaptic_cleft import SynapticCleft
 from simulation import run
-from neural_network import NeuralNetwork
+from synapse import Synapse
 
 def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     for r in rs:
         for s in spike_strengths:
-            nn = NeuralNetwork()
-            axon = nn.create_axon(release_time_factor=10,
+            syn = Synapse(verbose=args.verbose)
+            axon = syn.create_axon(release_time_factor=10,
                         replenish_rate=0.05,
                         reuptake_rate=0.05,
                         capacity=0.25,
                         verbose=args.verbose)
-            dendrite = nn.create_dendrite(release_rate=0.25,
+            dendrite = syn.create_dendrite(release_rate=0.25,
                         initial_size=0.25,
                         verbose=args.verbose)
-            synaptic_cleft = nn.create_synaptic_cleft(enzyme_concentration=0.25, verbose=args.verbose)
-            axon_data,synaptic_cleft_data,dendrite_data = run(nn,
-                axon=axon,
-                synaptic_cleft=synaptic_cleft,
-                dendrite=dendrite,
+            syn.set_enzyme_concentration(0.25)
+            axon_data,synaptic_cleft_data,dendrite_data = run(syn,
                 iterations = args.iterations,
                 frequency=r,
                 spike_strength=s,

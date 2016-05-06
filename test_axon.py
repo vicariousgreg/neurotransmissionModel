@@ -5,19 +5,18 @@ from plot import plot
 from axon import Axon
 from synaptic_cleft import SynapticCleft
 from simulation import run
-from neural_network import NeuralNetwork
+from synapse import Synapse
 
 def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synaptic_cleft=False):
     data = []
     for r in rs:
         for s in spike_strengths:
-            nn = NeuralNetwork()
-            axon = nn.create_axon(release_time_factor=r,
+            syn = Synapse(verbose=args.verbose)
+            axon = syn.create_axon(release_time_factor=r,
                         replenish_rate=0.0,
                         reuptake_rate=0.0,
                         verbose=args.verbose)
-            axon_data,synaptic_cleft_data,dendrite_data = run(nn,
-                axon=axon,
+            axon_data,synaptic_cleft_data,dendrite_data = run(syn,
                 iterations = 100,
                 frequency=0,
                 spike_strength=s)
@@ -29,19 +28,16 @@ def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synaptic_c
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
     data = []
     for r in rs:
-        nn = NeuralNetwork()
-        synaptic_cleft = nn.create_synaptic_cleft(enzyme_concentration=0.0)
-        synaptic_cleft.add_concentration(0.5)
+        syn = Synapse(verbose=args.verbose)
+        syn.synaptic_cleft.add_concentration(0.5)
 
-        axon = nn.create_axon(release_time_factor=1,
+        axon = syn.create_axon(release_time_factor=1,
                     replenish_rate=0.0,
                     reuptake_rate=r,
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synaptic_cleft_data,dendrite_data = run(nn,
-            axon=axon,
-            synaptic_cleft = synaptic_cleft,
+        axon_data,synaptic_cleft_data,dendrite_data = run(syn,
             iterations = 50,
             frequency=0,
             spike_strength=0.0)
@@ -52,15 +48,14 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
 def axon_replenish(rs=[0.1, 0.5, 1.0]):
     data = []
     for r in rs:
-        nn = NeuralNetwork()
-        axon = nn.create_axon(release_time_factor=1,
+        syn = Synapse(verbose=args.verbose)
+        axon = syn.create_axon(release_time_factor=1,
                     replenish_rate=r,
                     reuptake_rate=0.0,
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synaptic_cleft_data,dendrite_data = run(nn,
-            axon=axon,
+        axon_data,synaptic_cleft_data,dendrite_data = run(syn,
             iterations = 50,
             frequency=0,
             spike_strength=0.0)
