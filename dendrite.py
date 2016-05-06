@@ -12,7 +12,7 @@ from molecule import Molecules
 
 class Dendrite(Pool):
     def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
-                    release_rate=1, verbose=False):
+                    release_rate=1, environment=None, verbose=False):
         """
         Dendrites get neurotransmitters from a synapse and release them back
             over time.
@@ -23,7 +23,7 @@ class Dendrite(Pool):
             into the synapse.  Higher values increase the rate of release.
         """
         if initial_size > 1.0: raise ValueError
-        super(Dendrite, self).__init__(baseline_concentration=0.0)
+        super(Dendrite, self).__init__(baseline_concentration=0.0, environment=environment)
 
         self.size = initial_size
         self.mol_id = mol_id

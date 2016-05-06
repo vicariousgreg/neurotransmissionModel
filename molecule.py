@@ -58,5 +58,4 @@ def metabolize(enzyme_count, mol_count, rate):
     """
     baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
     destroyed = beta(baseline, rate=10)
-    print(destroyed, mol_count)
     return destroyed

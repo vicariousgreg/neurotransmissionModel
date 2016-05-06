@@ -1,10 +1,10 @@
 from plot import plot
 
-from synapse import Synapse
+from neural_network import NeuralNetwork
 
-def run(axon=None, synapse=None, dendrite=None, stagger=True, taper=False,
+def run(network, axon=None, synapse=None, dendrite=None, taper=False,
         iterations=100, frequency=None, spike_strength=1.0, verbose=False):
-    if synapse is None: synapse = Synapse(0.0)
+    if synapse is None: synapse = network.create_synapse(enzyme_concentration=0.0)
     if axon:
         synapse.connect(axon)
     axon_data = []
@@ -28,16 +28,13 @@ def run(axon=None, synapse=None, dendrite=None, stagger=True, taper=False,
     components = [x for x in (axon,synapse,dendrite) if x]
     if frequency == 0: axon.fire(spike_strength, 0)
     for t in xrange(iterations):
+        network.step(t)
+        record(t)
         if frequency and frequency > 0:
             if t % frequency == 0: axon.fire(spike_strength, t)
         if taper:
             if t == iterations/2: spike_strength /= 2
             if t == iterations*0.75: spike_strength /= 2
-        record(t)
-        if stagger:
-            components[t%len(components)].step(t)
-        else:
-            [component.step(t) for component in components]
     record(t)
 
     return axon_data,synapse_data,dendrite_data

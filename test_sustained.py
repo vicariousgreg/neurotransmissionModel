@@ -6,21 +6,23 @@ from axon import Axon
 from dendrite import Dendrite
 from synapse import Synapse
 from simulation import run
+from neural_network import NeuralNetwork
 
 def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
         print_axon=False, print_synapse=False, print_dendrite=True):
     for r in rs:
         for s in spike_strengths:
-            axon = Axon(release_time_factor=20,
+            nn = NeuralNetwork()
+            axon = nn.create_axon(release_time_factor=20,
                         replenish_rate=0.1,
                         reuptake_rate=0.5,
                         capacity=0.5,
                         verbose=args.verbose)
-            dendrite = Dendrite(release_rate=0.25,
+            dendrite = nn.create_dendrite(release_rate=0.25,
                         initial_size=1.0,
                         verbose=args.verbose)
-            synapse = Synapse(1.0)
-            axon_data,synapse_data,dendrite_data = run(
+            synapse = nn.create_synapse(enzyme_concentration=1.0)
+            axon_data,synapse_data,dendrite_data = run(nn,
                 axon=axon,
                 synapse=synapse,
                 dendrite=dendrite,

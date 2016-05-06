@@ -5,40 +5,18 @@ from plot import plot
 from axon import Axon
 from synapse import Synapse
 from simulation import run
-
-def run_simulation(axon, syn=None, iterations=100, spike_strength=1.0):
-    if syn is None: syn = Synapse(0.0)
-    syn.connect(axon)
-    axon_data = []
-    synapse_data = []
-    rate = 0.0
-
-    def record(time):
-        axon_data.append(axon.get_concentration())
-        synapse_data.append(syn.get_concentration())
-
-        if args.verbose:
-            output = (time,rate,axon.get_concentration(),syn.get_concentration())
-            print(",".join("%-20s" % str(x) for x in output))
-
-    axon.fire(spike_strength, 0)
-    for t in xrange(iterations):
-        record(t)
-        axon.step(t)
-        syn.step(t)
-    record(t)
-
-    return axon_data,synapse_data
+from neural_network import NeuralNetwork
 
 def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synapse=False):
     data = []
     for r in rs:
         for s in spike_strengths:
-            axon = Axon(release_time_factor=r,
+            nn = NeuralNetwork()
+            axon = nn.create_axon(release_time_factor=r,
                         replenish_rate=0.0,
                         reuptake_rate=0.0,
                         verbose=args.verbose)
-            axon_data,synapse_data,dendrite_data = run(
+            axon_data,synapse_data,dendrite_data = run(nn,
                 axon=axon,
                 iterations = 100,
                 frequency=0,
@@ -51,16 +29,17 @@ def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synapse=Fa
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synapse=False):
     data = []
     for r in rs:
-        syn = Synapse(0.0)
+        nn = NeuralNetwork()
+        syn = nn.create_synapse(enzyme_concentration=0.0)
         syn.add_concentration(0.5)
 
-        axon = Axon(release_time_factor=1,
+        axon = nn.create_axon(release_time_factor=1,
                     replenish_rate=0.0,
                     reuptake_rate=r,
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synapse_data,dendrite_data = run(
+        axon_data,synapse_data,dendrite_data = run(nn,
             axon=axon,
             synapse = syn,
             iterations = 50,
@@ -73,13 +52,14 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synapse=False):
 def axon_replenish(rs=[0.1, 0.5, 1.0]):
     data = []
     for r in rs:
-        axon = Axon(release_time_factor=1,
+        nn = NeuralNetwork()
+        axon = nn.create_axon(release_time_factor=1,
                     replenish_rate=r,
                     reuptake_rate=0.0,
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synapse_data,dendrite_data = run(
+        axon_data,synapse_data,dendrite_data = run(nn,
             axon=axon,
             iterations = 50,
             frequency=0,

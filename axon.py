@@ -15,7 +15,7 @@ from membrane import stochastic_bind
 class Axon(Pool):
     def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_rate=1.0,
                     capacity=1.0, release_time_factor=1,
-                    replenish_rate=5, verbose=False):
+                    replenish_rate=5, environment=False, verbose=None):
         """
         Axon keep track of activation and release neurotransmitters over
             time.
@@ -29,7 +29,8 @@ class Axon(Pool):
             over time.  Higher values increase rate of restoration.
         """
         # Initialize as a membrane.
-        super(Axon, self).__init__(baseline_concentration=capacity)
+        super(Axon, self).__init__(baseline_concentration=capacity,
+            environment=environment)
 
         # Cell attributes
         self.mol_id = mol_id

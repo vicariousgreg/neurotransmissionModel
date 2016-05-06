@@ -14,7 +14,7 @@ from pool import Pool
 from membrane import stochastic_bind
 
 class Synapse:
-    def __init__(self, enzyme_concentration=1.0, verbose=False):
+    def __init__(self, enzyme_concentration=1.0, environment=None, verbose=False):
         """
         A synapse contains a list of molecule concentrations by id and
             a list of enzyme concentrations by id.
@@ -22,7 +22,7 @@ class Synapse:
         """
         if enzyme_concentration > 1.0: raise ValueError
 
-        self.pools = [Pool() for m in xrange(Molecules.size)]
+        self.pools = [Pool(environment=environment) for m in xrange(Molecules.size)]
         self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
