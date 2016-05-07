@@ -26,18 +26,24 @@ class Synapse:
             axon.step(time)
         for dendrite in self.dendrites:
             dendrite.step(time)
-        self.synaptic_cleft.step(time)
+
+        # Bind dendrites, then axons
+        for dendrite in self.dendrites:
+            self.synaptic_cleft.bind(dendrite)
+        for axon in self.axons:
+            self.synaptic_cleft.bind(axon)
+        self.synaptic_cleft.metabolize()
 
     def create_axon(self, **args):
         args["environment"] = self.environment
         axon = Axon(**args)
         self.axons.append(axon)
-        self.synaptic_cleft.connect(axon)
+        axon.destination = self.synaptic_cleft
         return axon
 
     def create_dendrite(self, **args):
         args["environment"] = self.environment
         dendrite = Dendrite(**args)
         self.dendrites.append(dendrite)
-        self.synaptic_cleft.connect(dendrite)
+        dendrite.destination = self.synaptic_cleft
         return dendrite

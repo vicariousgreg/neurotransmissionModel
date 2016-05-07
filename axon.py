@@ -69,8 +69,7 @@ class Axon(Membrane):
             and their corresponding enzymes.
         Molecules are also replenished based on the concentration available.
         """
-        if self.get_native_concentration() < self.capacity:
-            if self.replenish_rate > 0.0: self.replenish()
+        self.replenish()
         self.release(time)
 
     def release(self, time):
@@ -114,6 +113,10 @@ class Axon(Membrane):
         """
         Replenishes some neurotransmitters.
         """
+        if self.get_native_concentration() >=  self.capacity \
+                or self.replenish_rate == 0.0:
+            return
+
         missing = self.capacity - self.get_native_concentration()
         sample = beta(missing, rate=self.replenish_rate)
         self.add_concentration(sample, self.native_mol_id)

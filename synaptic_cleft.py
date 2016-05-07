@@ -26,25 +26,15 @@ class SynapticCleft(PoolCluster):
         self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
-        self.receptors = []
-
-    def connect(self, receptor):
-        receptor.destination = self
-        self.receptors.append(receptor)
-
-    def step(self, time):
-        """
-        Runs a time step.
-        Molecules are cleared from the synaptic cleft every time step.
-        The amount cleared depends on the concentrations of molecules
-            and their corresponding enzymes.
-        """
+    def bind(self, receptor):
         # Distribute molecules to available membrane receptors.
-        for receptor in self.receptors:
-            total_bound = receptor.stochastic_bind(self)
-            for mol_id,bound in total_bound.iteritems():
-                self.remove_concentration(bound, mol_id)
+        total_bound = receptor.stochastic_bind(self)
+        for mol_id,bound in total_bound.iteritems():
+            self.remove_concentration(bound, mol_id)
 
+        self.metabolize()
+
+    def metabolize(self):
         # Metabolize from remaining pool.
         for mol_id,mol_count in enumerate(self.get_concentration(mol) for mol in xrange(Molecules.size)):
             if mol_count <= 0.0: continue
