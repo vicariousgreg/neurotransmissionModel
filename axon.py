@@ -9,10 +9,9 @@ from math import exp
 from stochastic import beta
 
 from molecule import Molecules
-from pool import Pool
-from membrane import stochastic_bind
+from membrane import Membrane
 
-class Axon(Pool):
+class Axon(Membrane):
     def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_rate=1.0,
                     capacity=1.0, release_time_factor=1,
                     replenish_rate=5, environment=False, verbose=None):
@@ -28,8 +27,9 @@ class Axon(Pool):
         |replenish_rate| controls the regeneration of neurotransmitter 
             over time.  Higher values increase rate of restoration.
         """
-        # Initialize as a membrane.
-        super(Axon, self).__init__(baseline_concentration=capacity,
+        # Initialize as a Membrane.
+        Membrane.__init__(self, mol_id,
+            baseline_concentration=capacity,
             environment=environment)
 
         # Cell attributes
@@ -49,7 +49,17 @@ class Axon(Pool):
         self.potential_released = []
 
     def get_available_spots(self):
-        return min(self.capacity-self.get_concentration(), self.size)
+        return min(self.capacity-self.get_native_concentration(), self.size)
+
+    def fire(self, potential, time):
+        """
+        Fires an action/graded |potential|.
+        """
+        if potential > 1.0: raise ValueError
+
+        self.potential_strengths.append(potential)
+        self.potential_times.append(time)
+        self.potential_released.append(0.0)
 
     def step(self, time):
         """
@@ -59,8 +69,11 @@ class Axon(Pool):
             and their corresponding enzymes.
         Molecules are also replenished based on the concentration available.
         """
-        if self.get_concentration() < self.capacity:
+        if self.get_native_concentration() < self.capacity:
             if self.replenish_rate > 0.0: self.replenish()
+        self.release(time)
+
+    def release(self, time):
         to_remove = []
 
         for i in xrange(len(self.potential_times)):
@@ -76,10 +89,10 @@ class Axon(Pool):
 
             # Determine how many molecules to actually release.
             mol_count = beta(difference, rate=1)
-            mol_count = min(mol_count, self.get_concentration())
-            self.remove_concentration(mol_count)
+            mol_count = min(mol_count, self.get_native_concentration())
+            self.remove_concentration(mol_count, self.native_mol_id)
             if self.destination:
-                self.destination.add_concentration(mol_count, mol_id=self.mol_id)
+                self.destination.add_concentration(mol_count, mol_id=self.native_mol_id)
 
             # Decrement released
             self.potential_released[i] = expected
@@ -97,23 +110,13 @@ class Axon(Pool):
             del self.potential_times[i]
             del self.potential_released[i]
 
-    def fire(self, potential, time):
-        """
-        Fires an action/graded |potential|.
-        """
-        if potential > 1.0: raise ValueError
-
-        self.potential_strengths.append(potential)
-        self.potential_times.append(time)
-        self.potential_released.append(0.0)
-
     def replenish(self):
         """
         Replenishes some neurotransmitters.
         """
-        missing = self.capacity - self.get_concentration()
+        missing = self.capacity - self.get_native_concentration()
         sample = beta(missing, rate=self.replenish_rate)
-        self.add_concentration(sample)
+        self.add_concentration(sample, self.native_mol_id)
         if self.verbose:
             print("Regenerated %f" % sample)
-            print("Axon: %f" % self.get_concentration())
+            print("Axon: %f" % self.get_native_concentration())

@@ -1,23 +1,41 @@
 from stochastic import beta
+from pool import Pool
+from molecule import Molecules, Analogs
+from pool_cluster import PoolCluster
 
-def stochastic_bind(available_mols, available_spots, affinity=0.5, verbose=False):
-    # Check available molecules
-    if available_mols <= 0: return 0.0
+class Membrane(PoolCluster):
+    def __init__(self, native_mol_id, baseline_concentration=0.0, environment=None):
+        self.native_mol_id = native_mol_id
+        self.analogs = [molecule for molecule in xrange(Molecules.size)
+                            if Analogs[molecule][0] == native_mol_id]
+        concentrations = dict([
+            (mol_id, 0.0)
+            for mol_id in self.analogs])
+        concentrations[native_mol_id] = baseline_concentration
+        PoolCluster.__init__(self, concentrations, environment)
 
-    # Sample available molecules
-    sample = beta(available_mols, rate=2)
-    bound = sample * available_spots * affinity
+    def get_available_spots(self):
+        raise ValueError("Cannot simulate abstract class!")
 
-    if verbose: print("Bound %f" % bound)
+    def get_native_concentration(self):
+        return self.get_concentration(self.native_mol_id)
 
-    # Bind sampled molecules
-    return bound
+    def stochastic_bind(self, source):
+        total_bound = dict()
+        for analog in self.analogs:
+            available_mols = source.get_concentration(analog)
+            affinity = Analogs[analog][2]
 
-def stochastic_release(available_mols, release_rate, verbose=False):
-    # Stochastically sample bound molecules
-    sample = beta(available_mols, rate=release_rate)
+            # Check available molecules
+            if available_mols <= 0: continue
 
-    if verbose: print("Removed %f molecules" % sample)
+            # Sample available molecules
+            sample = beta(available_mols, rate=2)
+            bound = sample * self.get_available_spots() * affinity
 
-    # Release sampled molecules
-    return sample
+            if self.verbose: print("Bound %f" % bound)
+
+            # Bind sampled molecules
+            self.pools[analog].add_concentration(bound)
+            total_bound[analog] = bound
+        return total_bound

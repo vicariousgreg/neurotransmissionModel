@@ -1,3 +1,4 @@
 for t in $( ls test*.py ); do
-  python $t -s -v
+  echo $t
+  python $t -s
 done

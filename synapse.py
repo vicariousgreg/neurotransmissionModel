@@ -24,9 +24,9 @@ class Synapse:
         self.environment.step(time)
         for axon in self.axons:
             axon.step(time)
-        self.synaptic_cleft.step(time)
         for dendrite in self.dendrites:
             dendrite.step(time)
+        self.synaptic_cleft.step(time)
 
     def create_axon(self, **args):
         args["environment"] = self.environment

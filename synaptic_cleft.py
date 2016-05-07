@@ -10,10 +10,9 @@
 #     receptors.
 
 from molecule import Molecules, Analogs, Enzymes, metabolize
-from pool import Pool
-from membrane import stochastic_bind
+from pool_cluster import PoolCluster
 
-class SynapticCleft:
+class SynapticCleft(PoolCluster):
     def __init__(self, enzyme_concentration=1.0, environment=None, verbose=False):
         """
         A synaptic cleft contains a list of molecule concentrations by id and
@@ -21,28 +20,17 @@ class SynapticCleft:
         |enzyme_concentration| is the intial enzyme concentration.
         """
         if enzyme_concentration > 1.0: raise ValueError
-
-        self.pools = [Pool(environment=environment) for m in xrange(Molecules.size)]
+        PoolCluster.__init__(self,
+            dict([(mol_id, 0.0) for mol_id in xrange(Molecules.size)]),
+            environment)
         self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
-        self.receptors = [[]] * Enzymes.size
-
-    def get_concentration(self, mol_id=Molecules.GLUTAMATE):
-        return self.pools[mol_id].get_concentration()
-
-    def set_concentration(self, new_concentration, mol_id=Molecules.GLUTAMATE):
-        return self.pools[mol_id].set_concentration(new_concentration)
-
-    def add_concentration(self, molecules, mol_id=Molecules.GLUTAMATE):
-        return self.pools[mol_id].add_concentration(molecules)
-
-    def remove_concentration(self, molecules, mol_id=Molecules.GLUTAMATE):
-        return self.pools[mol_id].remove_concentration(molecules)
+        self.receptors = []
 
     def connect(self, receptor):
         receptor.destination = self
-        self.receptors[receptor.mol_id].append(receptor)
+        self.receptors.append(receptor)
 
     def step(self, time):
         """
@@ -52,22 +40,10 @@ class SynapticCleft:
             and their corresponding enzymes.
         """
         # Distribute molecules to available membrane receptors.
-        for mol_id in xrange(Molecules.size):
-            native_mol_id,metab_rate,affinity = Analogs[mol_id]
-
-            receptors = self.receptors[native_mol_id]
-            empty_densities = [receptor.get_available_spots() for receptor in receptors]
-            total_empty_density = sum(empty_densities)
-
-            if total_empty_density == 0.0: continue
-
-            available = self.get_concentration(mol_id)
-
-            for empty_density,receptor in zip(empty_densities, receptors):
-                portion = available * (empty_density / total_empty_density)
-                bound = stochastic_bind(portion, empty_density, affinity)
-                receptor.add_concentration(bound)
-                self.remove_concentration(bound)
+        for receptor in self.receptors:
+            total_bound = receptor.stochastic_bind(self)
+            for mol_id,bound in total_bound.iteritems():
+                self.remove_concentration(bound, mol_id)
 
         # Metabolize from remaining pool.
         for mol_id,mol_count in enumerate(self.get_concentration(mol) for mol in xrange(Molecules.size)):
