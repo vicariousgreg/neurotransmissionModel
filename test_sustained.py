@@ -5,7 +5,7 @@ from plot import plot
 from simulation import run
 from synapse import Synapse
 
-def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
+def sustained(rs=[1,5,10, 15], spike_strengths=[1.0],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     for r in rs:
         for s in spike_strengths:
@@ -13,7 +13,7 @@ def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
             axon = syn.create_axon(release_time_factor=20,
                         replenish_rate=0.1,
                         reuptake_rate=0.5,
-                        capacity=0.5,
+                        capacity=1.0,
                         verbose=args.verbose)
             dendrite = syn.create_dendrite(release_rate=0.25,
                         initial_size=1.0,
@@ -35,7 +35,7 @@ def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
                 plot(data, title="Short Term Depression (firing rate, strength)")
 
 def main():
-    sustained(rs=[10, 25, 100],
+    sustained(rs=[1,10, 25, 100, 200],
         print_axon=True,
         print_synaptic_cleft=True,
         print_dendrite=True)

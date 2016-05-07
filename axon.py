@@ -75,14 +75,14 @@ class Axon(Pool):
             difference = expected - already_released
 
             # Determine how many molecules to actually release.
-            mol_count = beta(difference, rate=2)
+            mol_count = beta(difference, rate=1)
             mol_count = min(mol_count, self.get_concentration())
             self.remove_concentration(mol_count)
             if self.destination:
                 self.destination.add_concentration(mol_count, mol_id=self.mol_id)
 
             # Decrement released
-            self.potential_released[i] = self.potential_released[i] + mol_count
+            self.potential_released[i] = expected
 
             # Expiration of activity
             if age > self.release_time_factor and difference < 0.000001:
