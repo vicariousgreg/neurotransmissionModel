@@ -9,7 +9,7 @@ def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
     data = []
     for r in rs:
         syn = Synapse(verbose=args.verbose)
-        dendrite = syn.create_dendrite(release_rate=0, initial_size=1.0, verbose=args.verbose)
+        dendrite = syn.create_dendrite(initial_size=1.0, verbose=args.verbose)
         syn.synaptic_cleft.set_concentration(r)
 
         axon_data,synaptic_cleft_data, dendrite_data = run(syn,
@@ -23,7 +23,7 @@ def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synaptic_cleft=False):
     data = []
     for r in rs:
         syn = Synapse(verbose=args.verbose)
-        dendrite = syn.create_dendrite(release_rate=r, initial_size=1.0, verbose=args.verbose)
+        dendrite = syn.create_dendrite(initial_size=1.0, verbose=args.verbose)
         dendrite.set_concentration(1.0)
 
         axon_data,synaptic_cleft_data, dendrite_data = run(syn,

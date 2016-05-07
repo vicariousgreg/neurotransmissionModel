@@ -30,8 +30,8 @@ Molecules = enum(
 # Molecule: index
 # (Analog, metabolic rate, affinity)
 Analogs = [
-    (Molecules.GLUTAMATE, 1.0, 1.0),
-    (Molecules.GABA,      1.0, 1.0)
+    (Molecules.GLUTAMATE, 1.0, 0.9),
+    (Molecules.GABA,      1.0, 0.9)
 ]
 
 

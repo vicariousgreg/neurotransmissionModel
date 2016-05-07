@@ -7,25 +7,22 @@ from math import exp
 from stochastic import beta
 from membrane import Membrane
 
-from molecule import Molecules
+from molecule import Molecules, Analogs
 
 class Dendrite(Membrane):
     def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
-                    release_rate=1, environment=None, verbose=False):
+                    environment=None, verbose=False):
         """
         Dendrites get neurotransmitters from a synaptic cleft and release them
             back over time.
 
         |mol_id| is the identifier for the neurotransmitter to be bound.
         |initial_size| is the initial size of the receptor pool.
-        |release_rate| controls the release of neurotransmitter back
-            into the synaptic cleft.  Higher values increase the rate of release.
         """
         if initial_size > 1.0: raise ValueError
         Membrane.__init__(self, mol_id, 0.0, environment)
 
         self.size = initial_size
-        self.release_rate = release_rate 
         self.verbose = verbose
         self.destination = None
 
@@ -45,7 +42,7 @@ class Dendrite(Membrane):
             if available == 0.0: continue
 
             # Stochastically sample bound molecules
-            released = beta(available, rate=self.release_rate)
+            released = beta(available, rate=1.0-Analogs[mol_id][2])
 
             if self.verbose: print("Removed %f molecules" % released)
 

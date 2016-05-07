@@ -15,7 +15,7 @@ def sustained(rs=[1,5,10, 15], spike_strengths=[1.0],
                         reuptake_rate=0.5,
                         capacity=1.0,
                         verbose=args.verbose)
-            dendrite = syn.create_dendrite(release_rate=0.25,
+            dendrite = syn.create_dendrite(
                         initial_size=1.0,
                         verbose=args.verbose)
             syn.set_enzyme_concentration(1.0)
