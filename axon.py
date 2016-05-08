@@ -47,8 +47,6 @@ class Axon(TransporterMembrane):
             environment=environment)
 
         # Cell attributes
-        self.capacity = capacity
-        self.size = reuptake_rate
         self.verbose = verbose
 
         # Time factors
