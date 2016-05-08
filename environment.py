@@ -40,7 +40,7 @@ class Environment:
         self.concentrations.append(0.0)
         return identity
 
-    def step(self, time): pass
+    def step(self): pass
 
 class BatchEnvironment:
     def __init__(self, noise=0.5):
@@ -76,7 +76,7 @@ class BatchEnvironment:
         self.prev_concentrations.append(0.0)
         return identity
 
-    def step(self, time):
+    def step(self):
         for i in xrange(len(self.prev_concentrations)):
             self.prev_concentrations[i]=self.next_concentrations[i]
 

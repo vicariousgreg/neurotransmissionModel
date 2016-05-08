@@ -21,11 +21,46 @@ class Synapse:
             self.synaptic_cleft.enzymes[i] = e_c
 
     def step(self, time):
+        """
+        Runs a timestep, which involves the following steps:
+
+        0. Environment cycles
+        1. Axon releases
+        2. Dendrite binds
+        3. Dendrite releases
+        4. Enzymes metabolize
+        5. Axon reuptakes and replenishes
+        """
+        # 0: Cycle environment
+        self.environment.step()
+
+        # 1: Release from axons
+        for axon in self.axons:
+            axon.release(self.synaptic_cleft)
+
+        # 2: Bind to dendrites
+        for dendrite in self.dendrites:
+            self.synaptic_cleft.bind(dendrite)
+
+        # 3: Release from dendrites
+        for dendrite in self.dendrites:
+            dendrite.release(self.synaptic_cleft)
+
+        # 4: Metabolize
+        self.synaptic_cleft.metabolize()
+
+        # 5: Reuptake and replenish
+        for axon in self.axons:
+            self.synaptic_cleft.bind(axon)
+            axon.replenish()
+
+        '''
         self.environment.step(time)
         for axon in self.axons:
-            axon.step(time)
+            axon.release(self.synaptic_cleft)
+            axon.replenish()
         for dendrite in self.dendrites:
-            dendrite.step(time)
+            dendrite.release(self.synaptic_cleft)
 
         # Bind dendrites, then axons
         for dendrite in self.dendrites:
@@ -33,17 +68,16 @@ class Synapse:
         for axon in self.axons:
             self.synaptic_cleft.bind(axon)
         self.synaptic_cleft.metabolize()
+        '''
 
     def create_axon(self, **args):
         args["environment"] = self.environment
         axon = Axon(**args)
         self.axons.append(axon)
-        axon.destination = self.synaptic_cleft
         return axon
 
     def create_dendrite(self, **args):
         args["environment"] = self.environment
         dendrite = Dendrite(**args)
         self.dendrites.append(dendrite)
-        dendrite.destination = self.synaptic_cleft
         return dendrite

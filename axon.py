@@ -6,9 +6,23 @@
 # Release follows strength * (1 - e^(-time_factor * age))
 
 from math import exp
+from sys import maxint
 
 from molecule import Molecules
 from membrane import Membrane
+
+def release_generator(release_multiple, strength):
+    """
+    Creates a generator for neurotransmitter release over time steps.
+    |release_multiple| comes from the Axon (see Axon)
+    |strength| is the strength of the spike
+    """
+    prev = 0.0
+    for x in xrange(1,maxint):
+        curr = strength*(1.0 - exp(release_multiple * -float(x)))
+        diff = curr - prev
+        prev = curr
+        yield diff
 
 class Axon(Membrane):
     def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_rate=1.0,
@@ -42,10 +56,8 @@ class Axon(Membrane):
         self.release_time_factor = release_time_factor 
         self.release_multiple = 5.0 / release_time_factor 
 
-        # Records of activity
-        self.potential_strengths = []
-        self.potential_times = []
-        self.potential_released = []
+        # Spike generators.
+        self.potentials = []
 
     def get_available_spots(self):
         return min(self.capacity-self.get_native_concentration(), self.size)
@@ -54,71 +66,46 @@ class Axon(Membrane):
         """
         Fires an action/graded |potential|.
         """
-        if potential > 1.0: raise ValueError
+        #if potential > 1.0: raise ValueError
+        self.potentials.append(release_generator(self.release_multiple, potential))
 
-        self.potential_strengths.append(potential)
-        self.potential_times.append(time)
-        self.potential_released.append(0.0)
-
-    def step(self, time):
-        """
-        Runs a time step.
-        Molecules are cleared from the synaptic cleft every time step.
-        The amount cleared depends on the concentrations of molecules
-            and their corresponding enzymes.
-        Molecules are also replenished based on the concentration available.
-        """
-        self.replenish()
-        self.release(time)
-
-    def release(self, time):
+    def release(self, destination):
         to_remove = []
 
-        for i in xrange(len(self.potential_times)):
-            strength = self.potential_strengths[i]
-            time_tag = self.potential_times[i]
-            already_released = self.potential_released[i]
-
-            # Calculate the age and determine the expected number of
-            #     released neurotransmitters.
-            age = time - time_tag
-            expected = strength*(1 - exp(self.release_multiple * -float(age)))
-            difference = expected - already_released
+        for i,generator in enumerate(self.potentials):
+            difference = next(generator)
 
             # Determine how many molecules to actually release.
-            mol_count = self.environment.beta(difference, rate=1)
-            mol_count = min(mol_count, self.get_native_concentration())
-            self.remove_concentration(mol_count, self.native_mol_id)
-            if self.destination:
-                self.destination.add_concentration(mol_count, mol_id=self.native_mol_id)
+            released = min(self.get_native_concentration(),
+                self.environment.beta(difference, rate=1))
 
-            # Decrement released
-            self.potential_released[i] = expected
+            # Transfer concentration.
+            self.remove_concentration(released, self.native_mol_id)
+            if destination:
+                destination.add_concentration(released, mol_id=self.native_mol_id)
 
             # Expiration of activity
-            if age > self.release_time_factor and difference < 0.000001:
+            if difference < 0.000001:
                 to_remove.append(i)
 
             if self.verbose:
-                print("Released %f molecules (%d)" % (mol_count, i))
+                print("Released %f molecules (%d)" % (released, i))
 
-        # Remove expired activations
+        # Remove expired potentials
         for i in reversed(to_remove):
-            del self.potential_strengths[i]
-            del self.potential_times[i]
-            del self.potential_released[i]
+            del self.potentials[i]
 
     def replenish(self):
         """
         Replenishes some neurotransmitters.
         """
         if self.get_native_concentration() >=  self.capacity \
-                or self.replenish_rate == 0.0:
-            return
+                or self.replenish_rate == 0.0: return
 
         missing = self.capacity - self.get_native_concentration()
         sample = self.environment.beta(missing, rate=self.replenish_rate)
         self.add_concentration(sample, self.native_mol_id)
+
         if self.verbose:
             print("Regenerated %f" % sample)
             print("Axon: %f" % self.get_native_concentration())

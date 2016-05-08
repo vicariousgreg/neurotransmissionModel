@@ -23,19 +23,11 @@ class Dendrite(Membrane):
 
         self.size = initial_size
         self.verbose = verbose
-        self.destination = None
 
     def get_available_spots(self):
         return self.size - self.get_total_concentration()
 
-    def step(self, time):
-        """
-        Runs a time step.
-        Releases molecules.
-        """
-        self.release()
-
-    def release(self):
+    def release(self, destination):
         for mol_id in self.analogs:
             available = self.get_concentration(mol_id)
             if available == 0.0: continue
@@ -46,5 +38,5 @@ class Dendrite(Membrane):
             if self.verbose: print("Removed %f molecules" % released)
 
             self.remove_concentration(released, mol_id)
-            if self.destination:
-                self.destination.add_concentration(released, mol_id=mol_id)
+            if destination:
+                destination.add_concentration(released, mol_id=mol_id)
