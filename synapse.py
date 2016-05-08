@@ -16,7 +16,7 @@ class Synapse:
         self.axons = []
         self.dendrites = []
 
-    def set_enzyme_concentration(self, e_c, molecules=range(Molecules.size)):
+    def set_enzyme_concentration(self, e_c, molecules=range(len(Molecules))):
         for i in molecules:
             self.synaptic_cleft.enzymes[i] = e_c
 

@@ -1,4 +1,4 @@
-from molecule import Molecules
+from molecule import Molecule_IDs
 
 class PoolCluster:
     def __init__(self, concentrations, environment=None):
@@ -9,23 +9,23 @@ class PoolCluster:
 
         # Uncomment to use a list of pools instead of a dictionary.
         '''
-        self.pool_ids = [Pool(environment=environment) for _ in xrange(Molecules.size)]
+        self.pool_ids = [Pool(environment=environment) for _ in xrange(Molecule_IDs.size)]
         for mol_id,concentration in concentrations.iteritems():
             self.pool_ids[mol_id].set_concentration(concentration)
         '''
 
     def get_total_concentration(self):
-        return sum(self.get_concentration(mol_id) for mol_id in self.analogs)
+        return sum(self.get_concentration(mol_id) for mol_id in self.pool_ids)
 
-    def get_concentration(self, mol_id=Molecules.GLUTAMATE):
+    def get_concentration(self, mol_id=Molecule_IDs.GLUTAMATE):
         return self.environment.get_concentration(self.pool_ids[mol_id])
 
-    def set_concentration(self, new_concentration, mol_id=Molecules.GLUTAMATE):
+    def set_concentration(self, new_concentration, mol_id=Molecule_IDs.GLUTAMATE):
         return self.environment.set_concentration(self.pool_ids[mol_id], new_concentration)
 
-    def add_concentration(self, molecules, mol_id=Molecules.GLUTAMATE):
+    def add_concentration(self, molecules, mol_id=Molecule_IDs.GLUTAMATE):
         return self.environment.add_concentration(self.pool_ids[mol_id], molecules)
 
-    def remove_concentration(self, molecules, mol_id=Molecules.GLUTAMATE):
+    def remove_concentration(self, molecules, mol_id=Molecule_IDs.GLUTAMATE):
         return self.environment.remove_concentration(self.pool_ids[mol_id], molecules)
 

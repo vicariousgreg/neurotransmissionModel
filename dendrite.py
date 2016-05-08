@@ -4,12 +4,11 @@
 #     from the synaptic cleft bind, modifying the membrane potential of the cell.
 
 from math import exp
-from membrane import Membrane
+from molecule import Receptors
+from membrane import ReceptorMembrane
 
-from molecule import Molecules, Analogs
-
-class Dendrite(Membrane):
-    def __init__(self, initial_size=1.0, mol_id=Molecules.GLUTAMATE,
+class Dendrite(ReceptorMembrane):
+    def __init__(self, receptor=Receptors.AMPA, initial_size=1.0,
                     environment=None, verbose=False):
         """
         Dendrites get neurotransmitters from a synaptic cleft and release them
@@ -19,21 +18,16 @@ class Dendrite(Membrane):
         |initial_size| is the initial size of the receptor pool.
         """
         if initial_size > 1.0: raise ValueError
-        Membrane.__init__(self, mol_id, 0.0, environment)
-
-        self.size = initial_size
+        ReceptorMembrane.__init__(self, receptor, initial_size, environment)
         self.verbose = verbose
 
-    def get_available_receptors(self):
-        return self.size - self.get_total_concentration()
-
     def release(self, destination):
-        for mol_id in self.analogs:
+        for mol_id,affinity in self.receptor.affinities.iteritems():
             available = self.get_concentration(mol_id)
             if available == 0.0: continue
 
             # Stochastically sample bound molecules
-            released = self.environment.beta(available, rate=1.0-Analogs[mol_id][2])
+            released = self.environment.beta(available, rate=1.0-affinity)
 
             if self.verbose: print("Removed %f molecules" % released)
 

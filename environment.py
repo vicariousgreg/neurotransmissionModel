@@ -9,13 +9,20 @@
 # Concentrations are retrieved from prev_concentrations
 #     and set to next_concentrations.
 
-import stochastic
+from random import betavariate
+
+def betav(maximum, noise=0.5, rate=1.0):
+    if rate < 0.0 or noise < 0.0: raise ValueError
+    ratio = 1/(0.0001+rate)
+    a = 1.0+(100.0*(1.0-noise))
+    b = ratio * a
+    return maximum*(betavariate(a,b))
 
 class Environment:
     def __init__(self, noise=0.5):
         self.concentrations = []
         def beta(maximum, rate=1.0):
-            return stochastic.beta(maximum, noise=noise, rate=rate)
+            return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
 
     def create_pool(self, baseline_concentration):
@@ -47,7 +54,7 @@ class BatchEnvironment:
         self.prev_concentrations = []
         self.next_concentrations = []
         def beta(maximum, rate=1.0):
-            return stochastic.beta(maximum, noise=noise, rate=rate)
+            return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
 
     def create_pool(self, baseline_concentration):
@@ -79,4 +86,3 @@ class BatchEnvironment:
     def step(self):
         for i in xrange(len(self.prev_concentrations)):
             self.prev_concentrations[i]=self.next_concentrations[i]
-

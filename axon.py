@@ -8,8 +8,8 @@
 from math import exp
 from sys import maxint
 
-from molecule import Molecules
-from membrane import Membrane
+from molecule import Molecules, Transporters
+from membrane import TransporterMembrane
 
 def release_generator(release_multiple, strength):
     """
@@ -24,8 +24,8 @@ def release_generator(release_multiple, strength):
         prev = curr
         yield diff
 
-class Axon(Membrane):
-    def __init__(self, mol_id=Molecules.GLUTAMATE, reuptake_rate=1.0,
+class Axon(TransporterMembrane):
+    def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
                     capacity=1.0, release_time_factor=1,
                     replenish_rate=5, environment=False, verbose=None):
         """
@@ -40,33 +40,28 @@ class Axon(Membrane):
         |replenish_rate| controls the regeneration of neurotransmitter 
             over time.  Higher values increase rate of restoration.
         """
-        # Initialize as a Membrane.
-        Membrane.__init__(self, mol_id,
-            baseline_concentration=capacity,
+        # Initialize as a Transporter Membrane.
+        TransporterMembrane.__init__(self, transporter,
+            size=reuptake_rate,
+            capacity=capacity,
             environment=environment)
 
         # Cell attributes
-        self.mol_id = mol_id
         self.capacity = capacity
         self.size = reuptake_rate
         self.verbose = verbose
 
         # Time factors
         self.replenish_rate = replenish_rate
-        self.release_time_factor = release_time_factor 
         self.release_multiple = 5.0 / release_time_factor 
 
         # Spike generators.
         self.potentials = []
 
-    def get_available_receptors(self):
-        return min(self.capacity-self.get_native_concentration(), self.size)
-
     def fire(self, potential, time):
         """
         Fires an action/graded |potential|.
         """
-        #if potential > 1.0: raise ValueError
         self.potentials.append(release_generator(self.release_multiple, potential))
 
     def release(self, destination):

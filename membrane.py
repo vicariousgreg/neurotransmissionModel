@@ -1,15 +1,14 @@
-from molecule import Molecules, Analogs
+#from molecule import Molecules, Analogs
 from pool_cluster import PoolCluster
 
 class Membrane(PoolCluster):
-    def __init__(self, native_mol_id, baseline_concentration=0.0, environment=None):
-        self.native_mol_id = native_mol_id
-        self.analogs = [molecule for molecule in xrange(Molecules.size)
-                            if Analogs[molecule][0] == native_mol_id]
+    def __init__(self, protein, size, environment=None):
+        self.native_mol_id = protein.native_mol_id
         concentrations = dict([
             (mol_id, 0.0)
-            for mol_id in self.analogs])
-        concentrations[native_mol_id] = baseline_concentration
+            for mol_id in protein.affinities])
+        self.size = size
+        self.affinities = protein.affinities
         PoolCluster.__init__(self, concentrations, environment)
 
     def get_available_receptors(self):
@@ -20,10 +19,9 @@ class Membrane(PoolCluster):
 
     def stochastic_bind(self, source, total_receptors):
         total_bound = dict()
-        for analog in self.analogs:
+        for mol_id, affinity in self.affinities.iteritems():
             fraction = self.get_available_receptors() / total_receptors
-            available_mols = source.get_concentration(analog) * fraction
-            affinity = Analogs[analog][2]
+            available_mols = source.get_concentration(mol_id) * fraction
 
             # Check available molecules
             if available_mols <= 0: continue
@@ -35,6 +33,24 @@ class Membrane(PoolCluster):
             if self.verbose: print("Bound %f" % bound)
 
             # Bind sampled molecules
-            self.add_concentration(bound, analog)
-            total_bound[analog] = bound
+            self.add_concentration(bound, mol_id)
+            total_bound[mol_id] = bound
         return total_bound
+
+class ReceptorMembrane(Membrane):
+    def __init__(self, receptor, size=1.0, environment=None):
+        Membrane.__init__(self, receptor, size, environment)
+        self.receptor = receptor
+
+    def get_available_receptors(self):
+        return self.size - self.get_total_concentration()
+
+class TransporterMembrane(Membrane):
+    def __init__(self, transporter, size=1.0, capacity=1.0, environment=None):
+        Membrane.__init__(self, transporter, size, environment)
+        self.transporter = transporter
+        self.capacity = capacity
+        self.set_concentration(capacity, transporter.native_mol_id)
+
+    def get_available_receptors(self):
+        return min(self.capacity-self.get_native_concentration(), self.size)
