@@ -3,12 +3,12 @@
 # Models the axon of a presynaptic neurons, which pumps and reuptakes
 #     neurotransmitters into and out of the synaptic cleft.
 #
-# Release follows strength * (1 - e^(-time_factor * age))
+# Release follows (strength * (1 - e^(-time_factor * age)))
 
 from math import exp
 from sys import maxint
 
-from molecule import Molecules, Transporters
+from molecule import Transporters
 from membrane import TransporterMembrane
 
 def release_generator(release_multiple, strength):
@@ -28,7 +28,7 @@ def release_generator(release_multiple, strength):
 class Axon(TransporterMembrane):
     def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
                     capacity=1.0, release_time_factor=1,
-                    replenish_rate=5, environment=False, verbose=None):
+                    replenish_rate=5, environment=False, verbose=False):
         """
         Axons keep track of activation and release neurotransmitters over
             time.  Neurotransmitters are regenerated via reuptake and
@@ -57,14 +57,26 @@ class Axon(TransporterMembrane):
         # Spike generators.
         self.voltage_spikes = []
 
-    def fire(self, voltage, time):
+    def fire(self, voltage):
         """
-        Fires an action/graded |potential|.
+        Triggers the release of neurotransmitter over time.
+        The amount to be released is determined by the input |voltage|.
         """
         self.voltage_spikes.append(
             release_generator(self.release_multiple, voltage))
 
     def release(self, destination):
+        """
+        Releases neurotransmitters according to the history of activity.
+
+        Each fire() call creates a generator for neurotransmitter release that
+            follows a (1-e^-x) pattern.  Activations stack on top of one
+            another, and they must thus be iterated over.  Once the amount of
+            neurotransmitter being released from a particular activation drops
+            below a very low threshold, that activation is removed from the
+            history to save computation time.  This limits the total number of
+            activations to be considered during a timestep.
+        """
         to_remove = []
 
         for i,generator in enumerate(self.voltage_spikes):

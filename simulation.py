@@ -25,7 +25,7 @@ def run(synapse, taper=False,
             print(",".join("%-20s" % str(x) for x in output))
 
     def fire(time):
-       try: synapse.axons[0].fire(spike_strength, time)
+       try: synapse.axons[0].fire(spike_strength)
        except IndexError: pass
         
     if frequency == 0: fire(0)
@@ -56,7 +56,7 @@ def main():
     axon_data,synaptic_cleft_data,dendrite_data = run(syn,
         iterations = 100,
         frequency=0,
-        spike_strength=0.1)
+        spike_strength=1.0)
 
     data = []
     print_axon=True
@@ -69,7 +69,7 @@ def main():
     if print_dendrite:
         data.append(("dendrite", dendrite_data))
     if not args.silent:
-        plot(data, title="Short Term Depression (firing rate, strength)")
+        plot(data, title="Simple spike release")
 
 def set_options():
     """

@@ -11,14 +11,14 @@ def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
         for s in spike_strengths:
             syn = Synapse(verbose=args.verbose)
             axon = syn.create_axon(release_time_factor=20,
-                        replenish_rate=0.01,
-                        reuptake_rate=0.01,
+                        replenish_rate=0.001,
+                        reuptake_rate=0.001,
                         capacity=0.5,
                         verbose=args.verbose)
             dendrite = syn.create_dendrite(
                         density=1.0,
                         verbose=args.verbose)
-            syn.set_enzyme_concentration(0.5)
+            syn.set_enzyme_concentration(1.0)
             axon_data,synaptic_cleft_data,dendrite_data = run(syn,
                 iterations = args.iterations,
                 frequency=r,

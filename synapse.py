@@ -2,23 +2,30 @@
 #
 # The synapse contains axons, dendrites, and a synaptic cleft.
 
-from molecule import Molecules
+from molecule import Enzymes
 from axon import Axon
 from dendrite import Dendrite
 from synaptic_cleft import SynapticCleft
 from environment import Environment, BatchEnvironment
 
 class Synapse:
-    def __init__(self, verbose=False):
+    def __init__(self, intial_enzyme_concentration=0.0, verbose=False):
+        """
+        Creates a synapse with an initialized synaptic cleft.
+        An initial enzyme concentration can be specified.
+        """
         self.environment = BatchEnvironment()
         self.synaptic_cleft = SynapticCleft(
-            enzyme_concentration=0.0, environment=self.environment, verbose=verbose)
+            enzyme_concentration=initial_enzyme_concentration,
+            environment=self.environment, verbose=verbose)
         self.axons = []
         self.dendrites = []
 
-    def set_enzyme_concentration(self, e_c, molecules=range(len(Molecules))):
-        for i in molecules:
-            self.synaptic_cleft.enzymes[i] = e_c
+    def set_enzyme_concentration(self, e_c, enzymes=range(len(Enzymes))):
+        """
+        Sets the concentration of the given |enzymes| in the synaptic cleft.
+        """
+        for i in enzymes: self.synaptic_cleft.enzymes[i] = e_c
 
     def step(self, time):
         """
@@ -53,12 +60,18 @@ class Synapse:
             axon.replenish()
 
     def create_axon(self, **args):
+        """
+        Creates an axon and adds it to the synapse.
+        """
         args["environment"] = self.environment
         axon = Axon(**args)
         self.axons.append(axon)
         return axon
 
     def create_dendrite(self, **args):
+        """
+        Creates a dendrite and adds it to the synapse.
+        """
         args["environment"] = self.environment
         dendrite = Dendrite(**args)
         self.dendrites.append(dendrite)

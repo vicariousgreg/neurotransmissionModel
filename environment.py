@@ -5,7 +5,7 @@
 #
 # The batch environment holds concentrations of neurotransmitters for pools.
 # An array is kept for previous and next concentrations to avoid race
-#     race conditions.  When a timestep is run, the buffers flip.
+#     race conditions.  When a timestep is run, the buffers shift.
 # Concentrations are retrieved from prev_concentrations
 #     and set to next_concentrations.
 
@@ -42,11 +42,6 @@ class Environment:
     def remove_concentration(self, pool_id, molecules):
         self.concentrations[pool_id] -= molecules
 
-    def get_id(self):
-        identity = len(self.concentrations)
-        self.concentrations.append(0.0)
-        return identity
-
     def step(self): pass
 
 class BatchEnvironment:
@@ -76,12 +71,6 @@ class BatchEnvironment:
         self.next_concentrations[pool_id] -= molecules
         self.next_concentrations[pool_id] = \
             max(0.0, self.next_concentrations[pool_id])
-
-    def get_id(self):
-        identity = len(self.prev_concentrations)
-        self.next_concentrations.append(0.0)
-        self.prev_concentrations.append(0.0)
-        return identity
 
     def step(self):
         for i in xrange(len(self.prev_concentrations)):

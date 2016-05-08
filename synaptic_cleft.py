@@ -7,7 +7,7 @@
 # Presynpatic neurons pump neurotransmitters into the synaptic cleft.
 #
 # Synaptic neurotransmitters bind stochastically to postsynaptic neuron
-#     receptors.
+#     receptors and presynaptic transporters.
 
 from molecule import Molecules, Enzymes, metabolize
 from pool_cluster import PoolCluster
@@ -29,17 +29,17 @@ class SynapticCleft(PoolCluster):
         """
         Stochastically binds molecules to the given |membranes|.
         Molecule availablity is determined by the relative concentration of
-            receptors on a given membrane compared to the total across all
+            proteins on a given membrane compared to the total across all
             membranes.
         """
-        # Calculate total receptor count.
-        total_receptors = sum(
-            membrane.get_available_receptors() for membrane in membranes)
-        if total_receptors == 0.0: return
+        # Calculate total protein count.
+        total_proteins = sum(
+            membrane.get_available_proteins() for membrane in membranes)
+        if total_proteins == 0.0: return
 
-        # Distribute molecules to available membrane receptors.
+        # Distribute molecules to available membrane proteins.
         for membrane in membranes:
-            total_bound = membrane.stochastic_bind(self, total_receptors)
+            total_bound = membrane.stochastic_bind(self, total_proteins)
             for mol_id,bound in total_bound.iteritems():
                 self.remove_concentration(bound, mol_id)
 

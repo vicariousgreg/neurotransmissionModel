@@ -1,7 +1,17 @@
+# Pool Cluster
+#
+# Models a collection of individual molecule pools.
+
 from molecule import Molecule_IDs
 
 class PoolCluster:
     def __init__(self, concentrations, environment=None):
+        """
+        Creates a cluster of pools according to a |concentration| dictionary
+            of molecule identifiers to initial concentrations.
+        The |environment| contains the actual concentrations so that they can
+            be managed during timesteps externally.
+        """
         self.pool_ids = dict([
             (mol_id, environment.create_pool(concentration))
             for mol_id,concentration in concentrations.iteritems()])
