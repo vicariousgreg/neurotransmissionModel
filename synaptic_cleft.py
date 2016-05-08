@@ -27,10 +27,12 @@ class SynapticCleft(PoolCluster):
         self.verbose = verbose
 
     def bind(self, membranes):
-        # Distribute molecules to available membrane receptors.
+        # Calculate total receptor count.
         total_receptors = sum(
             membrane.get_available_receptors() for membrane in membranes)
+        if total_receptors == 0.0: return
 
+        # Distribute molecules to available membrane receptors.
         for membrane in membranes:
             total_bound = membrane.stochastic_bind(self, total_receptors)
             for mol_id,bound in total_bound.iteritems():
