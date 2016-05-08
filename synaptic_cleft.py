@@ -15,9 +15,8 @@ from pool_cluster import PoolCluster
 class SynapticCleft(PoolCluster):
     def __init__(self, enzyme_concentration=1.0, environment=None, verbose=False):
         """
-        A synaptic cleft contains a list of molecule concentrations by id and
-            a list of enzyme concentrations by id.
-        |enzyme_concentration| is the intial enzyme concentration.
+        A synaptic cleft contains pools of molecules and enzymes.
+        |enzyme_concentration| is the intial concentration of enzymes.
         """
         if enzyme_concentration > 1.0: raise ValueError
         PoolCluster.__init__(self,
@@ -27,6 +26,12 @@ class SynapticCleft(PoolCluster):
         self.verbose = verbose
 
     def bind(self, membranes):
+        """
+        Stochastically binds molecules to the given |membranes|.
+        Molecule availablity is determined by the relative concentration of
+            receptors on a given membrane compared to the total across all
+            membranes.
+        """
         # Calculate total receptor count.
         total_receptors = sum(
             membrane.get_available_receptors() for membrane in membranes)
@@ -39,9 +44,14 @@ class SynapticCleft(PoolCluster):
                 self.remove_concentration(bound, mol_id)
 
     def metabolize(self):
-        # Metabolize from remaining pool.
-        for mol,mol_count in ((mol, self.get_concentration(mol.mol_id)) for mol in Molecules):
+        """
+        Stochastically metabolizes molecules in the pools according to the
+            concentration of appropriate enzymes.
+        """
+        for mol in Molecules:
+            mol_count = self.get_concentration(mol.mol_id)
             if mol_count <= 0.0: continue
+
             mol_id = mol.mol_id
             enz_id = mol.enzyme_id
             rate = mol.metab_rate
@@ -50,5 +60,5 @@ class SynapticCleft(PoolCluster):
             destroyed = metabolize(enzyme_count, mol_count, rate, self.environment)
             self.remove_concentration(destroyed, mol_id)
             if self.verbose:
-                print("Destroyed %f" % destroyed)
-                print("Concentration: %f" % self.get_concentration(mol_id))
+                print("Destroyed %f of %s" % (destroyed, mol.name))
+                print("New concentrations: %f" % self.get_concentration(mol_id))

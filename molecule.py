@@ -22,14 +22,15 @@ Enzymes = enum(
 #################
 
 class Molecule:
-    def __init__(self, mol_id, enzyme_id, metab_rate):
+    def __init__(self, name, mol_id, enzyme_id, metab_rate):
+        self.name = name
         self.mol_id = mol_id
         self.enzyme_id = enzyme_id
         self.metab_rate = metab_rate
 
 Molecules = [
-    Molecule(mol_id=0, enzyme_id=0, metab_rate=1.0),
-    Molecule(mol_id=1, enzyme_id=1, metab_rate=1.0)
+    Molecule("Glutamate", mol_id=0, enzyme_id=0, metab_rate=1.0),
+    Molecule("GABA", mol_id=1, enzyme_id=1, metab_rate=1.0)
 ]
 
 Molecule_IDs = enum(

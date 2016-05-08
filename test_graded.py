@@ -5,7 +5,7 @@ from plot import plot
 from simulation import run
 from synapse import Synapse
 
-def graded(rs=[1,5,10,15], spike_strengths=[0.5],
+def graded(rs=[1,5,10,25], spike_strengths=[0.5],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     for r in rs:
         for s in spike_strengths:

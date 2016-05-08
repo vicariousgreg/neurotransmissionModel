@@ -14,7 +14,7 @@ class Dendrite(ReceptorMembrane):
         Dendrites get neurotransmitters from a synaptic cleft and release them
             back over time.
 
-        |mol_id| is the identifier for the neurotransmitter to be bound.
+        |receptor| is the type of receptor on the dendrite membrane.
         |density| is the initial receptor density of the membrane.
         """
         if density > 1.0: raise ValueError
@@ -22,6 +22,10 @@ class Dendrite(ReceptorMembrane):
         self.verbose = verbose
 
     def release(self, destination):
+        """
+        Stochastically releases neurotransmitters from the receptor proteins.
+        Neurotransmitters are released into the given |destination|.
+        """
         for mol_id,affinity in self.receptor.affinities.iteritems():
             available = self.get_concentration(mol_id)
             if available == 0.0: continue

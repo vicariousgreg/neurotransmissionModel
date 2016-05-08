@@ -30,10 +30,11 @@ class Axon(TransporterMembrane):
                     capacity=1.0, release_time_factor=1,
                     replenish_rate=5, environment=False, verbose=None):
         """
-        Axon keep track of activation and release neurotransmitters over
-            time.
+        Axons keep track of activation and release neurotransmitters over
+            time.  Neurotransmitters are regenerated via reuptake and
+            replenishing.
 
-        |transporter| is the type of transporter on the axon.
+        |transporter| is the type of transporter on the axon membrane.
         |reuptake_rate| is the concentration of reuptake receptors on the
             membrane, and controls the rate of neurotransmitter reuptake.
         |capacity| is the neurotransmitter capacity in the axon vesicles.
@@ -90,7 +91,7 @@ class Axon(TransporterMembrane):
 
     def replenish(self):
         """
-        Replenishes some neurotransmitters.
+        Replenishes neurotransmitters if the axon is not at capacity.
         """
         if self.get_native_concentration() >=  self.capacity \
             or self.replenish_rate == 0.0: return
