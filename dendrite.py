@@ -8,17 +8,17 @@ from molecule import Receptors
 from membrane import ReceptorMembrane
 
 class Dendrite(ReceptorMembrane):
-    def __init__(self, receptor=Receptors.AMPA, initial_size=1.0,
+    def __init__(self, receptor=Receptors.AMPA, density=1.0,
                     environment=None, verbose=False):
         """
         Dendrites get neurotransmitters from a synaptic cleft and release them
             back over time.
 
         |mol_id| is the identifier for the neurotransmitter to be bound.
-        |initial_size| is the initial size of the receptor pool.
+        |density| is the initial receptor density of the membrane.
         """
-        if initial_size > 1.0: raise ValueError
-        ReceptorMembrane.__init__(self, receptor, initial_size, environment)
+        if density > 1.0: raise ValueError
+        ReceptorMembrane.__init__(self, receptor, density, environment)
         self.verbose = verbose
 
     def release(self, destination):
@@ -32,5 +32,4 @@ class Dendrite(ReceptorMembrane):
             if self.verbose: print("Removed %f molecules" % released)
 
             self.remove_concentration(released, mol_id)
-            if destination:
-                destination.add_concentration(released, mol_id=mol_id)
+            destination.add_concentration(released, mol_id=mol_id)

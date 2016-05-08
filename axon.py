@@ -13,8 +13,9 @@ from membrane import TransporterMembrane
 
 def release_generator(release_multiple, strength):
     """
-    Creates a generator for neurotransmitter release over time steps.
-    |release_multiple| comes from the Axon (see Axon)
+    Creates a generator for neurotransmitter spike over time steps.
+    |release_multiple| comes from the Axon, and specifies the time course
+        over which the spike is stretched (see Axon)
     |strength| is the strength of the spike
     """
     prev = 0.0
@@ -32,9 +33,10 @@ class Axon(TransporterMembrane):
         Axon keep track of activation and release neurotransmitters over
             time.
 
-        |mol_id| is the identifier for the neurotransmitter to be released.
-        |reuptake_rate| is the concentration of reuptake receptors.
-        |initial_size| is the maximum concentration of neurotransmitter.
+        |transporter| is the type of transporter on the axon.
+        |reuptake_rate| is the concentration of reuptake receptors on the
+            membrane, and controls the rate of neurotransmitter reuptake.
+        |capacity| is the neurotransmitter capacity in the axon vesicles.
         |release_time_factor| controls the release of neurotransmitter over
             time.  Higher values delay release.
         |replenish_rate| controls the regeneration of neurotransmitter 
@@ -42,11 +44,9 @@ class Axon(TransporterMembrane):
         """
         # Initialize as a Transporter Membrane.
         TransporterMembrane.__init__(self, transporter,
-            size=reuptake_rate,
+            density=reuptake_rate,
             capacity=capacity,
             environment=environment)
-
-        # Cell attributes
         self.verbose = verbose
 
         # Time factors
@@ -54,18 +54,19 @@ class Axon(TransporterMembrane):
         self.release_multiple = 5.0 / release_time_factor 
 
         # Spike generators.
-        self.potentials = []
+        self.voltage_spikes = []
 
-    def fire(self, potential, time):
+    def fire(self, voltage, time):
         """
         Fires an action/graded |potential|.
         """
-        self.potentials.append(release_generator(self.release_multiple, potential))
+        self.voltage_spikes.append(
+            release_generator(self.release_multiple, voltage))
 
     def release(self, destination):
         to_remove = []
 
-        for i,generator in enumerate(self.potentials):
+        for i,generator in enumerate(self.voltage_spikes):
             difference = next(generator)
 
             # Determine how many molecules to actually release.
@@ -74,8 +75,7 @@ class Axon(TransporterMembrane):
 
             # Transfer concentration.
             self.remove_concentration(released, self.native_mol_id)
-            if destination:
-                destination.add_concentration(released, mol_id=self.native_mol_id)
+            destination.add_concentration(released, mol_id=self.native_mol_id)
 
             # Expiration of activity
             if difference < 0.000001:
@@ -84,16 +84,16 @@ class Axon(TransporterMembrane):
             if self.verbose:
                 print("Released %f molecules (%d)" % (released, i))
 
-        # Remove expired potentials
+        # Remove expired voltage spikes
         for i in reversed(to_remove):
-            del self.potentials[i]
+            del self.voltage_spikes[i]
 
     def replenish(self):
         """
         Replenishes some neurotransmitters.
         """
         if self.get_native_concentration() >=  self.capacity \
-                or self.replenish_rate == 0.0: return
+            or self.replenish_rate == 0.0: return
 
         missing = self.capacity - self.get_native_concentration()
         sample = self.environment.beta(missing, rate=self.replenish_rate)

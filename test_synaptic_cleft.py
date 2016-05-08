@@ -23,7 +23,7 @@ def synaptic_cleft_bind(rs=[0.01, 0.1, 0.5, 1.0]):
 
     for r in rs:
         syn = Synapse(verbose=args.verbose)
-        dendrite = syn.create_dendrite(initial_size=r)
+        dendrite = syn.create_dendrite(density=r)
         syn.synaptic_cleft.set_concentration(1.0)
 
         axon_data,synaptic_cleft_data,dendrite_data = run(syn, iterations=50)

@@ -2,12 +2,12 @@
 from pool_cluster import PoolCluster
 
 class Membrane(PoolCluster):
-    def __init__(self, protein, size, environment=None):
+    def __init__(self, protein, density, environment=None):
         self.native_mol_id = protein.native_mol_id
         concentrations = dict([
             (mol_id, 0.0)
             for mol_id in protein.affinities])
-        self.size = size
+        self.density = density
         self.affinities = protein.affinities
         PoolCluster.__init__(self, concentrations, environment)
 
@@ -38,19 +38,19 @@ class Membrane(PoolCluster):
         return total_bound
 
 class ReceptorMembrane(Membrane):
-    def __init__(self, receptor, size=1.0, environment=None):
-        Membrane.__init__(self, receptor, size, environment)
+    def __init__(self, receptor, density=1.0, environment=None):
+        Membrane.__init__(self, receptor, density, environment)
         self.receptor = receptor
 
     def get_available_receptors(self):
-        return self.size - self.get_total_concentration()
+        return self.density - self.get_total_concentration()
 
 class TransporterMembrane(Membrane):
-    def __init__(self, transporter, size=1.0, capacity=1.0, environment=None):
-        Membrane.__init__(self, transporter, size, environment)
+    def __init__(self, transporter, density=1.0, capacity=1.0, environment=None):
+        Membrane.__init__(self, transporter, density, environment)
         self.transporter = transporter
         self.capacity = capacity
         self.set_concentration(capacity, transporter.native_mol_id)
 
     def get_available_receptors(self):
-        return min(self.capacity-self.get_native_concentration(), self.size)
+        return min(self.capacity-self.get_native_concentration(), self.density)
