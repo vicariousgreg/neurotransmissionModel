@@ -9,7 +9,7 @@ from synaptic_cleft import SynapticCleft
 from environment import Environment, BatchEnvironment
 
 class Synapse:
-    def __init__(self, intial_enzyme_concentration=0.0, verbose=False):
+    def __init__(self, initial_enzyme_concentration=0.0, verbose=False):
         """
         Creates a synapse with an initialized synaptic cleft.
         An initial enzyme concentration can be specified.
@@ -21,7 +21,7 @@ class Synapse:
         self.axons = []
         self.dendrites = []
 
-    def set_enzyme_concentration(self, e_c, enzymes=range(len(Enzymes))):
+    def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
         Sets the concentration of the given |enzymes| in the synaptic cleft.
         """

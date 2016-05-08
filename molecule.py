@@ -72,9 +72,9 @@ class Receptor:
         self.affinities[mol_id] = affinity
 
 Receptors = enum(
-    AMPA = Receptor(Molecule_IDs.GLUTAMATE),
-    NMDA = Receptor(Molecule_IDs.GLUTAMATE, voltage_dependent=True),
-    GABA = Receptor(Molecule_IDs.GABA)
+    AMPA = Receptor(Molecule_IDs.GLUTAMATE, 0.9),
+    NMDA = Receptor(Molecule_IDs.GLUTAMATE, 0.9, voltage_dependent=True),
+    GABA = Receptor(Molecule_IDs.GABA, 0.9)
 )
 
 
