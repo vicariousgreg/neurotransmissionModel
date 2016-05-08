@@ -41,7 +41,7 @@ class SynapticCleft(PoolCluster):
             enz_id,rate,affinity = Analogs[mol_id]
             enzyme_count = self.enzymes[enz_id]
 
-            destroyed = metabolize(enzyme_count, mol_count, rate)
+            destroyed = metabolize(enzyme_count, mol_count, rate, self.environment)
             self.remove_concentration(destroyed, mol_id)
             if self.verbose:
                 print("Destroyed %f" % destroyed)

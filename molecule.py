@@ -6,7 +6,6 @@
 
 from enum import enum
 from math import exp
-from stochastic import beta
 
 #################
 """  ENZYMES  """
@@ -51,7 +50,7 @@ def tanh(x):
     try: return (2.0 / (1.0 + exp(-2 * x))) - 1.0
     except OverflowError: return 0.0
 
-def metabolize(enzyme_count, mol_count, rate):
+def metabolize(enzyme_count, mol_count, rate, environment):
     """
     Returns the number of molecules destroyed during metabolism.
     |enzyme_count| is the number of enzymes in the pool.
@@ -59,5 +58,5 @@ def metabolize(enzyme_count, mol_count, rate):
     |rate| is the metabolic rate.
     """
     baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
-    destroyed = beta(baseline, rate=10)
+    destroyed = environment.beta(baseline, rate=10)
     return destroyed

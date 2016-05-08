@@ -1,4 +1,3 @@
-from stochastic import beta
 from molecule import Molecules, Analogs
 from pool_cluster import PoolCluster
 
@@ -29,7 +28,7 @@ class Membrane(PoolCluster):
             if available_mols <= 0: continue
 
             # Sample available molecules
-            sample = beta(available_mols, rate=2)
+            sample = self.environment.beta(available_mols, rate=2)
             bound = sample * self.get_available_spots() * affinity
 
             if self.verbose: print("Bound %f" % bound)

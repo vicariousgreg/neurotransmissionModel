@@ -4,7 +4,6 @@
 #     from the synaptic cleft bind, modifying the membrane potential of the cell.
 
 from math import exp
-from stochastic import beta
 from membrane import Membrane
 
 from molecule import Molecules, Analogs
@@ -42,7 +41,7 @@ class Dendrite(Membrane):
             if available == 0.0: continue
 
             # Stochastically sample bound molecules
-            released = beta(available, rate=1.0-Analogs[mol_id][2])
+            released = self.environment.beta(available, rate=1.0-Analogs[mol_id][2])
 
             if self.verbose: print("Removed %f molecules" % released)
 

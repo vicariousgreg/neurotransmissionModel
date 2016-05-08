@@ -9,9 +9,14 @@
 # Concentrations are retrieved from prev_concentrations
 #     and set to next_concentrations.
 
+import stochastic
+
 class Environment:
-    def __init__(self):
+    def __init__(self, noise=0.5):
         self.concentrations = []
+        def beta(maximum, rate=1.0):
+            return stochastic.beta(maximum, noise=noise, rate=rate)
+        self.beta = beta
 
     def create_pool(self, baseline_concentration):
         pool_id = len(self.concentrations)
@@ -38,9 +43,12 @@ class Environment:
     def step(self, time): pass
 
 class BatchEnvironment:
-    def __init__(self):
+    def __init__(self, noise=0.5):
         self.prev_concentrations = []
         self.next_concentrations = []
+        def beta(maximum, rate=1.0):
+            return stochastic.beta(maximum, noise=noise, rate=rate)
+        self.beta = beta
 
     def create_pool(self, baseline_concentration):
         pool_id = len(self.prev_concentrations)

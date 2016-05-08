@@ -6,7 +6,6 @@
 # Release follows strength * (1 - e^(-time_factor * age))
 
 from math import exp
-from stochastic import beta
 
 from molecule import Molecules
 from membrane import Membrane
@@ -87,7 +86,7 @@ class Axon(Membrane):
             difference = expected - already_released
 
             # Determine how many molecules to actually release.
-            mol_count = beta(difference, rate=1)
+            mol_count = self.environment.beta(difference, rate=1)
             mol_count = min(mol_count, self.get_native_concentration())
             self.remove_concentration(mol_count, self.native_mol_id)
             if self.destination:
@@ -118,7 +117,7 @@ class Axon(Membrane):
             return
 
         missing = self.capacity - self.get_native_concentration()
-        sample = beta(missing, rate=self.replenish_rate)
+        sample = self.environment.beta(missing, rate=self.replenish_rate)
         self.add_concentration(sample, self.native_mol_id)
         if self.verbose:
             print("Regenerated %f" % sample)
