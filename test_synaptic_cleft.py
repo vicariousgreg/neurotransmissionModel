@@ -13,8 +13,11 @@ def synaptic_cleft_metabolize(rs=[0.01, 0.1, 0.5, 1.0]):
         syn.set_enzyme_concentration(r)
         syn.synaptic_cleft.set_concentration(1.0)
 
-        axon_data,synaptic_cleft_data,dendrite_data = run(syn, iterations=100)
-        data.append(("metabolize " + str(r), synaptic_cleft_data))
+        record_components = [(
+            "metabolize %s" % str(r),
+            syn.synaptic_cleft)]
+
+        data += run(syn, record_components=record_components, iterations=100)
     if not args.silent:
         plot(data, title="Metabolize (enzyme concentration)")
 
@@ -26,8 +29,11 @@ def synaptic_cleft_bind(rs=[0.01, 0.1, 0.5, 1.0]):
         dendrite = syn.create_dendrite(density=r)
         syn.synaptic_cleft.set_concentration(1.0)
 
-        axon_data,synaptic_cleft_data,dendrite_data = run(syn, iterations=50)
-        data.append(("bind " + str(r), synaptic_cleft_data))
+        record_components = [(
+            "metabolize %s" % str(r),
+            syn.synaptic_cleft)]
+
+        data += run(syn, record_components=record_components, iterations=50)
     if not args.silent:
         plot(data, title="Bind (dendrite density)")
 

@@ -12,30 +12,59 @@ def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
         dendrite = syn.create_dendrite(density=1.0, verbose=args.verbose)
         syn.synaptic_cleft.set_concentration(r)
 
-        axon_data,synaptic_cleft_data, dendrite_data = run(syn,
+        record_components = [("bind %s" % str(r), dendrite)]
+        if print_synaptic_cleft:
+            record_components.append((
+                "synaptic cleft %s" % str(r),
+                syn.synaptic_cleft))
+
+        data += run(syn, record_components=record_components,
             iterations=100, verbose=args.verbose)
-        data.append(("bind " + str(r), dendrite_data))
-        if print_synaptic_cleft: data.append(("synaptic_cleft " + str(r), synaptic_cleft_data))
     if not args.silent:
         plot(data, title="Bind (synaptic_cleft concentration)")
 
-def dendrite_release(rs=[0.1, 0.5, 1, 5], print_synaptic_cleft=False):
+def dendrite_release(print_synaptic_cleft=False):
+    data = []
+
+    syn = Synapse(verbose=args.verbose)
+    dendrite = syn.create_dendrite(density=1.0, verbose=args.verbose)
+    dendrite.set_concentration(1.0)
+
+    record_components = [("release", dendrite)]
+    if print_synaptic_cleft:
+        record_components.append((
+            "synaptic cleft %s" % str(r),
+            syn.synaptic_cleft))
+
+    data += run(syn, record_components=record_components,
+        iterations=25, verbose=args.verbose)
+    if not args.silent:
+        plot(data, title="Release (release rate)")
+
+def multiple_dendrites(rs=[0.5], print_synaptic_cleft=False):
     data = []
     for r in rs:
         syn = Synapse(verbose=args.verbose)
-        dendrite = syn.create_dendrite(density=1.0, verbose=args.verbose)
-        dendrite.set_concentration(1.0)
+        dendrite1 = syn.create_dendrite(density=1.0, verbose=args.verbose)
+        dendrite2 = syn.create_dendrite(density=0.5, verbose=args.verbose)
+        syn.synaptic_cleft.set_concentration(r)
 
-        axon_data,synaptic_cleft_data, dendrite_data = run(syn,
-            iterations=25, verbose=args.verbose)
-        data.append(("release " + str(r), dendrite_data))
-        if print_synaptic_cleft: data.append(("synaptic_cleft " + str(r), synaptic_cleft_data))
+        record_components = [("bind1 %s" % str(r), dendrite1),
+                             ("bind2 %s" % str(r), dendrite2)]
+        if print_synaptic_cleft:
+            record_components.append((
+                "synaptic cleft %s" % str(r),
+                syn.synaptic_cleft))
+
+        data += run(syn, record_components=record_components,
+            iterations=100, verbose=args.verbose)
     if not args.silent:
-        plot(data, title="Release (release rate)")
+        plot(data, title="Bind (synaptic_cleft concentration)")
 
 def main():
     dendrite_bind(print_synaptic_cleft=False)
     dendrite_release()
+    multiple_dendrites()
 
 def set_options():
     """

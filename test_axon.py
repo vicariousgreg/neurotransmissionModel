@@ -14,13 +14,18 @@ def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synaptic_c
                         replenish_rate=0.0,
                         reuptake_rate=0.0,
                         verbose=args.verbose)
-            axon_data,synaptic_cleft_data,dendrite_data = run(syn,
+
+            record_components = [("release %s  rate: %s" % (str(r), str(s)), axon)]
+            if print_synaptic_cleft:
+                record_components.append((
+                    "synaptic cleft %s  rate: %s" % (str(r), str(s)),
+                    syn.synaptic_cleft))
+
+            data += run(syn,
+                record_components = record_components,
                 iterations = 100,
                 frequency=0,
                 spike_strength=s)
-            data.append(("release %s  rate: %s" % (str(r), str(s)), axon_data))
-            if print_synaptic_cleft:
-                data.append(("synaptic cleft %s  rate: %s" % (str(r), str(s)), synaptic_cleft_data))
     if not args.silent: plot(data, title="Release (release time factor)")
 
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
@@ -35,12 +40,17 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synaptic_cleft_data,dendrite_data = run(syn,
+        record_components = [("reuptake %s" % str(r), axon)]
+        if print_synaptic_cleft:
+            record_components.append((
+                "synaptic cleft %s" % str(r),
+                syn.synaptic_cleft))
+
+        data += run(syn,
+            record_components = record_components,
             iterations = 50,
             frequency=0,
             spike_strength=0.0)
-        data.append(("reuptake " + str(r), axon_data))
-        if print_synaptic_cleft: data.append(("synaptic cleft " + str(r), synaptic_cleft_data))
     if not args.silent: plot(data, title="Reuptake (reuptake rate)")
 
 def axon_replenish(rs=[0.1, 0.5, 1.0]):
@@ -53,11 +63,13 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
                     verbose=args.verbose)
         axon.set_concentration(0.0)
 
-        axon_data,synaptic_cleft_data,dendrite_data = run(syn,
+        record_components = [("replenish %s" % str(r), axon)]
+
+        data += run(syn,
+            record_components = record_components,
             iterations = 50,
             frequency=0,
             spike_strength=0.0)
-        data.append(("replenish " + str(r), axon_data))
     if not args.silent: plot(data, title="Replenish (replenish rate)")
 
 def main():

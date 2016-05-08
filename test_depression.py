@@ -19,17 +19,23 @@ def depression(rs=[1,5,10, 15], spike_strengths=[0.25],
                         density=1.0,
                         verbose=args.verbose)
             syn.set_enzyme_concentration(1.0)
-            axon_data,synaptic_cleft_data,dendrite_data = run(syn,
+
+            record_components = []
+            if print_axon:
+                record_components.append((
+                    "release %s  rate: %s" % (str(r), str(s)), axon))
+            if print_synaptic_cleft:
+                record_components.append((
+                    "synaptic cleft %s  rate: %s" % (str(r), str(s)),
+                    syn.synaptic_cleft))
+            if print_dendrite:
+                record_components.append((
+                    "dendrite %s  rate: %s" % (str(r), str(s)), dendrite))
+
+            data = run(syn, record_components=record_components,
                 iterations = args.iterations,
                 frequency=r,
                 spike_strength=s)
-            data = []
-            if print_axon:
-                data.append(("axon %s  rate: %s" % (str(r), str(s)), axon_data))
-            if print_synaptic_cleft:
-                data.append(("synaptic_cleft %s  rate: %s" % (str(r), str(s)), synaptic_cleft_data))
-            if print_dendrite:
-                data.append(("dendrite %s  rate: %s" % (str(r), str(s)), dendrite_data))
             if not args.silent:
                 plot(data, title="Short Term Depression (firing rate, strength)")
 

@@ -1,28 +1,19 @@
 import argparse
 from plot import plot
 from synapse import Synapse
+from molecule import Molecule_IDs
 
-def run(synapse, taper=False,
+def run(synapse, taper=False, record_components = [], molecule = Molecule_IDs.GLUTAMATE,
         iterations=100, frequency=None, spike_strength=1.0, verbose=False):
-    axon_data = []
-    dendrite_data = []
-    synaptic_cleft_data = []
+    data = [(name,[]) for name,component in record_components]
 
     def record(time):
-        try:
-            axon_data.append(synapse.axons[0].get_concentration())
-        except IndexError: pass
-        synaptic_cleft_data.append(synapse.synaptic_cleft.get_concentration())
-        try:
-            dendrite_data.append(synapse.dendrites[0].get_concentration())
-        except IndexError: pass
+        for i,component in enumerate(record_components):
+            data[i][1].append(component[1].get_concentration(molecule))
 
         if verbose:
-            output = (time,spike_strength,
-                synapse.axons[0].get_concentration() if len(synapse.axons)>0 else "",
-                synapse.synaptic_cleft.get_concentration(),
-                synapse.dendrites[0].get_concentration() if len(synapse.dendrites)>0 else "")
-            print(",".join("%-20s" % str(x) for x in output))
+            print(("%5d, %.4f" % (time, spike_strength)) + \
+                ",".join("%-20s" % str(x[-1]) for x in data))
 
     def fire(time):
        try: synapse.axons[0].fire(spike_strength)
@@ -38,11 +29,14 @@ def run(synapse, taper=False,
             if t == iterations*0.25: spike_strength /= 2
             if t == iterations*0.5: spike_strength /= 2
             if t == iterations*0.75: spike_strength /= 2
-    record(t)
 
-    return axon_data,synaptic_cleft_data,dendrite_data
+    return data
 
 def main():
+    print_axon=True
+    print_synaptic_cleft=True
+    print_dendrite=True
+
     syn = Synapse(verbose=args.verbose)
     axon = syn.create_axon(release_time_factor=20,
                 replenish_rate=0.1,
@@ -53,21 +47,23 @@ def main():
                 density=1.0,
                 verbose=args.verbose)
     syn.set_enzyme_concentration(1.0)
-    axon_data,synaptic_cleft_data,dendrite_data = run(syn,
+
+    record_components = []
+    if print_axon:
+        record_components.append((
+            "axon", axon))
+    if print_synaptic_cleft:
+        record_components.append((
+            "synaptic cleft", syn.synaptic_cleft))
+    if print_dendrite:
+        record_components.append((
+            "dendrite", dendrite))
+
+    data = run(syn, record_components=record_components,
         iterations = 100,
         frequency=0,
         spike_strength=1.0)
 
-    data = []
-    print_axon=True
-    print_synaptic_cleft=True
-    print_dendrite=True
-    if print_axon:
-        data.append(("axon", axon_data))
-    if print_synaptic_cleft:
-        data.append(("synapse", synaptic_cleft_data))
-    if print_dendrite:
-        data.append(("dendrite", dendrite_data))
     if not args.silent:
         plot(data, title="Simple spike release")
 

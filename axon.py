@@ -91,11 +91,9 @@ class Axon(TransporterMembrane):
             destination.add_concentration(released, mol_id=self.native_mol_id)
 
             # Expiration of activity
-            if difference < 0.000001:
-                to_remove.append(i)
+            if difference < 0.000001: to_remove.append(i)
 
-            if self.verbose:
-                print("Released %f molecules (%d)" % (released, i))
+            if self.verbose: print("Released %f molecules (%d)" % (released, i))
 
         # Remove expired voltage spikes
         for i in reversed(to_remove):
