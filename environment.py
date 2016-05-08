@@ -13,6 +13,11 @@ class Environment:
     def __init__(self):
         self.concentrations = []
 
+    def create_pool(self, baseline_concentration):
+        pool_id = len(self.concentrations)
+        self.concentrations.append(baseline_concentration)
+        return pool_id
+
     def get_concentration(self, pool_id):
         return self.concentrations[pool_id]
 
@@ -36,6 +41,12 @@ class BatchEnvironment:
     def __init__(self):
         self.prev_concentrations = []
         self.next_concentrations = []
+
+    def create_pool(self, baseline_concentration):
+        pool_id = len(self.prev_concentrations)
+        self.prev_concentrations.append(baseline_concentration)
+        self.next_concentrations.append(baseline_concentration)
+        return pool_id
 
     def get_concentration(self, pool_id):
         return self.prev_concentrations[pool_id]

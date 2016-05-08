@@ -1,5 +1,4 @@
 from stochastic import beta
-from pool import Pool
 from molecule import Molecules, Analogs
 from pool_cluster import PoolCluster
 
@@ -36,6 +35,6 @@ class Membrane(PoolCluster):
             if self.verbose: print("Bound %f" % bound)
 
             # Bind sampled molecules
-            self.pools[analog].add_concentration(bound)
+            self.add_concentration(bound, analog)
             total_bound[analog] = bound
         return total_bound
