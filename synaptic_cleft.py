@@ -26,13 +26,15 @@ class SynapticCleft(PoolCluster):
         self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
-    def bind(self, receptor):
+    def bind(self, membranes):
         # Distribute molecules to available membrane receptors.
-        total_bound = receptor.stochastic_bind(self)
-        for mol_id,bound in total_bound.iteritems():
-            self.remove_concentration(bound, mol_id)
+        total_receptors = sum(
+            membrane.get_available_receptors() for membrane in membranes)
 
-        self.metabolize()
+        for membrane in membranes:
+            total_bound = membrane.stochastic_bind(self, total_receptors)
+            for mol_id,bound in total_bound.iteritems():
+                self.remove_concentration(bound, mol_id)
 
     def metabolize(self):
         # Metabolize from remaining pool.

@@ -59,7 +59,7 @@ class Axon(Membrane):
         # Spike generators.
         self.potentials = []
 
-    def get_available_spots(self):
+    def get_available_receptors(self):
         return min(self.capacity-self.get_native_concentration(), self.size)
 
     def fire(self, potential, time):

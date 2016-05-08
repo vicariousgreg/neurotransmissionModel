@@ -24,7 +24,7 @@ class Dendrite(Membrane):
         self.size = initial_size
         self.verbose = verbose
 
-    def get_available_spots(self):
+    def get_available_receptors(self):
         return self.size - self.get_total_concentration()
 
     def release(self, destination):

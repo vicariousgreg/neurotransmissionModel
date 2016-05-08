@@ -12,16 +12,17 @@ class Membrane(PoolCluster):
         concentrations[native_mol_id] = baseline_concentration
         PoolCluster.__init__(self, concentrations, environment)
 
-    def get_available_spots(self):
+    def get_available_receptors(self):
         raise ValueError("Cannot simulate abstract class!")
 
     def get_native_concentration(self):
         return self.get_concentration(self.native_mol_id)
 
-    def stochastic_bind(self, source):
+    def stochastic_bind(self, source, total_receptors):
         total_bound = dict()
         for analog in self.analogs:
-            available_mols = source.get_concentration(analog)
+            fraction = self.get_available_receptors() / total_receptors
+            available_mols = source.get_concentration(analog) * fraction
             affinity = Analogs[analog][2]
 
             # Check available molecules
@@ -29,7 +30,7 @@ class Membrane(PoolCluster):
 
             # Sample available molecules
             sample = self.environment.beta(available_mols, rate=2)
-            bound = sample * self.get_available_spots() * affinity
+            bound = sample * self.get_available_receptors() * affinity
 
             if self.verbose: print("Bound %f" % bound)
 

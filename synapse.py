@@ -25,11 +25,11 @@ class Synapse:
         Runs a timestep, which involves the following steps:
 
         0. Environment cycles
-        1. Axon releases
-        2. Dendrite binds
-        3. Dendrite releases
+        1. Axons release
+        2. Dendrites and axons bind
+        3. Dendrites release
         4. Enzymes metabolize
-        5. Axon reuptakes and replenishes
+        5. Axons replenish
         """
         # 0: Cycle environment
         self.environment.step()
@@ -38,9 +38,8 @@ class Synapse:
         for axon in self.axons:
             axon.release(self.synaptic_cleft)
 
-        # 2: Bind to dendrites
-        for dendrite in self.dendrites:
-            self.synaptic_cleft.bind(dendrite)
+        # 2: Bind to dendrites and axons
+        self.synaptic_cleft.bind(self.dendrites + self.axons)
 
         # 3: Release from dendrites
         for dendrite in self.dendrites:
@@ -49,26 +48,9 @@ class Synapse:
         # 4: Metabolize
         self.synaptic_cleft.metabolize()
 
-        # 5: Reuptake and replenish
+        # 5: Replenish
         for axon in self.axons:
-            self.synaptic_cleft.bind(axon)
             axon.replenish()
-
-        '''
-        self.environment.step(time)
-        for axon in self.axons:
-            axon.release(self.synaptic_cleft)
-            axon.replenish()
-        for dendrite in self.dendrites:
-            dendrite.release(self.synaptic_cleft)
-
-        # Bind dendrites, then axons
-        for dendrite in self.dendrites:
-            self.synaptic_cleft.bind(dendrite)
-        for axon in self.axons:
-            self.synaptic_cleft.bind(axon)
-        self.synaptic_cleft.metabolize()
-        '''
 
     def create_axon(self, **args):
         args["environment"] = self.environment
