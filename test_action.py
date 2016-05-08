@@ -4,13 +4,15 @@ from plot import plot
 
 from simulation import run
 from synapse import Synapse
+from neuron import Neuron
 
-def graded(rs=[1,5,10,25], spike_strengths=[0.5],
+def action(rs=[363, 300, 100], spike_strengths=[0.043],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
+    data = []
     for r in rs:
         for s in spike_strengths:
             syn = Synapse(verbose=args.verbose)
-            axon = syn.create_axon(release_time_factor=20,
+            axon = syn.create_axon(release_time_factor=100,
                         replenish_rate=0.1,
                         reuptake_rate=0.5,
                         capacity=1.0,
@@ -18,31 +20,29 @@ def graded(rs=[1,5,10,25], spike_strengths=[0.5],
             dendrite = syn.create_dendrite(
                         density=1.0,
                         verbose=args.verbose)
-            syn.set_enzyme_concentration(1.0)
+            syn.set_enzyme_concentration(0.1)
 
-            record_components = []
-            if print_axon:
-                record_components.append((
-                    "release %s  rate: %s" % (str(r), str(s)), axon))
-            if print_synaptic_cleft:
-                record_components.append((
-                    "synaptic cleft %s  rate: %s" % (str(r), str(s)),
-                    syn.synaptic_cleft))
-            if print_dendrite:
-                record_components.append((
-                    "dendrite %s  rate: %s" % (str(r), str(s)), dendrite))
+            neuron = Neuron()
 
-            data = run(syn, record_components=record_components,
+            record_components = [(
+                "dendrite %s  rate: %s" % (str(r), str(s)), dendrite)]
+
+            dendrite_data = run(syn, record_components=record_components,
                 iterations = args.iterations,
                 frequency=r,
-                increase=True,
+                #increase=True,
+                #sustain=True,
+                sample_rate=1,
                 spike_strength=s)
 
-            if not args.silent:
-                plot(data, title="Graded potentials (firing rate)")
+            for i in dendrite_data[0][1]:
+                neuron.step(i, resolution=100)
+
+            data.append(neuron.get_data(name="freq: %d  strength: %f" % (r,s)))
+    plot(data, title="Graded potentials (firing rate)")
 
 def main():
-    graded(#rs=[10],
+    action(#rs=[10],
         print_axon=True,
         print_synaptic_cleft=True,
         print_dendrite=True)
@@ -57,7 +57,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 1000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 2500, help = 
     """table""")
 
     return parser.parse_args()

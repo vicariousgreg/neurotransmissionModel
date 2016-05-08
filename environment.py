@@ -45,7 +45,7 @@ class Environment:
     def step(self): pass
 
 class BatchEnvironment:
-    def __init__(self, noise=0.5):
+    def __init__(self, noise=0.0):
         self.prev_concentrations = []
         self.next_concentrations = []
         def beta(maximum, rate=1.0):

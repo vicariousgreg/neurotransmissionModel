@@ -3,8 +3,8 @@ from plot import plot
 from synapse import Synapse
 from molecule import Molecule_IDs
 
-def run(synapse, taper=False, record_components = [], molecule = Molecule_IDs.GLUTAMATE,
-        iterations=100, frequency=None, spike_strength=1.0, verbose=False):
+def run(synapse, increase=False, decrease=False, sustain=False, record_components = [], molecule = Molecule_IDs.GLUTAMATE,
+        iterations=100, frequency=None, spike_strength=1.0, sample_rate=1, verbose=False):
     data = [(name,[]) for name,component in record_components]
 
     def record(time):
@@ -19,16 +19,24 @@ def run(synapse, taper=False, record_components = [], molecule = Molecule_IDs.GL
        try: synapse.axons[0].fire(spike_strength)
        except IndexError: pass
         
+    if increase: spike_strength /= 8
     if frequency == 0: fire(0)
+    if sustain:
+        time_changes = [0.1, 0.2, 0.3, 0.4]
+    else:
+        time_changes = [0.25, 0.5, 0.75]
+
     for t in xrange(iterations):
         synapse.step(t)
-        record(t)
+        if t % sample_rate == 0: record(t)
         if frequency and frequency > 0:
             if t % frequency == 0: fire(t)
-        if taper:
-            if t == iterations*0.25: spike_strength /= 2
-            if t == iterations*0.5: spike_strength /= 2
-            if t == iterations*0.75: spike_strength /= 2
+        if decrease:
+            for time_change in time_changes:
+                if t == iterations*_change: spike_strength /= 2
+        elif increase:
+            for time_change in time_changes:
+                if t == iterations*time_change: spike_strength *= 2
 
     return data
 

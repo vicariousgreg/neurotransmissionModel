@@ -31,7 +31,9 @@ class Dendrite(ReceptorMembrane):
             if available == 0.0: continue
 
             # Stochastically sample bound molecules
-            released = self.environment.beta(available, rate=1.0-affinity)
+            #released = self.environment.beta(available, rate=1.0-affinity)
+            released = self.environment.beta(available, rate=5.0)
+            #released = available
 
             if self.verbose: print("Removed %f molecules" % released)
 
