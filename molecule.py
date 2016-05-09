@@ -109,18 +109,6 @@ Transporters = enum(
 """ METABOLISM """
 ##################
 
-def tanh(x):
-    """
-    Calculates tanh(x).
-
-        2
-    ----------   - 1
-    1 + e^(-2x)
-
-    """
-    try: return (2.0 / (1.0 + exp(-2 * x))) - 1.0
-    except OverflowError: return 0.0
-
 def metabolize(enzyme_count, mol_count, metab_rate, environment):
     """
     Returns the number of molecules destroyed during metabolism.
