@@ -6,7 +6,7 @@ from simulation import run
 from synapse import Synapse
 from neuron import Neuron
 
-def action(rs=[363, 300, 100], spike_strengths=[0.043],
+def action(rs=[180, 160, 100], spike_strengths=[0.10],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     data = []
     for r in rs:
@@ -18,9 +18,9 @@ def action(rs=[363, 300, 100], spike_strengths=[0.043],
                         capacity=1.0,
                         verbose=args.verbose)
             dendrite = syn.create_dendrite(
-                        density=1.0,
+                        density=0.05,
                         verbose=args.verbose)
-            syn.set_enzyme_concentration(0.1)
+            syn.set_enzyme_concentration(1.0)
 
             neuron = Neuron()
 
@@ -30,19 +30,18 @@ def action(rs=[363, 300, 100], spike_strengths=[0.043],
             dendrite_data = run(syn, record_components=record_components,
                 iterations = args.iterations,
                 frequency=r,
-                #increase=True,
-                #sustain=True,
                 sample_rate=1,
                 spike_strength=s)
 
             for i in dendrite_data[0][1]:
                 neuron.step(i, resolution=100)
 
-            data.append(neuron.get_data(name="freq: %d  strength: %f" % (r,s)))
-    plot(data, title="Graded potentials (firing rate)")
+            data.append(neuron.get_data(name="time period: %d  strength: %f" % (r,s)))
+    if not args.silent:
+        plot(data, title="Spike train (firing rate)")
 
 def main():
-    action(#rs=[10],
+    action(#rs=[100],
         print_axon=True,
         print_synaptic_cleft=True,
         print_dendrite=True)
@@ -57,7 +56,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 2500, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 10000, help = 
     """table""")
 
     return parser.parse_args()

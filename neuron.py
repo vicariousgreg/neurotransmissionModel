@@ -1,4 +1,8 @@
-from plot import plot
+# Neuron Model
+#
+# Adapted from Hodgkin-Huxley model implementation by G. Bard Ermentrout
+# http://www.math.pitt.edu/~bard/bardware/hh-c.ode
+
 from math import exp
 
 class Neuron:
@@ -28,7 +32,8 @@ class Neuron:
 
     def step(self, ligand_activation, resolution=10):
         time_coefficient = 1.0 / resolution
-        self.m += ligand_activation * self.h
+        self.m += ligand_activation
+
         self.cycle(time_coefficient)
         if self.time % self.sample_rate == 0: self.data.append(min(-0.45, self.v/100)+0.80)
         if self.v > 0.0 and self.firing is False:

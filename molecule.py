@@ -33,8 +33,8 @@ class Molecule:
         self.metab_rate = metab_rate
 
 Molecules = [
-    Molecule("Glutamate", mol_id=0, enzyme_id=0, metab_rate=1.0),
-    Molecule("GABA", mol_id=1, enzyme_id=1, metab_rate=1.0)
+    Molecule("Glutamate", mol_id=0, enzyme_id=0, metab_rate=0.25),
+    Molecule("GABA", mol_id=1, enzyme_id=1, metab_rate=0.25)
 ]
 
 Molecule_IDs = enum(
@@ -72,8 +72,8 @@ class Receptor:
         self.affinities[mol_id] = affinity
 
 Receptors = enum(
-    AMPA = Receptor(Molecule_IDs.GLUTAMATE, 0.9),
-    NMDA = Receptor(Molecule_IDs.GLUTAMATE, 0.9, voltage_dependent=True),
+    AMPA = Receptor(Molecule_IDs.GLUTAMATE, 0.8),
+    NMDA = Receptor(Molecule_IDs.GLUTAMATE, 0.4, voltage_dependent=True),
     GABA = Receptor(Molecule_IDs.GABA, 0.9)
 )
 
@@ -121,14 +121,32 @@ def tanh(x):
     try: return (2.0 / (1.0 + exp(-2 * x))) - 1.0
     except OverflowError: return 0.0
 
-def metabolize(enzyme_count, mol_count, rate, environment):
+def metabolize(enzyme_count, mol_count, metab_rate, environment):
     """
     Returns the number of molecules destroyed during metabolism.
     |enzyme_count| is the number of enzymes in the pool.
     |mol_count| is the number of molecules in the pool.
     |rate| is the metabolic rate.
     The |environment| provides the stochastic method for metablism.
+
+    Enzyme degredation
+    V_0 = V_max * [S] / ( [S] + K_M )
+
+    V_0 is the concentration delta.
+    V_max is the max rate (the enzyme count)
+    S is the molecule concentration
+    K_M is the dissociation constant (1 - metab_rate)
     """
-    baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
-    destroyed = environment.beta(baseline, rate=10)
-    return destroyed
+    # Determine dissociation constant
+    k = 1.0 - metab_rate
+
+    # Scale
+    scale = 100
+    mol_count *= scale
+    k *= scale
+
+    # Calculate delta
+    delta = enzyme_count * mol_count / ( mol_count + k )
+
+    # Re-scale output
+    return delta / scale

@@ -48,7 +48,7 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
 
         data += run(syn,
             record_components = record_components,
-            iterations = 50,
+            iterations = 100,
             frequency=0,
             spike_strength=0.0)
     if not args.silent: plot(data, title="Reuptake (reuptake rate)")

@@ -11,6 +11,7 @@ from sys import maxint
 from molecule import Transporters
 from membrane import TransporterMembrane
 
+
 def release_generator(release_multiple, strength):
     """
     Creates a generator for neurotransmitter spike over time steps.
@@ -43,12 +44,8 @@ class Axon(TransporterMembrane):
         |replenish_rate| controls the regeneration of neurotransmitter 
             over time.  Higher values increase rate of restoration.
         """
-        # Initialize as a Transporter Membrane.
-        TransporterMembrane.__init__(self, transporter,
-            density=reuptake_rate,
-            capacity=capacity,
-            environment=environment)
-        self.verbose = verbose
+        # Initialize as pool cluster
+        TransporterMembrane.__init__(self, transporter, reuptake_rate, capacity, environment)
 
         # Time factors
         self.replenish_rate = replenish_rate
@@ -56,6 +53,8 @@ class Axon(TransporterMembrane):
 
         # Spike generators.
         self.voltage_spikes = []
+
+        self.verbose = verbose
 
     def fire(self, voltage):
         """
@@ -103,13 +102,14 @@ class Axon(TransporterMembrane):
         """
         Replenishes neurotransmitters if the axon is not at capacity.
         """
-        if self.get_native_concentration() >=  self.capacity \
+        native_concentration = self.get_native_concentration()
+        if native_concentration >=  self.capacity \
             or self.replenish_rate == 0.0: return
 
-        missing = self.capacity - self.get_native_concentration()
+        missing = self.capacity - native_concentration
         sample = self.environment.beta(missing, rate=self.replenish_rate)
         self.add_concentration(sample, self.native_mol_id)
 
         if self.verbose:
             print("Regenerated %f" % sample)
-            print("Axon: %f" % self.get_native_concentration())
+            print("Axon: %f" % self.get_concentration(self.native_mol_id))
