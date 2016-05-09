@@ -41,7 +41,7 @@ def action(rs=[170, 160, 100], spike_strengths=[0.10],
         plot(data, title="Spike train (firing rate)")
 
 def main():
-    action(#rs=[10],
+    action(#rs=[100],
         print_axon=True,
         print_synaptic_cleft=True,
         print_dendrite=True)

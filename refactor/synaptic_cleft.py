@@ -42,9 +42,9 @@ class SynapticCleft(PoolCluster):
         """
         # Total concentration of each molecule
         mol_concentrations = dict()
-        # Total density of proteins receptive to each molecule
+        # Map of molecules to total concentrations of receptive proteins
         mol_protein_count = dict()
-        # Total concentration of molecules receptive to each protein
+        # Map of proteins to total concentration of receptive molecules
         protein_mol_count = dict()
 
         # Check available molecules
