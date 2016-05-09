@@ -24,14 +24,21 @@ class SynapticCleft(PoolCluster):
         self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
-    def step(self):
+    def step(self, membranes):
         self.metabolize()
-        self.bind()
+        self.bind(membranes)
 
     def bind(self, membranes):
         """
         Bound/Unbound fraction
         f = [L] / ( [L] + K_d )
+
+        f is the fraction of molecules that are bound to receptors.
+        L is the molecule concentration
+        K_d is the dissociation constant
+
+        The adapted version of this equation takes into account competition
+            between similar receptors and similar molecules.
         """
         # Total concentration of each molecule
         mol_concentrations = dict()
@@ -59,8 +66,6 @@ class SynapticCleft(PoolCluster):
                     mol_protein_count[mol_id] += membrane.get_available_proteins(mol_id) * affinity
                     protein_mol_count[membrane.protein] += mol_concentrations[mol_id] * affinity
 
-        mol_bound = dict([(mol_id, 0.0) for mol_id in mol_concentrations])
-
         # Compute for each protein-molecule pair.
         for membrane in membranes:
             protein = membrane.protein
@@ -74,32 +79,29 @@ class SynapticCleft(PoolCluster):
             for mol_id,affinity in protein.affinities.iteritems():
                 if mol_id not in mol_concentrations: continue
 
-                count = membrane.get_available_proteins(mol_id)
+                protein_count = membrane.get_available_proteins(mol_id)
                 mol_concentration = mol_concentrations[mol_id]
 
                 # Proportion of molecule relative to competitors.
                 mol_fraction = affinity * mol_concentration / competing_molecules
 
                 # Proportion of protein relative to competitors.
-                protein_fraction = affinity * count / mol_protein_count[mol_id]
+                protein_fraction = affinity * protein_count / mol_protein_count[mol_id]
 
                 k = (1 - mol_fraction * protein_fraction)
-                bound = count * (mol_concentration**2) / ( mol_concentration + k )
-                if self.verbose:
-                    print(" P: %f      M: %f" % (count, mol_concentration))
-                    print("fP: %f    fM: %f" % (protein_fraction, mol_fraction))
-                    print("k: %f    bound: %f" % (k, bound))
+                bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
 
-                for membrane in membranes:
-                    if membrane.protein == protein:
-                        membrane.add_concentration(bound, mol_id)
-                        mol_bound[mol_id] += bound
-        for mol_id,bound in mol_bound.iteritems():
-            self.remove_concentration(bound, mol_id)
-            if self.verbose: print(self.get_concentration(mol_id))
-        if self.verbose:
-            print("")
-            #raw_input()
+                if self.verbose:
+                    print("Concentrations:")
+                    print(" P: %f      M: %f" % (protein_count, mol_concentration))
+                    print("Proportions::")
+                    print("fP: %f    fM: %f" % (protein_fraction, mol_fraction))
+                    print("Constant and final bound count:")
+                    print("k: %f    bound: %f" % (k, bound))
+                    print("")
+
+                membrane.add_concentration(bound, mol_id)
+                self.remove_concentration(bound, mol_id)
 
     def metabolize(self):
         """

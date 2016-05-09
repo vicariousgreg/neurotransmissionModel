@@ -9,7 +9,8 @@ from math import exp
 from sys import maxint
 
 from molecule import Transporters
-from pool_cluster import PoolCluster
+from membrane import TransporterMembrane
+
 
 def release_generator(release_multiple, strength):
     """
@@ -25,7 +26,7 @@ def release_generator(release_multiple, strength):
         prev = curr
         yield diff
 
-class Axon(PoolCluster):
+class Axon(TransporterMembrane):
     def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
                     capacity=1.0, release_time_factor=1,
                     replenish_rate=5, environment=False, verbose=False):
@@ -43,16 +44,8 @@ class Axon(PoolCluster):
         |replenish_rate| controls the regeneration of neurotransmitter 
             over time.  Higher values increase rate of restoration.
         """
-        self.protein = transporter
-        self.native_mol_id = transporter.native_mol_id
-        self.density = reuptake_rate
-        self.capacity = capacity
-        self.affinities = transporter.affinities
-
         # Initialize as pool cluster
-        concentrations = dict([(mol_id, 0.0) for mol_id in transporter.reuptake_inhibitors])
-        concentrations[self.native_mol_id] = capacity
-        PoolCluster.__init__(self, concentrations, environment)
+        TransporterMembrane.__init__(self, transporter, reuptake_rate, capacity, environment)
 
         # Time factors
         self.replenish_rate = replenish_rate
@@ -62,12 +55,6 @@ class Axon(PoolCluster):
         self.voltage_spikes = []
 
         self.verbose = verbose
-
-    def get_available_proteins(self, mol_id):
-        if mol_id == self.native_mol_id:
-            return min(self.density, self.capacity - self.get_concentration(self.native_mol_id))
-        else:
-            return self.density
 
     def fire(self, voltage):
         """
@@ -95,7 +82,7 @@ class Axon(PoolCluster):
             difference = next(generator)
 
             # Determine how many molecules to actually release.
-            released = min(self.get_concentration(self.native_mol_id),
+            released = min(self.get_native_concentration(),
                 self.environment.beta(difference, rate=1))
 
             # Transfer concentration.
@@ -115,7 +102,7 @@ class Axon(PoolCluster):
         """
         Replenishes neurotransmitters if the axon is not at capacity.
         """
-        native_concentration = self.get_concentration(self.native_mol_id)
+        native_concentration = self.get_native_concentration()
         if native_concentration >=  self.capacity \
             or self.replenish_rate == 0.0: return
 

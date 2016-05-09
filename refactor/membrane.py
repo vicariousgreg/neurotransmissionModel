@@ -25,6 +25,7 @@ class Membrane(PoolCluster):
         The |environment| is passed through to the PoolCluster.
         Affinities for certain molecules are retreived from the protein.
         """
+        self.protein = protein
         self.native_mol_id = protein.native_mol_id
         concentrations = dict([
             (mol_id, 0.0)
@@ -55,33 +56,6 @@ class Membrane(PoolCluster):
             for mol_id in self.affinities
             if mol_id != self.native_mol_id)
 
-    def stochastic_bind(self, source, total_proteins):
-        """
-        Stochastically binds molecules from a |source| to available proteins
-            on the membrane.
-        |total_proteins| indicates the overall density of proteins, which is
-            necessary for determining what portion of molecules is available to
-            this membrane..
-        """
-        total_bound = dict()
-        for mol_id, affinity in self.affinities.iteritems():
-            fraction = self.get_available_proteins() / total_proteins
-            available_mols = source.get_concentration(mol_id) * fraction
-
-            # Check available molecules
-            if available_mols <= 0: continue
-
-            # Sample available molecules
-            sample = self.environment.beta(available_mols, rate=2)
-            bound = sample * self.get_available_proteins() * affinity
-
-            if self.verbose: print("Bound %f" % bound)
-
-            # Bind sampled molecules
-            self.add_concentration(bound, mol_id)
-            total_bound[mol_id] = bound
-        return total_bound
-
 class ReceptorMembrane(Membrane):
     def __init__(self, receptor, density=1.0, environment=None):
         """
@@ -89,15 +63,14 @@ class ReceptorMembrane(Membrane):
             at the given |density|.
         """
         Membrane.__init__(self, receptor, density, environment)
-        self.receptor = receptor
 
     def get_available_proteins(self, mol_id):
         """
-        The number of available proteins on the receptor membrane is the number
-            of unoccupied receptors, which can be determined by the receptor
-            density and the total concentration of molecules in the membrane.
+        The number of available proteins on the receptor membrane is the
+            receptor density if the receptors are receptive to the given
+            molecule.
         """
-        return self.density - self.get_total_concentration()
+        return self.density if mol_id in self.affinities else 0.0
 
 class TransporterMembrane(Membrane):
     def __init__(self, transporter, density=1.0, capacity=1.0, environment=None):
@@ -108,7 +81,6 @@ class TransporterMembrane(Membrane):
             molecule.
         """
         Membrane.__init__(self, transporter, density, environment)
-        self.transporter = transporter
         self.capacity = capacity
         self.set_concentration(capacity, transporter.native_mol_id)
 
@@ -125,5 +97,7 @@ class TransporterMembrane(Membrane):
         """
         if mol_id == self.native_mol_id:
             return min(self.density, self.capacity - self.get_native_concentration())
-        else:
+        elif mol_id in self.affinities:
             return self.density
+        else:
+            return 0.0

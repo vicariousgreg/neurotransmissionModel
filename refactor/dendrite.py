@@ -4,9 +4,9 @@
 #     from the synaptic cleft bind, modifying the membrane potential of the cell.
 
 from molecule import Receptors
-from pool_cluster import PoolCluster
+from membrane import ReceptorMembrane
 
-class Dendrite(PoolCluster):
+class Dendrite(ReceptorMembrane):
     def __init__(self, receptor=Receptors.AMPA, density=1.0, environment=None, verbose=False):
         """
         Dendrites hold receptors that are activated by neurochemicals in the
@@ -15,15 +15,6 @@ class Dendrite(PoolCluster):
         |receptor| is the type of receptor on the dendrite membrane.
         |density| is the initial receptor density of the membrane.
         """
-        concentrations = dict([(mol_id, 0.0) for mol_id in receptor.affinities])
-        PoolCluster.__init__(self, concentrations, environment)
-
         if density > 1.0: raise ValueError
-        self.protein = receptor
-        self.density = density
-        self.native_mol_id = receptor.native_mol_id
-        self.affinities = receptor.affinities
+        ReceptorMembrane.__init__(self, receptor, density, environment)
         self.verbose = verbose
-
-    def get_available_proteins(self, mol_id):
-        return self.density

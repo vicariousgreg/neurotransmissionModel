@@ -143,7 +143,6 @@ def metabolize(enzyme_count, mol_count, metab_rate, environment):
     # Scale
     scale = 100
     mol_count *= scale
-    enzyme_count *= scale
     k *= scale
 
     # Calculate delta
