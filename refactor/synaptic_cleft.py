@@ -68,19 +68,16 @@ class SynapticCleft(PoolCluster):
 
         # Compute for each protein-molecule pair.
         for membrane in membranes:
-            protein = membrane.protein
-
             # How many molecules are competing for this protein?
-            # Relative concentration:
-            try: competing_molecules = protein_mol_count[protein]
+            try: competing_molecules = protein_mol_count[membrane.protein]
             except KeyError: continue
 
             # For each receptive molecule:
-            for mol_id,affinity in protein.affinities.iteritems():
-                if mol_id not in mol_concentrations: continue
+            for mol_id,affinity in membrane.protein.affinities.iteritems():
+                try: mol_concentration = mol_concentrations[mol_id]
+                except KeyError: continue
 
                 protein_count = membrane.get_available_proteins(mol_id)
-                mol_concentration = mol_concentrations[mol_id]
 
                 # Proportion of molecule relative to competitors.
                 mol_fraction = affinity * mol_concentration / competing_molecules
@@ -88,8 +85,13 @@ class SynapticCleft(PoolCluster):
                 # Proportion of protein relative to competitors.
                 protein_fraction = affinity * protein_count / mol_protein_count[mol_id]
 
-                k = (1 - mol_fraction * protein_fraction)
+                # Calculate bound concentration.
+                k = (1 - (mol_fraction * protein_fraction))
                 bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
+
+                # Transfer molecules.
+                membrane.add_concentration(bound, mol_id)
+                self.remove_concentration(bound, mol_id)
 
                 if self.verbose:
                     print("Concentrations:")
@@ -99,9 +101,6 @@ class SynapticCleft(PoolCluster):
                     print("Constant and final bound count:")
                     print("k: %f    bound: %f" % (k, bound))
                     print("")
-
-                membrane.add_concentration(bound, mol_id)
-                self.remove_concentration(bound, mol_id)
 
     def metabolize(self):
         """

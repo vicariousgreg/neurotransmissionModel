@@ -37,7 +37,8 @@ def action(rs=[170, 160, 100], spike_strengths=[0.10],
                 neuron.step(i, resolution=100)
 
             data.append(neuron.get_data(name="time period: %d  strength: %f" % (r,s)))
-    plot(data, title="Spike train (firing rate)") #, file_name="spikes.jpg")
+    if not args.silent:
+        plot(data, title="Spike train (firing rate)")
 
 def main():
     action(#rs=[10],
