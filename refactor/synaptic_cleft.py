@@ -18,7 +18,6 @@ class SynapticCleft(PoolCluster):
         A synaptic cleft contains pools of molecules and enzymes.
         |enzyme_concentration| is the intial concentration of enzymes.
         """
-        #if enzyme_concentration > 1.0: raise ValueError
         PoolCluster.__init__(self,
             dict([(mol.mol_id, 0.0) for mol in Molecules]),
             environment)
@@ -84,11 +83,9 @@ class SynapticCleft(PoolCluster):
                 # Proportion of protein relative to competitors.
                 protein_fraction = affinity * count / mol_protein_count[mol_id]
 
-                #print(mol_fraction, protein_fraction)
                 k = (1 - mol_fraction * protein_fraction)
                 bound = count * (mol_concentration**2) / ( mol_concentration + k )
-                #if self.verbose:
-                if True:
+                if self.verbose:
                     print(" P: %f      M: %f" % (count, mol_concentration))
                     print("fP: %f    fM: %f" % (protein_fraction, mol_fraction))
                     print("k: %f    bound: %f" % (k, bound))
@@ -99,9 +96,8 @@ class SynapticCleft(PoolCluster):
                         mol_bound[mol_id] += bound
         for mol_id,bound in mol_bound.iteritems():
             self.remove_concentration(bound, mol_id)
-            #if self.verbose: print(self.get_concentration(mol_id))
-            print(self.get_concentration(mol_id))
-        if True or self.verbose:
+            if self.verbose: print(self.get_concentration(mol_id))
+        if self.verbose:
             print("")
             #raw_input()
 

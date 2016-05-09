@@ -121,50 +121,33 @@ def tanh(x):
     try: return (2.0 / (1.0 + exp(-2 * x))) - 1.0
     except OverflowError: return 0.0
 
-def metabolize_beta(enzyme_count, mol_count, rate, environment):
+def metabolize(enzyme_count, mol_count, metab_rate, environment):
     """
     Returns the number of molecules destroyed during metabolism.
     |enzyme_count| is the number of enzymes in the pool.
     |mol_count| is the number of molecules in the pool.
     |rate| is the metabolic rate.
     The |environment| provides the stochastic method for metablism.
+
+    Enzyme degredation
+    V_0 = V_max * [S] / ( [S] + K_M )
+
+    V_0 is the concentration delta.
+    V_max is the max rate (the enzyme count)
+    S is the molecule concentration
+    K_M is the dissociation constant (1 - metab_rate)
     """
-    baseline = (mol_count * enzyme_count) * tanh(rate*(1+(enzyme_count*mol_count)))
-    destroyed = environment.beta(baseline, rate=10)
-    return destroyed
+    # Determine dissociation constant
+    k = 1.0 - metab_rate
 
-"""
-Enzyme degredation
-V_0 = V_max * [S] / ( [S] + K_M )
-
-where V_0 is the initial "velocity" of the reaction
-so that's basically up to your choice of units
-molecules per time
-whatever
-V_max is the maximum velocity of the enzyme
-that you'll have to look up
-[S] is the substrate concentration
-and K_M is the michaelis menten constant
-also a constant you look up for the individual enzyme
-so then you generally assume the reaction is always at V_0
-and that's your d/dt [L]
-and you have a little system of DEs
-"""
-def metabolize(enzyme_count, mol_count, rate, environment):
-    # Determine V_MAX based on enzyme concentration
-    V_max = enzyme_count
-
-    # Determine K_M
-    K_M = 1.0 - rate
-
-    # Scale?
+    # Scale
     scale = 100
     mol_count *= scale
     enzyme_count *= scale
-    K_M *= scale
+    k *= scale
 
-    # Caclulate rate of change
-    V_0 = V_max * mol_count / ( mol_count + K_M )
+    # Calculate delta
+    delta = enzyme_count * mol_count / ( mol_count + k )
 
-    # Multiply by metabolic rate
-    return V_0 / scale
+    # Re-scale output
+    return delta / scale

@@ -27,7 +27,3 @@ class Dendrite(PoolCluster):
 
     def get_available_proteins(self, mol_id):
         return self.density
-
-    def bind(self, concentrations, destination):
-        pass
-

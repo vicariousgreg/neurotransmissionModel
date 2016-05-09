@@ -91,7 +91,7 @@ class ReceptorMembrane(Membrane):
         Membrane.__init__(self, receptor, density, environment)
         self.receptor = receptor
 
-    def get_available_proteins(self):
+    def get_available_proteins(self, mol_id):
         """
         The number of available proteins on the receptor membrane is the number
             of unoccupied receptors, which can be determined by the receptor
@@ -112,7 +112,7 @@ class TransporterMembrane(Membrane):
         self.capacity = capacity
         self.set_concentration(capacity, transporter.native_mol_id)
 
-    def get_available_proteins(self):
+    def get_available_proteins(self, mol_id):
         """
         The number of available proteins on the transporter membrane depends on
             the total density, the amount of molecules left to fill the
@@ -123,5 +123,7 @@ class TransporterMembrane(Membrane):
             inhibitors.  This, the amount available is the minimum of these
             two quantities.
         """
-        return min(self.capacity-self.get_native_concentration(),
-            self.density-self.get_foreign_concentration())
+        if mol_id == self.native_mol_id:
+            return min(self.density, self.capacity - self.get_native_concentration())
+        else:
+            return self.density

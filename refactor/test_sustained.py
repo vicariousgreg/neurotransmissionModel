@@ -14,8 +14,7 @@ def sustained(rs=[1,5,10, 15], spike_strengths=[0.1],
                         replenish_rate=0.1,
                         reuptake_rate=0.5,
                         capacity=1.0,
-                        #verbose=args.verbose)
-                        verbose=True)
+                        verbose=args.verbose)
             dendrite = syn.create_dendrite(
                         density=1.0,
                         verbose=args.verbose)

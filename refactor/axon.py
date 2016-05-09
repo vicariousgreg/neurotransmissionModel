@@ -69,9 +69,6 @@ class Axon(PoolCluster):
         else:
             return self.density
 
-    def bind(self, concentrations, destination):
-        pass
-
     def fire(self, voltage):
         """
         Triggers the release of neurotransmitter over time.
