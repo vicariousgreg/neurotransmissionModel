@@ -13,14 +13,38 @@ from molecule import Transporters
 from membrane import TransporterMembrane
 
 er = erlang(2)
+erlang_generators = dict()
 erlang_cache = dict()
 
-def get_prob(release_multiple, x):
-    return erlang_cache[release_multiple][x]
+def get_prob(release_multiple, time):
+    """
+    Returns a pdf delta value based on the given |release_multiple| and |time|.
+    Uses a lazy cache and erlang generators.  If a release multiple doesn't
+        yet have an erlang generator, one is created.  If a time has not been
+        evaluated for a given release_multiple, the generator is used to fill
+        the cache.  Otherwise, the value should be available in the cache and
+        it is accessed and returned.
+    """
+    try:
+        l = erlang_cache[release_multiple]
+    except KeyError:
+        gen = erlang_generator(release_multiple)
+        erlang_generators[release_multiple] = gen
+        return next(gen)
+    try:
+        return l[time]
+    except:
+        return next(erlang_generators[release_multiple])
 
-def fill_cache(release_multiple):
-    if release_multiple in erlang_cache: return
-
+def erlang_generator(release_multiple):
+    """
+    Creates an erlang generator.
+    Returns successive deltas over the erlang distribution given a
+        |release_multiple| that stretches or contracts the distribution
+        (see Axon).
+    The generator will make itself a place in the cache.  Calling next() will
+        cache the value in addition to returning it.
+    """
     erlang_cache[release_multiple] = []
     prev = 0.0
 
@@ -29,6 +53,7 @@ def fill_cache(release_multiple):
         diff = curr - prev
         prev = curr
         erlang_cache[release_multiple].append(diff)
+        yield diff
         if diff != 0.0 and diff < 0.000001:
             break
 
@@ -39,7 +64,6 @@ def release_generator(release_multiple, strength):
         over which the spike is stretched (see Axon)
     |strength| is the strength of the spike
     """
-    fill_cache(release_multiple)
     for x in xrange(maxint):
         yield strength*get_prob(release_multiple, x)
 
