@@ -75,6 +75,7 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
 def main():
     axon_release([100], print_synaptic_cleft=True)
     axon_release([10], spike_strengths=[0.1, 0.25, 0.5, 0.75, 1.0], print_synaptic_cleft=False)
+    axon_release([10], spike_strengths=[0.5, 0.5, 0.5, 0.5, 0.5], print_synaptic_cleft=False)
     axon_release()
 
     axon_reuptake([0.1], print_synaptic_cleft=True)

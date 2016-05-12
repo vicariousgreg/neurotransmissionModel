@@ -18,7 +18,7 @@ erlang_cache = dict()
 
 def get_prob(release_multiple, time):
     """
-    Returns a pdf delta value based on the given |release_multiple| and |time|.
+    Returns a cdf delta value based on the given |release_multiple| and |time|.
     Uses a lazy cache and erlang generators.  If a release multiple doesn't
         yet have an erlang generator, one is created.  If a time has not been
         evaluated for a given release_multiple, the generator is used to fill
@@ -54,8 +54,6 @@ def erlang_generator(release_multiple):
         prev = curr
         erlang_cache[release_multiple].append(diff)
         yield diff
-        if diff != 0.0 and diff < 0.000001:
-            break
 
 def release_generator(release_multiple, strength):
     """
@@ -66,6 +64,8 @@ def release_generator(release_multiple, strength):
     """
     for x in xrange(maxint):
         yield strength*get_prob(release_multiple, x)
+
+
 
 class Axon(TransporterMembrane):
     def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
@@ -124,8 +124,10 @@ class Axon(TransporterMembrane):
             difference = next(generator)
 
             # Determine how many molecules to actually release.
+            # Use beta distribution to release stochastically
+            # Rate 10 ensures low decrement.
             released = min(self.get_native_concentration(),
-                self.environment.beta(difference, rate=1))
+                self.environment.beta(difference, rate=10))
 
             # Transfer concentration.
             self.remove_concentration(released, self.native_mol_id)
