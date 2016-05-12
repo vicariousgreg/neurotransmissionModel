@@ -5,12 +5,32 @@
 #
 # Release follows (strength * (1 - e^(-time_factor * age)))
 
-from math import exp
 from sys import maxint
+
+from scipy.stats import erlang
 
 from molecule import Transporters
 from membrane import TransporterMembrane
 
+er = erlang(2)
+erlang_cache = dict()
+
+def get_prob(release_multiple, x):
+    return erlang_cache[release_multiple][x]
+
+def fill_cache(release_multiple):
+    if release_multiple in erlang_cache: return
+
+    erlang_cache[release_multiple] = []
+    prev = 0.0
+
+    for x in xrange(maxint):
+        curr = er.cdf(release_multiple*x)
+        diff = curr - prev
+        prev = curr
+        erlang_cache[release_multiple].append(diff)
+        if diff != 0.0 and diff < 0.000001:
+            break
 
 def release_generator(release_multiple, strength):
     """
@@ -19,12 +39,9 @@ def release_generator(release_multiple, strength):
         over which the spike is stretched (see Axon)
     |strength| is the strength of the spike
     """
-    prev = 0.0
-    for x in xrange(1,maxint):
-        curr = strength*(1.0 - exp(release_multiple * -float(x)))
-        diff = curr - prev
-        prev = curr
-        yield diff
+    fill_cache(release_multiple)
+    for x in xrange(maxint):
+        yield strength*get_prob(release_multiple, x)
 
 class Axon(TransporterMembrane):
     def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
@@ -49,7 +66,7 @@ class Axon(TransporterMembrane):
 
         # Time factors
         self.replenish_rate = replenish_rate
-        self.release_multiple = 5.0 / release_time_factor 
+        self.release_multiple = 10.0 / release_time_factor 
 
         # Spike generators.
         self.voltage_spikes = []
@@ -61,6 +78,7 @@ class Axon(TransporterMembrane):
         Triggers the release of neurotransmitter over time.
         The amount to be released is determined by the input |voltage|.
         """
+        if voltage == 0.0: return
         self.voltage_spikes.append(
             release_generator(self.release_multiple, voltage))
 
@@ -90,7 +108,7 @@ class Axon(TransporterMembrane):
             destination.add_concentration(released, mol_id=self.native_mol_id)
 
             # Expiration of activity
-            if difference < 0.000001: to_remove.append(i)
+            if difference != 0.0 and difference < 0.000001: to_remove.append(i)
 
             if self.verbose: print("Released %f molecules (%d)" % (released, i))
 
