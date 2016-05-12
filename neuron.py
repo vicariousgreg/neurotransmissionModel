@@ -30,11 +30,15 @@ class Neuron:
         self.vk=-77.0
         self.vl=-54.4
 
-    def step(self, ligand_activation, resolution=10):
+        # Stabilize
+        for _ in xrange(3000): self.step(0.0, silent=True)
+
+    def step(self, ligand_activation, resolution=10, silent=False):
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
-
         self.cycle(time_coefficient)
+        if silent: return
+
         if self.time % self.sample_rate == 0: self.data.append(min(-0.45, self.v/100)+0.80)
         if self.v > 0.0 and self.firing is False:
             time = len(self.data)
@@ -46,12 +50,12 @@ class Neuron:
         self.time += 1
 
     def cycle(self, time_coefficient):
-        am   = 0.1*(self.v+40)/( 1.0 - exp(-(self.v+40.0)/10.0) )
+        am   = 0.1*(self.v+40.0)/( 1.0 - exp(-(self.v+40.0)/10.0) )
         bm   = 4.0*exp(-(self.v+65.0)/18.0)
         minf = am/(am+bm)
         taum = 1.0/(am+bm)
 
-        ah   = 0.07*exp(-(self.v+65)/20.0)
+        ah   = 0.07*exp(-(self.v+65.0)/20.0)
         bh   = 1.0/( 1.0 + exp(-(self.v+35.0)/10.0) )
         hinf = ah/(ah+bh)
         tauh = 1/(ah+bh)
