@@ -5,72 +5,14 @@
 #
 # Release follows (strength * (1 - e^(-time_factor * age)))
 
-from sys import maxint
-
-from scipy.stats import erlang
+from math import exp
 
 from molecule import Transporters
 from membrane import TransporterMembrane
 
-er = erlang(2)
-erlang_generators = dict()
-erlang_cache = dict()
-
-def get_prob(release_multiple, time):
-    """
-    Returns a cdf delta value based on the given |release_multiple| and |time|.
-    Uses a lazy cache and erlang generators.  If a release multiple doesn't
-        yet have an erlang generator, one is created.  If a time has not been
-        evaluated for a given release_multiple, the generator is used to fill
-        the cache.  Otherwise, the value should be available in the cache and
-        it is accessed and returned.
-    """
-    try:
-        l = erlang_cache[release_multiple]
-    except KeyError:
-        gen = erlang_generator(release_multiple)
-        erlang_generators[release_multiple] = gen
-        return next(gen)
-    try:
-        return l[time]
-    except:
-        return next(erlang_generators[release_multiple])
-
-def erlang_generator(release_multiple):
-    """
-    Creates an erlang generator.
-    Returns successive deltas over the erlang distribution given a
-        |release_multiple| that stretches or contracts the distribution
-        (see Axon).
-    The generator will make itself a place in the cache.  Calling next() will
-        cache the value in addition to returning it.
-    """
-    erlang_cache[release_multiple] = []
-    prev = 0.0
-
-    for x in xrange(maxint):
-        curr = er.cdf(release_multiple*x)
-        diff = curr - prev
-        prev = curr
-        erlang_cache[release_multiple].append(diff)
-        yield diff
-
-def release_generator(release_multiple, strength):
-    """
-    Creates a generator for neurotransmitter spike over time steps.
-    |release_multiple| comes from the Axon, and specifies the time course
-        over which the spike is stretched (see Axon)
-    |strength| is the strength of the spike
-    """
-    for x in xrange(maxint):
-        yield strength*get_prob(release_multiple, x)
-
-
-
 class Axon(TransporterMembrane):
     def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
-                    capacity=1.0, release_time_factor=1,
-                    replenish_rate=5, environment=False, verbose=False):
+                    capacity=1.0, replenish_rate=5, environment=False, verbose=False):
         """
         Axons keep track of activation and release neurotransmitters over
             time.  Neurotransmitters are regenerated via reuptake and
@@ -80,67 +22,71 @@ class Axon(TransporterMembrane):
         |reuptake_rate| is the concentration of reuptake receptors on the
             membrane, and controls the rate of neurotransmitter reuptake.
         |capacity| is the neurotransmitter capacity in the axon vesicles.
-        |release_time_factor| controls the release of neurotransmitter over
-            time.  Higher values delay release.
         |replenish_rate| controls the regeneration of neurotransmitter 
             over time.  Higher values increase rate of restoration.
         """
         # Initialize as pool cluster
         TransporterMembrane.__init__(self, transporter, reuptake_rate, capacity, environment)
 
-        # Time factors
         self.replenish_rate = replenish_rate
-        self.release_multiple = 10.0 / release_time_factor 
-
-        # Spike generators.
-        self.voltage_spikes = []
-
         self.verbose = verbose
+        self.data = []
 
-    def fire(self, voltage):
-        """
-        Triggers the release of neurotransmitter over time.
-        The amount to be released is determined by the input |voltage|.
-        """
-        if voltage == 0.0: return
-        self.voltage_spikes.append(
-            release_generator(self.release_multiple, voltage))
+        self.stabilization_counter = 0
+        self.reset()
+
+
+    def reset(self):
+        self.time = 0
+
+        self.v=-65.0
+        self.n=0.318
+
+        self.cm=1.0
+        self.gcabar=36.0
+        self.gl=0.3
+        self.vca=-65
+        self.vl=-54.4
+
+        # Stabilize
+        for _ in xrange(3000): self.step(silent=True)
+        self.stable_voltage = self.v
+
+    def step(self, voltage=None, resolution=10, silent=False):
+        time_coefficient = 1.0 / resolution
+
+        if voltage: self.v = voltage
+        self.cycle(time_coefficient)
+
+        if silent: return
+        self.data.append((self.ica/2000))
+        self.time += 1
+
+    def cycle(self, time_coefficient):
+        an   = 0.01*(self.v + 55.0)/(1.0 - exp(-(self.v + 55.0)/10.0))
+        bn   = 0.125*exp(-(self.v + 65.0)/80.0)
+        ninf = an/(an+bn)
+        taun = 1.0/(an+bn)
+
+        self.ica  = self.gcabar * (self.n**4) * (self.v-self.vca)
+        il  = self.gl * (self.v-self.vl)
+
+        self.v +=  time_coefficient*(-self.ica - il ) / self.cm
+        self.n +=  time_coefficient*(ninf - self.n)/taun
 
     def release(self, destination):
-        """
-        Releases neurotransmitters according to the history of activity.
+        # Determine how many molecules to actually release.
+        # Use beta distribution to release stochastically
+        # Rate 10 ensures low decrement.
+        difference = (self.v - self.stable_voltage) / 500
+        released = max(0, min(self.get_native_concentration(),
+            self.environment.beta(difference, rate=10)))
 
-        Each fire() call creates a generator for neurotransmitter release that
-            follows a (1-e^-x) pattern.  Activations stack on top of one
-            another, and they must thus be iterated over.  Once the amount of
-            neurotransmitter being released from a particular activation drops
-            below a very low threshold, that activation is removed from the
-            history to save computation time.  This limits the total number of
-            activations to be considered during a timestep.
-        """
-        to_remove = []
+        # Transfer concentration.
+        self.remove_concentration(released, self.native_mol_id)
+        destination.add_concentration(released, mol_id=self.native_mol_id)
 
-        for i,generator in enumerate(self.voltage_spikes):
-            difference = next(generator)
-
-            # Determine how many molecules to actually release.
-            # Use beta distribution to release stochastically
-            # Rate 10 ensures low decrement.
-            released = min(self.get_native_concentration(),
-                self.environment.beta(difference, rate=10))
-
-            # Transfer concentration.
-            self.remove_concentration(released, self.native_mol_id)
-            destination.add_concentration(released, mol_id=self.native_mol_id)
-
-            # Expiration of activity
-            if difference != 0.0 and difference < 0.000001: to_remove.append(i)
-
-            if self.verbose: print("Released %f molecules (%d)" % (released, i))
-
-        # Remove expired voltage spikes
-        for i in reversed(to_remove):
-            del self.voltage_spikes[i]
+        if self.verbose: print("Released %f molecules (%d)" % (released, i))
 
     def replenish(self):
         """
@@ -157,3 +103,6 @@ class Axon(TransporterMembrane):
         if self.verbose:
             print("Regenerated %f" % sample)
             print("Axon: %f" % self.get_concentration(self.native_mol_id))
+
+    def get_data(self, name = "axon conductance"):
+        return (name, self.data)

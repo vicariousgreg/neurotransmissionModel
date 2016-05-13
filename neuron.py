@@ -6,10 +6,10 @@
 from math import exp
 
 class Neuron:
-    def __init__(self, base_current=0.0, sample_rate=1):
+    def __init__(self, base_current=0.0):
         self.data = []
         self.iapp = base_current
-        self.sample_rate=sample_rate
+        self.stabilization_counter=0
         self.reset()
 
     def reset(self):
@@ -32,14 +32,17 @@ class Neuron:
 
         # Stabilize
         for _ in xrange(3000): self.step(0.0, silent=True)
+        self.stable_voltage = self.v
 
-    def step(self, ligand_activation, resolution=10, silent=False):
+    def step(self, ligand_activation, resolution=100, silent=False):
+        if ligand_activation == 0 and self.iapp == 0.0 \
+            and self.stabilization_counter > 1: return
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
         self.cycle(time_coefficient)
         if silent: return
 
-        if self.time % self.sample_rate == 0: self.data.append(min(-0.45, self.v/100)+0.80)
+        self.data.append(min(-0.45, self.v/100)+0.65)
         if self.v > 0.0 and self.firing is False:
             time = len(self.data)
             print(time - self.last_spike)
@@ -48,6 +51,12 @@ class Neuron:
         elif self.firing and self.v < 0.0:
             self.firing = False
         self.time += 1
+
+        if self.v == self.stable_voltage:
+            self.stabilization_counter += 1
+        else:
+            self.stabilization_counter = 0
+
 
     def cycle(self, time_coefficient):
         am   = 0.1*(self.v+40.0)/( 1.0 - exp(-(self.v+40.0)/10.0) )

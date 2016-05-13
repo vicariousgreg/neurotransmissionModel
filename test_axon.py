@@ -4,28 +4,25 @@ from plot import plot
 
 from simulation import run
 from synapse import Synapse
+from neuron import Neuron
 
-def axon_release(rs=[1,5,10, 100, 1000], spike_strengths=[1.0], print_synaptic_cleft=False):
+def axon_release(rs=[1,5,10, 100, 1000], print_synaptic_cleft=False):
     data = []
-    for r in rs:
-        for s in spike_strengths:
-            syn = Synapse(verbose=args.verbose)
-            axon = syn.create_axon(release_time_factor=r,
-                        replenish_rate=0.0,
-                        reuptake_rate=0.0,
-                        verbose=args.verbose)
+    syn = Synapse(verbose=args.verbose)
+    axon = syn.create_axon(
+                replenish_rate=0.0,
+                reuptake_rate=0.0,
+                verbose=args.verbose)
 
-            record_components = [("release %s  rate: %s" % (str(r), str(s)), axon)]
-            if print_synaptic_cleft:
-                record_components.append((
-                    "synaptic cleft %s  rate: %s" % (str(r), str(s)),
-                    syn.synaptic_cleft))
+    record_components = [("release %s" % str(r), axon)]
+    if print_synaptic_cleft:
+        record_components.append((
+            "synaptic cleft %s" % str(r),
+            syn.synaptic_cleft))
 
-            data += run(syn,
-                record_components = record_components,
-                iterations = 100,
-                frequency=0,
-                spike_strength=s)
+    data += run(syn,
+        record_components = record_components,
+        iterations = 100)
     if not args.silent: plot(data, title="Release (release time factor)")
 
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
@@ -34,7 +31,7 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
         syn = Synapse(verbose=args.verbose)
         syn.synaptic_cleft.add_concentration(0.5)
 
-        axon = syn.create_axon(release_time_factor=1,
+        axon = syn.create_axon(
                     replenish_rate=0.0,
                     reuptake_rate=r,
                     verbose=args.verbose)
@@ -48,16 +45,14 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
 
         data += run(syn,
             record_components = record_components,
-            iterations = 100,
-            frequency=0,
-            spike_strength=0.0)
+            iterations = 100)
     if not args.silent: plot(data, title="Reuptake (reuptake rate)")
 
 def axon_replenish(rs=[0.1, 0.5, 1.0]):
     data = []
     for r in rs:
         syn = Synapse(verbose=args.verbose)
-        axon = syn.create_axon(release_time_factor=1,
+        axon = syn.create_axon(
                     replenish_rate=r,
                     reuptake_rate=0.0,
                     verbose=args.verbose)
@@ -67,17 +62,11 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
 
         data += run(syn,
             record_components = record_components,
-            iterations = 50,
-            frequency=0,
-            spike_strength=0.0)
+            iterations = 50)
     if not args.silent: plot(data, title="Replenish (replenish rate)")
 
-def main():
-    axon_release([100], print_synaptic_cleft=True)
-    axon_release([10], spike_strengths=[0.1, 0.25, 0.5, 0.75, 1.0], print_synaptic_cleft=False)
-    axon_release([10], spike_strengths=[0.5, 0.5, 0.5, 0.5, 0.5], print_synaptic_cleft=False)
-    axon_release()
 
+def main():
     axon_reuptake([0.1], print_synaptic_cleft=True)
     axon_reuptake()
 

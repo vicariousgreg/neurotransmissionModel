@@ -3,8 +3,8 @@ from plot import plot
 from synapse import Synapse
 from molecule import Molecule_IDs
 
-def run(synapse, increase=False, decrease=False, sustain=False, record_components = [], molecule = Molecule_IDs.GLUTAMATE,
-        iterations=100, frequency=None, spike_strength=1.0, sample_rate=1, verbose=False):
+def run(synapse, record_components = [], molecule = Molecule_IDs.GLUTAMATE,
+        iterations=100, sample_rate=1, verbose=False):
     data = [(name,[]) for name,component in record_components]
 
     def record(time):
@@ -12,31 +12,11 @@ def run(synapse, increase=False, decrease=False, sustain=False, record_component
             data[i][1].append(component[1].get_concentration(molecule))
 
         if verbose:
-            print(("%5d, %.4f" % (time, spike_strength)) + \
-                ",".join("%-20s" % str(x[-1]) for x in data))
-
-    def fire(time):
-       try: synapse.axons[0].fire(spike_strength)
-       except IndexError: pass
-        
-    if increase: spike_strength /= 8
-    if frequency == 0: fire(0)
-    if sustain:
-        time_changes = [0.1, 0.2, 0.3, 0.4]
-    else:
-        time_changes = [0.25, 0.5, 0.75]
+                ",".join("%-20s" % str(x[-1]) for x in data)
 
     for t in xrange(iterations):
         synapse.step(t)
         if t % sample_rate == 0: record(t)
-        if frequency and frequency > 0:
-            if t % frequency == 0: fire(t)
-        if decrease:
-            for time_change in time_changes:
-                if t == iterations*_change: spike_strength /= 2
-        elif increase:
-            for time_change in time_changes:
-                if t == iterations*time_change: spike_strength *= 2
 
     return data
 
@@ -46,7 +26,7 @@ def main():
     print_dendrite=True
 
     syn = Synapse(verbose=args.verbose)
-    axon = syn.create_axon(release_time_factor=20,
+    axon = syn.create_axon(
                 replenish_rate=0.1,
                 reuptake_rate=0.5,
                 capacity=0.5,
@@ -68,9 +48,7 @@ def main():
             "dendrite", dendrite))
 
     data = run(syn, record_components=record_components,
-        iterations = 100,
-        frequency=0,
-        spike_strength=1.0)
+        iterations = 100)
 
     if not args.silent:
         plot(data, title="Simple spike release")
