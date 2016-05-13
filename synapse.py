@@ -68,24 +68,22 @@ class Synapse:
         """
         # 1: Release from Dendrites
         for dendrite in self.dendrites:
-            for mol_id in dendrite.affinities:
-                released = dendrite.get_concentration(mol_id)
-                dendrite.set_concentration(0.0, mol_id)
-                self.synaptic_cleft.add_concentration(released,mol_id)
+            for mol_id,concentration in dendrite.unbind():
+                self.synaptic_cleft.add_concentration(concentration,mol_id)
 
         # Release reuptake inhibitors from axons
         for axon in self.axons:
-            for mol_id in axon.protein.reuptake_inhibitors:
-                released = axon.get_concentration(mol_id)
-                axon.set_concentration(0.0, mol_id)
-                self.synaptic_cleft.add_concentration(released,mol_id)
+            for mol_id,concentration in axon.unbind():
+                self.synaptic_cleft.add_concentration(concentration,mol_id)
 
         # 2: Cycle environment
         self.environment.step()
 
         # 3: Release from axons
         for axon in self.axons:
-            axon.release(self.synaptic_cleft)
+            released = axon.release()
+            self.synaptic_cleft.add_concentration(
+                released, mol_id=axon.native_mol_id)
 
         # 4: Metabolize
         self.synaptic_cleft.metabolize()

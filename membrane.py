@@ -56,6 +56,14 @@ class Membrane(PoolCluster):
             for mol_id in self.affinities
             if mol_id != self.native_mol_id)
 
+    def unbind(self):
+        """
+        Unbinds any molecules bound to the membrane.
+        Returns a list of (mol_id, concentration) tuples.
+        """
+        raise ValueError("Cannot simulate abstract class!")
+
+
 class ReceptorMembrane(Membrane):
     def __init__(self, receptor, density=1.0, environment=None):
         """
@@ -71,6 +79,17 @@ class ReceptorMembrane(Membrane):
             molecule.
         """
         return self.density if mol_id in self.affinities else 0.0
+
+    def unbind(self):
+        """
+        Receptor membranes unbind all molecules.
+        """
+        unbound = []
+        for mol_id in self.affinities:
+            released = self.get_concentration(mol_id)
+            self.set_concentration(0.0, mol_id)
+            unbound.append((mol_id, released))
+        return unbound
 
 class TransporterMembrane(Membrane):
     def __init__(self, transporter, density=1.0, capacity=1.0, environment=None):
@@ -101,3 +120,14 @@ class TransporterMembrane(Membrane):
             return self.density
         else:
             return 0.0
+
+    def unbind(self):
+        """
+        Transporter membranes unbind only reuptake inhibitors.
+        """
+        unbound = []
+        for mol_id in self.protein.reuptake_inhibitors:
+            released = self.get_concentration(mol_id)
+            self.set_concentration(0.0, mol_id)
+            unbound.append((mol_id, released))
+        return unbound

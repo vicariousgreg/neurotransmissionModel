@@ -2,8 +2,6 @@
 #
 # Models the axon of a presynaptic neurons, which pumps and reuptakes
 #     neurotransmitters into and out of the synaptic cleft.
-#
-# Release follows (strength * (1 - e^(-time_factor * age)))
 
 from math import exp
 
@@ -74,7 +72,7 @@ class Axon(TransporterMembrane):
         self.v +=  time_coefficient*(-self.ica - il ) / self.cm
         self.n +=  time_coefficient*(ninf - self.n)/taun
 
-    def release(self, destination):
+    def release(self):
         # Determine how many molecules to actually release.
         # Use beta distribution to release stochastically
         # Rate 10 ensures low decrement.
@@ -82,11 +80,11 @@ class Axon(TransporterMembrane):
         released = max(0, min(self.get_native_concentration(),
             self.environment.beta(difference, rate=10)))
 
-        # Transfer concentration.
+        # Remove concentration.
         self.remove_concentration(released, self.native_mol_id)
-        destination.add_concentration(released, mol_id=self.native_mol_id)
-
         if self.verbose: print("Released %f molecules (%d)" % (released, i))
+
+        return released
 
     def replenish(self):
         """
