@@ -4,7 +4,7 @@ from plot import plot
 
 from simulation import run
 from synapse import Synapse
-from neuron import Neuron
+from soma import Soma
 
 def pulse(strengths = [-2, -1, 5, 25]):
     data = []
@@ -26,18 +26,18 @@ def pulse(strengths = [-2, -1, 5, 25]):
     data.append(("current", current_data))
 
     for strength in strengths:
-        neuron = Neuron()
+        soma = Soma()
 
         for i in xrange(5000):
-            neuron.step(0.0, resolution=100)
+            soma.step(0.0, resolution=100)
         for i in xrange(30000):
             if i % frequency == 0:
-                neuron.iapp = strength
+                soma.iapp = strength
             elif i % frequency == period:
-                neuron.iapp = 0.0
-            neuron.step(0.0, resolution=100)
+                soma.iapp = 0.0
+            soma.step(0.0, resolution=100)
 
-        data.append(neuron.get_data("Pulse %f" % strength))
+        data.append(soma.get_data("Pulse %f" % strength))
     if not args.silent:
         plot(data, title="Pulse")
 

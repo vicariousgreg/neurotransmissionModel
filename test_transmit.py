@@ -4,14 +4,14 @@ from plot import plot
 
 from simulation import run
 from synapse import Synapse
-from neuron import Neuron
+from soma import Soma
 
 def transmit(rs=[180, 160, 100], spike_strengths=[0.10],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     data = []
     for r in rs:
         for s in spike_strengths:
-            pre_neuron = Neuron()
+            pre_soma = Soma()
             synapse = Synapse(verbose=args.verbose)
             axon = synapse.create_axon(
                         replenish_rate=0.1,
@@ -22,7 +22,7 @@ def transmit(rs=[180, 160, 100], spike_strengths=[0.10],
                         density=0.05,
                         verbose=args.verbose)
             synapse.set_enzyme_concentration(1.0)
-            post_neuron = Neuron()
+            post_soma = Soma()
 
             dendrite_data = []
             cleft_data = []
@@ -31,23 +31,23 @@ def transmit(rs=[180, 160, 100], spike_strengths=[0.10],
             activation = 0.25
             for t in xrange(10000):
                 if t % rate == 0:
-                    pre_neuron.step(activation, resolution=100)
+                    pre_soma.step(activation, resolution=100)
                     if activation > 0.0: activation -= 0.01
                 else:
-                    pre_neuron.step(0.0, resolution=100)
+                    pre_soma.step(0.0, resolution=100)
 
-                if pre_neuron.v > -55.0:
-                    axon.step(voltage = pre_neuron.v, resolution=100)
+                if pre_soma.v > -55.0:
+                    axon.step(voltage = pre_soma.v, resolution=100)
                 else:
                     axon.step(resolution=100)
 
                 synapse.step(t)
-                post_neuron.step(0.05*dendrite.get_concentration(), resolution=100)
+                post_soma.step(0.05*dendrite.get_concentration(), resolution=100)
                 dendrite_data.append(dendrite.get_concentration())
                 cleft_data.append(synapse.synaptic_cleft.get_concentration())
 
-            data.append(pre_neuron.get_data(name="pre time period: %d  strength: %f" % (r,s)))
-            data.append(post_neuron.get_data(name="post time period: %d  strength: %f" % (r,s)))
+            data.append(pre_soma.get_data(name="pre time period: %d  strength: %f" % (r,s)))
+            data.append(post_soma.get_data(name="post time period: %d  strength: %f" % (r,s)))
             #data.append(axon.get_data())
             #data.append(("dendrite", dendrite_data))
             #data.append(("synaptic cleft", cleft_data))

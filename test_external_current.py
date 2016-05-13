@@ -4,21 +4,21 @@ from plot import plot
 
 from simulation import run
 from synapse import Synapse
-from neuron import Neuron
+from soma import Soma
 
 def external_current(rs=[-2, -1, 0, 1, 5, 10]):
     data = []
     for r in rs:
-        neuron = Neuron()
+        soma = Soma()
 
         for i in xrange(1000):
-            neuron.step(0.0, resolution=100)
+            soma.step(0.0, resolution=100)
 
-        neuron.iapp = r
+        soma.iapp = r
         for i in xrange(10000):
-            neuron.step(0.0, resolution=100)
+            soma.step(0.0, resolution=100)
 
-        data.append(neuron.get_data(name="current: %f" % r))
+        data.append(soma.get_data(name="current: %f" % r))
     if not args.silent:
         plot(data, title="External current")
 

@@ -4,7 +4,6 @@ from plot import plot
 
 from simulation import run
 from synapse import Synapse
-from neuron import Neuron
 
 def axon_release(rs=[1,5,10, 100, 1000], print_synaptic_cleft=False):
     data = []

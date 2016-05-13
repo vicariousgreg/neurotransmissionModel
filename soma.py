@@ -1,11 +1,11 @@
-# Neuron Model
+# Soma Model
 #
 # Adapted from Hodgkin-Huxley model implementation by G. Bard Ermentrout
 # http://www.math.pitt.edu/~bard/bardware/hh-c.ode
 
 from math import exp
 
-class Neuron:
+class Soma:
     def __init__(self, base_current=0.0):
         self.data = []
         self.iapp = base_current
@@ -83,5 +83,5 @@ class Neuron:
         self.n +=  time_coefficient*(ninf - self.n)/taun
         self.m +=  time_coefficient*(minf - self.m)/taum
 
-    def get_data(self, name = "neuron voltage"):
+    def get_data(self, name = "soma voltage"):
         return (name, self.data)
