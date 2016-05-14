@@ -105,7 +105,7 @@ class Axon(TransporterMembrane):
 
         # Remove concentration.
         self.remove_concentration(released, self.native_mol_id)
-        if self.verbose: print("Released %f molecules (%d)" % (released, i))
+        if self.verbose: print("Released %f molecules" % released)
 
         return released
 

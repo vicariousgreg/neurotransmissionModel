@@ -2,7 +2,7 @@ import argparse
 
 from plot import plot
 
-from simulation import run
+from simulation import simulate_synapse
 from synapse import Synapse
 
 def synaptic_cleft_metabolize(rs=[0.01, 0.1, 0.5, 1.0, 2.0]):
@@ -17,7 +17,7 @@ def synaptic_cleft_metabolize(rs=[0.01, 0.1, 0.5, 1.0, 2.0]):
             "metabolize %s" % str(r),
             syn.synaptic_cleft)]
 
-        data += run(syn, record_components=record_components, iterations=1000)
+        data += simulate_synapse(syn, record_components=record_components, iterations=1000)
     if not args.silent:
         plot(data, title="Metabolize (enzyme concentration)") #, file_name="metabolize.jpg")
 
@@ -33,7 +33,7 @@ def synaptic_cleft_bind(rs=[0.01, 0.1, 0.5, 1.0]):
             "metabolize %s" % str(r),
             syn.synaptic_cleft)]
 
-        data += run(syn, record_components=record_components, iterations=50)
+        data += simulate_synapse(syn, record_components=record_components, iterations=50)
     if not args.silent:
         plot(data, title="Bind (dendrite density)")
 

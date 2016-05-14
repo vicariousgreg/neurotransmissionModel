@@ -2,7 +2,7 @@ import argparse
 
 from plot import plot
 
-from simulation import run
+from simulation import simulate_synapse
 from synapse import Synapse
 
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
@@ -23,7 +23,7 @@ def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
                 "synaptic cleft %s" % str(r),
                 syn.synaptic_cleft))
 
-        data += run(syn,
+        data += simulate_synapse(syn,
             record_components = record_components,
             iterations = 100)
     if not args.silent: plot(data, title="Reuptake (reuptake rate)")
@@ -40,7 +40,7 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
 
         record_components = [("replenish %s" % str(r), axon)]
 
-        data += run(syn,
+        data += simulate_synapse(syn,
             record_components = record_components,
             iterations = 50)
     if not args.silent: plot(data, title="Replenish (replenish rate)")

@@ -2,7 +2,7 @@ import argparse
 
 from plot import plot
 
-from simulation import run
+from simulation import simulate_synapse
 from synapse import Synapse
 from molecule import Receptors
 
@@ -19,7 +19,7 @@ def dendrite_bind(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
                 "synaptic cleft %s" % str(r),
                 syn.synaptic_cleft))
 
-        data += run(syn, record_components=record_components,
+        data += simulate_synapse(syn, record_components=record_components,
             iterations=100, verbose=args.verbose)
     if not args.silent:
         plot(data, title="Bind (synaptic_cleft concentration)")
@@ -37,7 +37,7 @@ def dendrite_release(print_synaptic_cleft=False):
             "synaptic cleft %s" % str(r),
             syn.synaptic_cleft))
 
-    data += run(syn, record_components=record_components,
+    data += simulate_synapse(syn, record_components=record_components,
         iterations=25, verbose=args.verbose)
     if not args.silent:
         plot(data, title="Release (release rate)")
@@ -57,7 +57,7 @@ def multiple_dendrites(rs=[0.1], print_synaptic_cleft=False):
                 "synaptic cleft %s" % str(r),
                 syn.synaptic_cleft))
 
-        data += run(syn, record_components=record_components,
+        data += simulate_synapse(syn, record_components=record_components,
             iterations=100, verbose=args.verbose)
     if not args.silent:
         plot(data, title="Bind (synaptic_cleft concentration)")
