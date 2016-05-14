@@ -19,32 +19,6 @@ def betav(maximum, noise=0.5, rate=1.0):
     return maximum*(betavariate(a,b))
 
 class Environment:
-    def __init__(self, noise=0.5):
-        self.concentrations = []
-        def beta(maximum, rate=1.0):
-            return betav(maximum, noise=noise, rate=rate)
-        self.beta = beta
-
-    def create_pool(self, baseline_concentration):
-        pool_id = len(self.concentrations)
-        self.concentrations.append(baseline_concentration)
-        return pool_id
-
-    def get_concentration(self, pool_id):
-        return self.concentrations[pool_id]
-
-    def set_concentration(self, pool_id, new_concentration):
-        self.concentrations[pool_id] = new_concentration
-
-    def add_concentration(self, pool_id, molecules):
-        self.concentrations[pool_id] += molecules
-
-    def remove_concentration(self, pool_id, molecules):
-        self.concentrations[pool_id] -= molecules
-
-    def step(self): pass
-
-class BatchEnvironment:
     def __init__(self, noise=0.0):
         self.prev_concentrations = []
         self.next_concentrations = []

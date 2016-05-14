@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from synapse import Synapse
 from soma import Soma
 
 def pulse(strengths = [-2, -1, 5, 25]):

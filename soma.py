@@ -90,7 +90,7 @@ class Soma:
         ik  = self.gkbar * (self.n**4) * (self.v-self.vk)
         il  = self.gl * (self.v-self.vl)
 
-        self.v +=  time_coefficient*( self.gap_current - self.iapp - ina - ik - il ) / self.cm
+        self.v +=  time_coefficient*( self.gap_current + self.iapp - ina - ik - il ) / self.cm
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
         self.m +=  time_coefficient*(minf - self.m)/taum

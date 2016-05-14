@@ -2,7 +2,6 @@ import argparse
 from plot import plot
 
 from synapse import Synapse
-from gap_junction import GapJunction
 from neuron import Neuron
 
 def pulse(strength1 = 0.0005, strength2 = 0.0):
@@ -20,7 +19,8 @@ def pulse(strength1 = 0.0005, strength2 = 0.0):
     data = [neuron1.soma.get_data(name="G Neuron %f" % strength1),
         neuron2.soma.get_data(name="G Neuron %f" % strength2),
         neuron3.soma.get_data(name="Control Neuron %f" % strength1)]
-    plot(data)
+    if not args.silent:
+        plot(data, title="Gap junction test")
 
 def main():
     pulse()
