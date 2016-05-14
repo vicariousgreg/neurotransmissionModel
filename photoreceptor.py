@@ -5,7 +5,7 @@
 
 from math import exp
 
-class Soma:
+class Photoreceptor:
     def __init__(self, base_current=0.0):
         self.data = []
         self.iapp = base_current
@@ -13,14 +13,12 @@ class Soma:
         self.reset()
 
     def reset(self):
-        self.time = 0
-        self.firing = False
-        self.last_spike = 0
 
         self.v=-65.0
         self.h=0.596
         self.n=0.318
-        self.m=0.053
+        #self.m=0.053
+        self.m=0.5
 
         self.cm=1.0
         self.gnabar=120.0
@@ -31,28 +29,22 @@ class Soma:
         self.vl=-54.4
 
         # Stabilize
-        for _ in xrange(3000): self.step(0.0, silent=True)
+        for _ in xrange(20000): self.step(silent=True)
         self.stable_voltage = self.v
 
-    def step(self, ligand_activation, resolution=100, silent=False):
-        if ligand_activation == 0 and self.iapp == 0.0 \
+    def step(self, light_activation=0.0, resolution=100, silent=False):
+        if light_activation == 0.0 and self.iapp == 0.0 \
                 and self.stabilization_counter > 1:
             self.data.append(min(-0.45, self.v/100)+0.65)
             return
         time_coefficient = 1.0 / resolution
-        self.m += ligand_activation
+
+        self.m = 0.5 - light_activation
         self.cycle(time_coefficient)
+
         if silent: return
 
         self.data.append(min(-0.45, self.v/100)+0.65)
-        if self.v > 0.0 and self.firing is False:
-            time = len(self.data)
-            print(time - self.last_spike)
-            self.last_spike = time
-            self.firing = True
-        elif self.firing and self.v < 0.0:
-            self.firing = False
-        self.time += 1
 
         if self.v == self.stable_voltage:
             self.stabilization_counter += 1
@@ -61,11 +53,6 @@ class Soma:
 
 
     def cycle(self, time_coefficient):
-        am   = 0.1*(self.v+40.0)/( 1.0 - exp(-(self.v+40.0)/10.0) )
-        bm   = 4.0*exp(-(self.v+65.0)/18.0)
-        minf = am/(am+bm)
-        taum = 1.0/(am+bm)
-
         ah   = 0.07*exp(-(self.v+65.0)/20.0)
         bh   = 1.0/( 1.0 + exp(-(self.v+35.0)/10.0) )
         hinf = ah/(ah+bh)
@@ -83,7 +70,6 @@ class Soma:
         self.v +=  time_coefficient*( self.iapp - ina - ik - il ) / self.cm
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
-        self.m +=  time_coefficient*(minf - self.m)/taum
 
     def get_data(self, name = "soma voltage"):
         return (name, self.data)

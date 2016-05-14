@@ -6,58 +6,56 @@ from simulation import run
 from synapse import Synapse
 from soma import Soma
 
-def transmit(rs=[180, 160, 100], spike_strengths=[0.10],
+def transmit(spike_strengths=[0.10],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     data = []
-    for r in rs:
-        for s in spike_strengths:
-            pre_soma = Soma()
-            synapse = Synapse(verbose=args.verbose)
-            axon = synapse.create_axon(
-                        replenish_rate=0.1,
-                        reuptake_rate=0.5,
-                        capacity=1.0,
-                        verbose=args.verbose)
-            dendrite = synapse.create_dendrite(
-                        density=0.05,
-                        verbose=args.verbose)
-            synapse.set_enzyme_concentration(1.0)
-            post_soma = Soma()
+    for s in spike_strengths:
+        pre_soma = Soma()
+        synapse = Synapse(verbose=args.verbose)
+        axon = synapse.create_axon(
+                    replenish_rate=0.1,
+                    reuptake_rate=0.5,
+                    capacity=1.0,
+                    verbose=args.verbose)
+        dendrite = synapse.create_dendrite(
+                    density=0.05,
+                    verbose=args.verbose)
+        synapse.set_enzyme_concentration(1.0)
+        post_soma = Soma()
 
-            dendrite_data = []
-            cleft_data = []
+        dendrite_data = []
+        cleft_data = []
 
-            rate = 500
-            activation = 0.25
-            for t in xrange(10000):
-                if t % rate == 0:
-                    pre_soma.step(activation, resolution=100)
-                    if activation > 0.0: activation -= 0.01
-                else:
-                    pre_soma.step(0.0, resolution=100)
+        rate = 500
+        activation = 0.25
+        for t in xrange(10000):
+            if t % rate == 0:
+                pre_soma.step(activation, resolution=100)
+                if activation > 0.0: activation -= 0.01
+            else:
+                pre_soma.step(0.0, resolution=100)
 
-                if pre_soma.v > -55.0:
-                    axon.step(voltage = pre_soma.v, resolution=100)
-                else:
-                    axon.step(resolution=100)
+            if pre_soma.v > -55.0:
+                axon.step(voltage = pre_soma.v, resolution=100)
+            else:
+                axon.step(resolution=100)
 
-                synapse.step(t)
-                post_soma.step(0.05*dendrite.get_concentration(), resolution=100)
-                dendrite_data.append(dendrite.get_concentration())
-                cleft_data.append(synapse.synaptic_cleft.get_concentration())
+            synapse.step(t)
+            post_soma.step(0.05*dendrite.get_concentration(), resolution=100)
 
-            data.append(pre_soma.get_data(name="pre time period: %d  strength: %f" % (r,s)))
-            data.append(post_soma.get_data(name="post time period: %d  strength: %f" % (r,s)))
-            #data.append(axon.get_data())
-            #data.append(("dendrite", dendrite_data))
-            #data.append(("synaptic cleft", cleft_data))
+            dendrite_data.append(dendrite.get_concentration())
+            cleft_data.append(synapse.synaptic_cleft.get_concentration())
+
+        data.append(pre_soma.get_data(name="pre strength: %f" % s))
+        data.append(post_soma.get_data(name="post strength: %f" % s))
+        data.append(axon.get_data())
+        #data.append(("dendrite", dendrite_data))
+        #data.append(("synaptic cleft", cleft_data))
     if not args.silent:
         plot(data, title="Spike train (firing rate)")
 
 def main():
     transmit(
-        rs=[500],
-        #rs=[10000],
         spike_strengths=[0.3],
         #spike_strengths=[0.0],
         print_axon=True,

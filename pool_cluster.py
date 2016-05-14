@@ -17,13 +17,6 @@ class PoolCluster:
             for mol_id,concentration in concentrations.iteritems()])
         self.environment = environment
 
-        # Uncomment to use a list of pools instead of a dictionary.
-        '''
-        self.pool_ids = [Pool(environment=environment) for _ in xrange(Molecule_IDs.size)]
-        for mol_id,concentration in concentrations.iteritems():
-            self.pool_ids[mol_id].set_concentration(concentration)
-        '''
-
     def get_total_concentration(self):
         return sum(self.get_concentration(mol_id) for mol_id in self.pool_ids)
 
