@@ -4,13 +4,15 @@
 #     neurotransmitters into and out of the synaptic cleft.
 
 from math import exp
+from collections import deque
 
 from molecule import Transporters
 from membrane import TransporterMembrane
 
 class Axon(TransporterMembrane):
-    def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=1.0,
-                    capacity=1.0, replenish_rate=5, environment=False, verbose=False):
+    def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=0.5,
+                    capacity=1.0, replenish_rate=0.1, delay=None,
+                    environment=False, verbose=False):
         """
         Axons keep track of activation and release neurotransmitters over
             time.  Neurotransmitters are regenerated via reuptake and
@@ -27,6 +29,12 @@ class Axon(TransporterMembrane):
         TransporterMembrane.__init__(self, transporter, reuptake_rate, capacity, environment)
 
         self.replenish_rate = replenish_rate
+
+        if delay:
+            self.voltage_queue = deque()
+            for _ in xrange(delay): self.voltage_queue.appendleft(None)
+        else: self.voltage_queue = None
+
         self.verbose = verbose
         self.data = []
 
@@ -60,6 +68,13 @@ class Axon(TransporterMembrane):
 
     def step(self, voltage=None, resolution=10, silent=False):
         time_coefficient = 1.0 / resolution
+
+        # If there is a delay, use the queue.
+        if self.voltage_queue:
+            # Add voltage to queue
+            self.voltage_queue.appendleft(voltage)
+            # Remove voltage from queue
+            voltage = self.voltage_queue.pop()
 
         if voltage: self.v = voltage
         self.cycle(time_coefficient)

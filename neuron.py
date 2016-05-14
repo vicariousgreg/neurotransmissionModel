@@ -47,13 +47,14 @@ class Neuron:
     @staticmethod
     def create_synapse(presynaptic, postsynaptic,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
-            axon_delay=0, dendrite_strength=0.05):
+            axon_delay=None, dendrite_strength=0.05):
         synapse = Synapse()
         axon = synapse.create_axon(
                     transporter=transporter,
                     replenish_rate=0.1,
                     reuptake_rate=0.5,
-                    capacity=1.0)
+                    capacity=1.0,
+                    delay=axon_delay)
         dendrite = synapse.create_dendrite(
                     receptor=receptor,
                     density=0.05,
