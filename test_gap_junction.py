@@ -26,7 +26,7 @@ def test_gap_junction(strength1 = 0.00065, strength2 = 0.0):
 
     neuron_factory.create_gap_junction(neuron1, neuron2, 1.0)
 
-    neuron_factory.step(10000)
+    neuron_factory.step(args.iterations)
 
     data = [neuron_factory.get_probe_data(neuron1_name),
         neuron_factory.get_probe_data(neuron2_name),

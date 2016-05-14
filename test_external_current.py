@@ -12,9 +12,9 @@ def external_current(rs=[-2, -1, 0, 1, 5, 10]):
         neuron_name = "current: %f" % r
         neuron = neuron_factory.create_neuron(probe_name=neuron_name)
 
-        neuron_factory.step(1000)
+        neuron_factory.step(args.iterations/10)
         neuron.soma.iapp = r
-        neuron_factory.step(10000)
+        neuron_factory.step(args.iterations)
 
         data.append(neuron_factory.get_probe_data(neuron_name))
     if not args.silent:

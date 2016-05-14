@@ -46,7 +46,7 @@ def test_photoreceptor(
         neuron_factory.step(5000)
         neuron_factory.register_driver(photoreceptor,
             ActivationPulseDriver(activation=strength, period=period, length=length))
-        neuron_factory.step(30000)
+        neuron_factory.step(args.iterations)
 
         data.append(neuron_factory.get_probe_data(pre_neuron_name))
         data.append(neuron_factory.get_probe_data(post_neuron_name))
@@ -69,6 +69,8 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
+    parser.add_argument("-i", "--iterations", type = int, default = 30000, help = 
+    """table""")
 
     return parser.parse_args()
 

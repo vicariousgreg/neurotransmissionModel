@@ -33,7 +33,7 @@ def pulse(strengths = [-2, -1, 5, 25]):
         neuron_factory.step(5000)
         neuron_factory.register_driver(neuron,
             CurrentPulseDriver(current=strength, period=period, length=length))
-        neuron_factory.step(30000)
+        neuron_factory.step(args.iterations)
 
         data.append(neuron_factory.get_probe_data(neuron_name))
     if not args.silent:
@@ -52,7 +52,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 10000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 30000, help = 
     """table""")
 
     return parser.parse_args()

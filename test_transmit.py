@@ -22,8 +22,7 @@ def transmit(strength=0.3, delays=[None, 100]):
 
     neuron_factory.register_driver(pre_neuron,
         ActivationPulseDriver(activation=strength, period=500, length=1, decrement=0.01))
-    for t in xrange(10000):
-        neuron_factory.step()
+    neuron_factory.step(args.iterations)
 
     data.append(neuron_factory.get_probe_data(pre_neuron_name))
     for name in post_neuron_names:
@@ -44,6 +43,8 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
+    parser.add_argument("-i", "--iterations", type = int, default = 30000, help = 
+    """table""")
 
     return parser.parse_args()
 
