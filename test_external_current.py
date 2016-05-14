@@ -3,25 +3,19 @@ import argparse
 from plot import plot
 
 from synapse import Synapse
-from soma import Soma
-from environment import NeuronEnvironment
+from neuron_factory import NeuronFactory
 
 def external_current(rs=[-2, -1, 0, 1, 5, 10]):
     data = []
     for r in rs:
-        environment = NeuronEnvironment()
-        soma = Soma(environment=environment)
+        neuron_factory = NeuronFactory()
+        neuron = neuron_factory.create_neuron()
 
-        for i in xrange(1000):
-            soma.step(0.0, resolution=100)
-            environment.step()
+        neuron_factory.step(1000)
+        neuron.soma.iapp = r
+        neuron_factory.step(10000)
 
-        soma.iapp = r
-        for i in xrange(10000):
-            soma.step(0.0, resolution=100)
-            environment.step()
-
-        data.append(soma.get_data(name="current: %f" % r))
+        data.append(neuron.soma.get_data(name="current: %f" % r))
     if not args.silent:
         plot(data, title="External current")
 

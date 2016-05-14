@@ -2,45 +2,39 @@ import argparse
 
 from plot import plot
 
-from soma import Soma
 from environment import NeuronEnvironment
+from neuron_factory import NeuronFactory, CurrentPulseDriver
 
 
 def pulse(strengths = [-2, -1, 5, 25]):
     data = []
-    period = 7000
-    frequency = 10000
+    length = 7000
+    period = 10000
 
     current_data = []
-    current = 0.0
+    current = -0.3
 
     for i in xrange(5000):
         current_data.append(-0.3)
-    for i in xrange(30000):
-        if i % frequency == 0:
+    for i in xrange(5000, 35000):
+        if i % period == 0:
             current = -0.2
-        elif i % frequency == period:
+        elif i % period == length:
             current = -0.3
         current_data.append(current)
 
     data.append(("current", current_data))
 
     for strength in strengths:
-        environment = NeuronEnvironment()
-        soma = Soma(environment=environment)
+        neuron_factory = NeuronFactory()
+        neuron = neuron_factory.create_neuron()
 
-        for i in xrange(5000):
-            soma.step(0.0, resolution=100)
-            environment.step()
-        for i in xrange(30000):
-            if i % frequency == 0:
-                soma.iapp = strength
-            elif i % frequency == period:
-                soma.iapp = 0.0
-            soma.step(0.0, resolution=100)
-            environment.step()
+        neuron_factory.step(5000)
+        neuron_factory.register_driver(neuron,
+            CurrentPulseDriver(current=strength, period=period, length=length))
+        neuron_factory.step(30000)
 
-        data.append(soma.get_data("Pulse %f" % strength))
+        data.append(neuron.soma.get_data("Pulse %f" % strength))
     if not args.silent:
         plot(data, title="Pulse")
 

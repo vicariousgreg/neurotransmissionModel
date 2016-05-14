@@ -5,34 +5,26 @@ from plot import plot
 from synapse import Synapse
 from neuron import Neuron
 from soma import Soma
-from environment import NeuronEnvironment
+from neuron_factory import NeuronFactory, ActivationPulseDriver
 
 def transmit(spike_strengths=[0.10],
         print_axon=False, print_synaptic_cleft=False, print_dendrite=True):
     data = []
     for s in spike_strengths:
-        environment = NeuronEnvironment()
-        pre_neuron = Neuron(environment=environment)
-        post_neuron = Neuron(environment=environment)
-        synapse = Neuron.create_synapse(pre_neuron, post_neuron)
+        neuron_factory = NeuronFactory()
+        pre_neuron = neuron_factory.create_neuron()
+        post_neuron = neuron_factory.create_neuron()
+        synapse = neuron_factory.create_synapse(pre_neuron, post_neuron)
         axon = pre_neuron.axons[0]
         dendrite = post_neuron.dendrites[0]
 
         dendrite_data = []
         cleft_data = []
 
-        rate = 500
-        activation = 0.25
+        neuron_factory.register_driver(pre_neuron,
+            ActivationPulseDriver(activation=0.25, period=500, length=1, decrement=0.01))
         for t in xrange(10000):
-            if t % rate == 0:
-                pre_neuron.step(activation, resolution=100)
-                if activation > 0.0: activation -= 0.01
-            else:
-                pre_neuron.step(0.0, resolution=100)
-            synapse.step(t)
-            post_neuron.step(0.05*dendrite.get_concentration(), resolution=100)
-            environment.step()
-
+            neuron_factory.step()
             dendrite_data.append(dendrite.get_concentration())
             cleft_data.append(synapse.synaptic_cleft.get_concentration())
 
