@@ -30,6 +30,8 @@ class Synapse:
         self.dendrites = []
         self.components = [self.synaptic_cleft]
 
+        self.done = False
+
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
         Sets the concentration of the given |enzymes| in the synaptic cleft.
@@ -82,35 +84,47 @@ class Synapse:
         6. Replenish axon neurotransmitter reserves
         7. Final environment cycle
         """
-        # 1: Release from Dendrites
-        for dendrite in self.dendrites:
-            for mol_id,concentration in dendrite.unbind():
-                self.synaptic_cleft.add_concentration(concentration,mol_id)
+        changed = False
+        if not self.done:
+            # 1: Release from Dendrites
+            for dendrite in self.dendrites:
+                for mol_id,concentration in dendrite.unbind():
+                    self.synaptic_cleft.add_concentration(concentration,mol_id)
 
-        # Release reuptake inhibitors from axons
-        for axon in self.axons:
-            for mol_id,concentration in axon.unbind():
-                self.synaptic_cleft.add_concentration(concentration,mol_id)
+            # Release reuptake inhibitors from axons
+            for axon in self.axons:
+                for mol_id,concentration in axon.unbind():
+                    self.synaptic_cleft.add_concentration(concentration,mol_id)
 
-        # 2: Cycle environment
-        self.environment.step()
+            changed = changed or self.environment.dirty
+            # 2: Cycle environment
+            self.environment.step()
 
         # 3: Release from axons
         for axon in self.axons:
             released = axon.release()
-            self.synaptic_cleft.add_concentration(
-                released, mol_id=axon.native_mol_id)
+            if released > 0.0:
+                self.synaptic_cleft.add_concentration(
+                    released, mol_id=axon.native_mol_id)
 
-        # 4: Metabolize
-        self.synaptic_cleft.metabolize()
+        changed = changed or self.environment.dirty
 
-        # 5: Bind to dendrites and axons
-        self.synaptic_cleft.bind(self.dendrites + self.axons)
+        if not self.done:
+            # 4: Metabolize
+            self.synaptic_cleft.metabolize()
 
-        # 6: Replenish
-        for axon in self.axons:
-            axon.replenish()
+            # 5: Bind to dendrites and axons
+            self.synaptic_cleft.bind(self.dendrites + self.axons)
+
+            # 6: Replenish
+            for axon in self.axons:
+                axon.replenish()
+
+            changed = changed or self.environment.dirty
 
         # 7. Cycle environment
         self.environment.step()
+
+        if self.done != (not changed): print((not changed))
+        self.done = not changed
 

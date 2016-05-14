@@ -125,6 +125,8 @@ class SynapticCleft(PoolCluster):
             mol_concentrations[mol_id] = concentration
             mol_protein_count[mol_id] = 0.0
 
+        if len(mol_concentrations) == 0: return
+
         # Calculate densities of all proteins.
         for membrane in membranes:
             if membrane.density == 0.0: continue
@@ -193,8 +195,9 @@ class SynapticCleft(PoolCluster):
         """
         mol_count = self.get_concentration(mol_id)
         if mol_count <= 0.0: return
-
-        destroyed = metabolize(enzyme_count, mol_count, rate, self.environment)
+        elif mol_count < 0.0001: destroyed = mol_count
+        else: 
+            destroyed = metabolize(enzyme_count, mol_count, rate, self.environment)
         self.remove_concentration(destroyed, mol_id)
         if self.verbose:
             print("Destroyed %f of mol %d" % (destroyed, mol_id))

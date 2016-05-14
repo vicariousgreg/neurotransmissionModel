@@ -65,7 +65,7 @@ class Axon(TransporterMembrane):
             self.step(0.0, silent=True)
         self.stable_voltage = self.v
 
-    def step(self, voltage=None, resolution=10, silent=False):
+    def step(self, voltage=None, resolution=100, silent=False):
         time_coefficient = 1.0 / resolution
 
         # If there is a delay, use the queue.
@@ -97,7 +97,7 @@ class Axon(TransporterMembrane):
         # Determine how many molecules to actually release.
 
         ### Non-stochastic release (faster)
-        released = max(0, (self.v - self.stable_voltage) / 500)
+        released = max(0.0, (self.v - self.stable_voltage) / 500)
         ###
 
         ### Use beta distribution to release stochastically
@@ -106,6 +106,9 @@ class Axon(TransporterMembrane):
         #released = max(0, min(self.get_native_concentration(),
         #    self.environment.beta(difference, rate=10)))
         ###
+
+        if released == 0.0:
+            return 0.0
 
         # Remove concentration.
         self.remove_concentration(released, self.native_mol_id)
@@ -119,6 +122,8 @@ class Axon(TransporterMembrane):
         """
         missing = self.capacity - self.get_native_concentration()
         if missing <= 0 or self.replenish_rate == 0.0: return
+        elif missing < 0.00001:
+            self.set_concentration(self.capacity, self.native_mol_id)
 
         # Determine concentration to replenish
 

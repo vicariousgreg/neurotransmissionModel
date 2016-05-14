@@ -32,6 +32,8 @@ def transmit(strength=0.3, delays=[None, 100]):
 
 def main():
     transmit(strength = 0.3)
+    #transmit(strength = 0.3, delays=[None])
+    #transmit(strength = 0.1, delays=[None])
 
 def set_options():
     """

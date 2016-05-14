@@ -31,6 +31,7 @@ class SynapseEnvironment:
         def beta(maximum, rate=1.0):
             return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
+        self.dirty = False
 
     def register(self, baseline_concentration):
         pool_id = len(self.prev_concentrations)
@@ -42,17 +43,21 @@ class SynapseEnvironment:
         return self.prev_concentrations[pool_id]
 
     def set_concentration(self, pool_id, new_concentration):
+        self.dirty = True
         self.next_concentrations[pool_id] = new_concentration
 
     def add_concentration(self, pool_id, molecules):
+        self.dirty = True
         self.next_concentrations[pool_id] += molecules
 
     def remove_concentration(self, pool_id, molecules):
+        self.dirty = True
         self.next_concentrations[pool_id] -= molecules
         self.next_concentrations[pool_id] = \
             max(0.0, self.next_concentrations[pool_id])
 
     def step(self):
+        self.dirty = False
         for i in xrange(len(self.prev_concentrations)):
             self.prev_concentrations[i]=self.next_concentrations[i]
 

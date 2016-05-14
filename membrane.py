@@ -94,6 +94,7 @@ class ReceptorMembrane(Membrane):
         unbound = []
         for mol_id in self.affinities:
             released = self.get_concentration(mol_id)
+            if released == 0.0: continue
             self.set_concentration(0.0, mol_id)
             unbound.append((mol_id, released))
         return unbound
@@ -135,6 +136,7 @@ class TransporterMembrane(Membrane):
         unbound = []
         for mol_id in self.protein.reuptake_inhibitors:
             released = self.get_concentration(mol_id)
+            if released == 0.0: continue
             self.set_concentration(0.0, mol_id)
             unbound.append((mol_id, released))
         return unbound
