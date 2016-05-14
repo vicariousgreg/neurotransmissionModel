@@ -1,4 +1,9 @@
-# Soma Model
+# Photoreceptor Model
+#
+# Photoreceptors do not generate action potentials.  Instead, they have a base
+#     current that triggers the release of glutamate in the dark.  With light
+#     activation, ion conductance is reduced, and less glutamate is released.
+#     The end result is high release in the dark, low release in the light.
 #
 # Adapted from Hodgkin-Huxley model implementation by G. Bard Ermentrout
 # http://www.math.pitt.edu/~bard/bardware/hh-c.ode
@@ -6,9 +11,8 @@
 from math import exp
 
 class Photoreceptor:
-    def __init__(self, base_current=0.0):
+    def __init__(self):
         self.data = []
-        self.iapp = base_current
         self.stabilization_counter=0
         self.base_conductance = 0.8
         self.light_level = 0.0
@@ -34,9 +38,8 @@ class Photoreceptor:
         self.stable_voltage = self.v
 
     def step(self, light_activation=0.0, resolution=100, silent=False):
-        if light_activation == 0.0 and self.iapp == 0.0 \
-                and self.stabilization_counter > 1:
-            self.data.append((self.v-self.stable_voltage)/100)
+        if light_activation == 0.0 and self.stabilization_counter > 1:
+            if not silent: self.data.append((self.v-self.stable_voltage)/100)
             return
         time_coefficient = 1.0 / resolution
 
@@ -69,9 +72,9 @@ class Photoreceptor:
         ik  = self.gkbar * (self.n**4) * (self.v-self.vk)
         il  = self.gl * (self.v-self.vl)
 
-        self.v +=  time_coefficient*( self.iapp - ina - ik - il ) / self.cm
+        self.v +=  time_coefficient*(-ina - ik - il ) / self.cm
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
 
-    def get_data(self, name = "soma voltage"):
+    def get_data(self, name = "photoreceptor voltage"):
         return (name, self.data)

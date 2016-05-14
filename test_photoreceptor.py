@@ -6,8 +6,8 @@ from synapse import Synapse
 from photoreceptor import Photoreceptor
 
 def transmit(
-        spike_strengths=[0.5]):
-        #spike_strengths=[0.1, 0.5, 0.7]):
+        #spike_strengths=[0.5]):
+        spike_strengths=[0.1, 0.5, 0.7]):
     data = []
     period = 5000
     frequency = 10000
@@ -65,7 +65,7 @@ def transmit(
 
         data.append(soma.get_data("Photoreceptor %f" % strength))
         #data.append(axon.get_data())
-        data.append(("dendrite", dendrite_data))
+        data.append(("dendrite %f" % strength, dendrite_data))
         #data.append(("synaptic cleft", cleft_data))
     if not args.silent:
         plot(data, title="Photoreceptor test")
