@@ -9,8 +9,8 @@ def transmit(
         #spike_strengths=[0.5]):
         spike_strengths=[0.1, 0.5, 0.7]):
     data = []
-    period = 5000
-    frequency = 10000
+    period = 7000
+    frequency = 12000
 
     current_data = []
     current = 0.0
