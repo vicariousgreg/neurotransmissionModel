@@ -43,7 +43,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 30000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 10000, help = 
     """table""")
 
     return parser.parse_args()
