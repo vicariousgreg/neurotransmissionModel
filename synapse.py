@@ -21,6 +21,7 @@ class Synapse:
             environment=self.environment, verbose=verbose)
         self.axons = []
         self.dendrites = []
+        self.components = [self.synaptic_cleft]
 
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
@@ -35,6 +36,7 @@ class Synapse:
         args["environment"] = self.environment
         axon = Axon(**args)
         self.axons.append(axon)
+        self.components.append(axon)
         return axon
 
     def create_dendrite(self, **args):
@@ -44,6 +46,7 @@ class Synapse:
         args["environment"] = self.environment
         dendrite = Dendrite(**args)
         self.dendrites.append(dendrite)
+        self.components.append(dendrite)
         return dendrite
 
     def step(self, time):

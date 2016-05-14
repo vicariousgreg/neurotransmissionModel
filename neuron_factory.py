@@ -22,6 +22,7 @@ class NeuronFactory:
 
         self.probes = {}
         self.neuron_probes = {}
+        self.concentration_probes = {}
 
         self.base_driver = ConstantDriver(0.0)
         self.time = 0
@@ -32,12 +33,16 @@ class NeuronFactory:
                 try: self.neuron_probes[neuron].record(neuron.soma)
                 except KeyError: pass
                 self.drivers.get(neuron, self.base_driver).drive(neuron, self.time)
-            for synapse in self.synapses: synapse.step(self.time)
+            for synapse in self.synapses:
+                for component in synapse.components:
+                    try: self.concentration_probes[component].record(component)
+                    except KeyError: pass
+                synapse.step(self.time)
             self.neuron_environment.step()
             self.time += 1
 
-    def create_neuron(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION,
-                              probe_name=None):
+    def create_neuron(self, base_current=0.0,
+            neuron_type=NeuronTypes.GANGLION, probe_name=None):
         neuron = Neuron(base_current=base_current,
             neuron_type=neuron_type,
             environment=self.neuron_environment)
@@ -50,11 +55,29 @@ class NeuronFactory:
 
     def create_synapse(self, pre_neuron, post_neuron,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
-            axon_delay=None, dendrite_strength=0.05):
+            axon_delay=None, dendrite_strength=0.05,
+            axon_probe_name=None, cleft_probe_name=None, dendrite_probe_name=None):
         synapse = Neuron.create_synapse(pre_neuron, post_neuron,
             transporter=transporter, receptor=receptor,
             axon_delay=axon_delay, dendrite_strength=dendrite_strength)
         self.synapses.append(synapse)
+
+        if axon_probe_name:
+            axon = synapse.axons[0]
+            probe = ConcentrationProbe(axon.native_mol_id)
+            self.concentration_probes[axon] = probe
+            self.probes[axon_probe_name] = probe
+        if cleft_probe_name:
+            cleft = synapse.synaptic_cleft
+            probe = ConcentrationProbe(synapse.axons[0].native_mol_id)
+            self.concentration_probes[cleft] = probe
+            self.probes[cleft_probe_name] = probe
+        if dendrite_probe_name:
+            dendrite = synapse.dendrites[0]
+            probe = ConcentrationProbe(dendrite.native_mol_id)
+            self.concentration_probes[dendrite] = probe
+            self.probes[dendrite_probe_name] = probe
+
         return synapse
 
     def create_gap_junction(self, pre_neuron, post_neuron, conductance=1.0):
@@ -109,4 +132,9 @@ class VoltageProbe:
         self.data.append(component.get_scaled_voltage())
 
 class ConcentrationProbe:
-    def __init__(self): pass
+    def __init__(self, mol_id):
+        self.data = []
+        self.mol_id = mol_id
+
+    def record(self, component):
+        self.data.append(component.get_concentration(self.mol_id))

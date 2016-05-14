@@ -19,25 +19,15 @@ def transmit(strength=0.3, delays=[None, 100]):
         post_neuron_names.append(name)
         post_neuron = neuron_factory.create_neuron(probe_name=name)
         synapse = neuron_factory.create_synapse(pre_neuron, post_neuron, axon_delay=delay)
-        #axon = pre_neuron.axons[0]
-        #dendrite = post_neuron.dendrites[0]
-
-    #dendrite_data = []
-    #cleft_data = []
 
     neuron_factory.register_driver(pre_neuron,
         ActivationPulseDriver(activation=strength, period=500, length=1, decrement=0.01))
     for t in xrange(10000):
         neuron_factory.step()
-        #dendrite_data.append(dendrite.get_concentration())
-        #cleft_data.append(synapse.synaptic_cleft.get_concentration())
 
     data.append(neuron_factory.get_probe_data(pre_neuron_name))
     for name in post_neuron_names:
         data.append(neuron_factory.get_probe_data(name))
-    #data.append(axon.get_data())
-    #data.append(("dendrite", dendrite_data))
-    #data.append(("synaptic cleft", cleft_data))
     if not args.silent:
         plot(data, title="Synaptic transmission")
 

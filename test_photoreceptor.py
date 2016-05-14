@@ -32,30 +32,27 @@ def test_photoreceptor(
             neuron_type=NeuronTypes.PHOTORECEPTOR,
             probe_name = pre_neuron_name)
         post = neuron_factory.create_neuron(probe_name=post_neuron_name)
-        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.015)
-        axon = photoreceptor.axons[0]
-        dendrite = post.dendrites[0]
+
+        axon_name="axon %f" % strength
+        cleft_name="synaptic cleft %f" % strength
+        dendrite_name="dendrite %f" % strength
+        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.015,
+            axon_probe_name=axon_name, cleft_probe_name=cleft_name, dendrite_probe_name=dendrite_name)
         synapse.set_enzyme_concentration(0.5)
 
         cleft_data = []
         dendrite_data = []
 
-        for i in xrange(5000):
-            neuron_factory.step()
-            cleft_data.append(synapse.synaptic_cleft.get_concentration())
-            dendrite_data.append(dendrite.get_concentration())
+        neuron_factory.step(5000)
         neuron_factory.register_driver(photoreceptor,
             ActivationPulseDriver(activation=strength, period=period, length=length))
-        for i in xrange(30000):
-            neuron_factory.step()
-            cleft_data.append(synapse.synaptic_cleft.get_concentration())
-            dendrite_data.append(dendrite.get_concentration())
+        neuron_factory.step(30000)
 
         data.append(neuron_factory.get_probe_data(pre_neuron_name))
         data.append(neuron_factory.get_probe_data(post_neuron_name))
-        #data.append(axon.get_data())
-        data.append(("dendrite %f" % strength, dendrite_data))
-        #data.append(("synaptic cleft", cleft_data))
+        #data.append(neuron_factory.get_probe_data(axon_name))
+        #data.append(neuron_factory.get_probe_data(cleft_name))
+        data.append(neuron_factory.get_probe_data(dendrite_name))
     if not args.silent:
         plot(data, title="Photoreceptor test")
 
