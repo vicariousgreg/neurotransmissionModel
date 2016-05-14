@@ -7,7 +7,6 @@ from math import exp
 
 class Soma:
     def __init__(self, base_current=0.0, environment=None):
-        self.data = []
         self.iapp = base_current
         self.stabilization_counter = 0
         self.environment = environment
@@ -59,21 +58,16 @@ class Soma:
 
     def step(self, ligand_activation, resolution=100, silent=False):
         if ligand_activation == 0 and self.iapp == 0.0 \
-                and self.stabilization_counter > 1:
-            self.data.append(min(0.2, (self.get_voltage()-self.stable_voltage)/100))
-            return
+            and self.stabilization_counter > 1: return
         voltage = self.get_voltage()
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
         voltage_delta = self.cycle(time_coefficient, voltage)
         if silent: return
 
-        self.data.append(min(0.2, (voltage-self.stable_voltage)/100))
-
         if voltage > 0.0 and self.firing is False:
-            time = len(self.data)
-            print(time - self.last_spike)
-            self.last_spike = time
+            print(self.time - self.last_spike)
+            self.last_spike = self.time
             self.firing = True
         elif self.firing and voltage < 0.0:
             self.firing = False
@@ -114,5 +108,5 @@ class Soma:
         self.n +=  time_coefficient*(ninf - self.n)/taun
         self.m +=  time_coefficient*(minf - self.m)/taum
 
-    def get_data(self, name = "soma voltage"):
-        return (name, self.data)
+    def get_scaled_voltage(self):
+        return min(0.2, (self.get_voltage()-self.stable_voltage)/100)

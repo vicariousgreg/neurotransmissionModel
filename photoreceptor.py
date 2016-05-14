@@ -12,7 +12,6 @@ from math import exp
 
 class PhotoreceptorSoma:
     def __init__(self, environment=None):
-        self.data = []
         self.stabilization_counter=0
         self.base_conductance = 0.8
         self.light_level = 0.0
@@ -62,9 +61,7 @@ class PhotoreceptorSoma:
         self.stable_voltage = self.get_voltage()
 
     def step(self, light_activation=0.0, resolution=100, silent=False):
-        if light_activation == 0.0 and self.stabilization_counter > 1:
-            if not silent: self.data.append((self.get_voltage()-self.stable_voltage)/100)
-            return
+        if light_activation == 0.0 and self.stabilization_counter > 1: return
         time_coefficient = 1.0 / resolution
 
         voltage = self.get_voltage()
@@ -73,8 +70,6 @@ class PhotoreceptorSoma:
         self.cycle(time_coefficient, voltage)
 
         if silent: return
-
-        self.data.append((voltage-self.stable_voltage)/100)
 
         if voltage == self.stable_voltage:
             self.stabilization_counter += 1
@@ -101,5 +96,5 @@ class PhotoreceptorSoma:
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
 
-    def get_data(self, name = "photoreceptor voltage"):
-        return (name, self.data)
+    def get_scaled_voltage(self):
+        return (self.get_voltage()-self.stable_voltage)/100

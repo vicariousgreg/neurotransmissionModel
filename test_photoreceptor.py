@@ -25,11 +25,15 @@ def test_photoreceptor(
 
     for strength in spike_strengths:
         neuron_factory = NeuronFactory()
-        neuron = neuron_factory.create_neuron(
-            neuron_type=NeuronTypes.PHOTORECEPTOR)
-        post = neuron_factory.create_neuron()
-        synapse = neuron_factory.create_synapse(neuron, post, dendrite_strength=0.015)
-        axon = neuron.axons[0]
+        pre_neuron_name = "Photoreceptor %f" % strength
+        post_neuron_name = "Postsynaptic %f" % strength
+
+        photoreceptor = neuron_factory.create_neuron(
+            neuron_type=NeuronTypes.PHOTORECEPTOR,
+            probe_name = pre_neuron_name)
+        post = neuron_factory.create_neuron(probe_name=post_neuron_name)
+        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.015)
+        axon = photoreceptor.axons[0]
         dendrite = post.dendrites[0]
         synapse.set_enzyme_concentration(0.5)
 
@@ -40,15 +44,15 @@ def test_photoreceptor(
             neuron_factory.step()
             cleft_data.append(synapse.synaptic_cleft.get_concentration())
             dendrite_data.append(dendrite.get_concentration())
-        neuron_factory.register_driver(neuron,
+        neuron_factory.register_driver(photoreceptor,
             ActivationPulseDriver(activation=strength, period=period, length=length))
         for i in xrange(30000):
             neuron_factory.step()
             cleft_data.append(synapse.synaptic_cleft.get_concentration())
             dendrite_data.append(dendrite.get_concentration())
 
-        data.append(neuron.soma.get_data("Photoreceptor %f" % strength))
-        data.append(post.soma.get_data("Postsynaptic %f" % strength))
+        data.append(neuron_factory.get_probe_data(pre_neuron_name))
+        data.append(neuron_factory.get_probe_data(post_neuron_name))
         #data.append(axon.get_data())
         data.append(("dendrite %f" % strength, dendrite_data))
         #data.append(("synaptic cleft", cleft_data))

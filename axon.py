@@ -127,3 +127,6 @@ class Axon(TransporterMembrane):
 
     def get_data(self, name = "axon conductance"):
         return (name, self.data)
+
+    def get_scaled_voltage(self):
+        return min(0.2, (self.get_voltage()-self.stable_voltage)/100)

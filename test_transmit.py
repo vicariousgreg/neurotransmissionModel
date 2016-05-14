@@ -10,13 +10,15 @@ from neuron_factory import NeuronFactory, ActivationPulseDriver
 def transmit(strength=0.3, delays=[None, 100]):
     data = []
     neuron_factory = NeuronFactory()
-    pre_neuron = neuron_factory.create_neuron()
+    pre_neuron_name = "pre strength: %f" % strength
+    pre_neuron = neuron_factory.create_neuron(probe_name=pre_neuron_name)
 
-    post_neurons = []
+    post_neuron_names = []
     for delay in delays:
-        post_neuron = neuron_factory.create_neuron()
+        name="post delay: %s" % str(delay)
+        post_neuron_names.append(name)
+        post_neuron = neuron_factory.create_neuron(probe_name=name)
         synapse = neuron_factory.create_synapse(pre_neuron, post_neuron, axon_delay=delay)
-        post_neurons.append(post_neuron)
         #axon = pre_neuron.axons[0]
         #dendrite = post_neuron.dendrites[0]
 
@@ -30,9 +32,9 @@ def transmit(strength=0.3, delays=[None, 100]):
         #dendrite_data.append(dendrite.get_concentration())
         #cleft_data.append(synapse.synaptic_cleft.get_concentration())
 
-    data.append(pre_neuron.soma.get_data(name="pre strength: %f" % strength))
-    for post_neuron,delay in zip(post_neurons, delays):
-        data.append(post_neuron.soma.get_data(name="post delay: %s" % str(delay)))
+    data.append(neuron_factory.get_probe_data(pre_neuron_name))
+    for name in post_neuron_names:
+        data.append(neuron_factory.get_probe_data(name))
     #data.append(axon.get_data())
     #data.append(("dendrite", dendrite_data))
     #data.append(("synaptic cleft", cleft_data))

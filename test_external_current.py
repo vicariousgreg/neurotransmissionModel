@@ -9,13 +9,14 @@ def external_current(rs=[-2, -1, 0, 1, 5, 10]):
     data = []
     for r in rs:
         neuron_factory = NeuronFactory()
-        neuron = neuron_factory.create_neuron()
+        neuron_name = "current: %f" % r
+        neuron = neuron_factory.create_neuron(probe_name=neuron_name)
 
         neuron_factory.step(1000)
         neuron.soma.iapp = r
         neuron_factory.step(10000)
 
-        data.append(neuron.soma.get_data(name="current: %f" % r))
+        data.append(neuron_factory.get_probe_data(neuron_name))
     if not args.silent:
         plot(data, title="External current")
 

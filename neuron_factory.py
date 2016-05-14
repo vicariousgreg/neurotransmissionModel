@@ -19,22 +19,33 @@ class NeuronFactory:
         self.neurons = []
         self.synapses = []
         self.drivers = {}
+
+        self.probes = {}
+        self.neuron_probes = {}
+
         self.base_driver = ConstantDriver(0.0)
         self.time = 0
 
     def step(self, count=1):
         for _ in xrange(count):
             for neuron in self.neurons:
+                try: self.neuron_probes[neuron].record(neuron.soma)
+                except KeyError: pass
                 self.drivers.get(neuron, self.base_driver).drive(neuron, self.time)
             for synapse in self.synapses: synapse.step(self.time)
             self.neuron_environment.step()
             self.time += 1
 
-    def create_neuron(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION):
+    def create_neuron(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION,
+                              probe_name=None):
         neuron = Neuron(base_current=base_current,
             neuron_type=neuron_type,
             environment=self.neuron_environment)
         self.neurons.append(neuron)
+        if probe_name:
+            probe = VoltageProbe()
+            self.probes[probe_name] = probe
+            self.neuron_probes[neuron] = probe
         return neuron
 
     def create_synapse(self, pre_neuron, post_neuron,
@@ -51,6 +62,9 @@ class NeuronFactory:
 
     def register_driver(self, neuron, driver):
         self.drivers[neuron] = driver
+
+    def get_probe_data(self, name):
+        return (name, self.probes[name].data)
 
 class ConstantDriver:
     def __init__(self, activation=0.0):
@@ -88,7 +102,11 @@ class ActivationPulseDriver:
             neuron.step()
 
 class VoltageProbe:
-    def __init__(self): pass
+    def __init__(self):
+        self.data = []
+
+    def record(self, component):
+        self.data.append(component.get_scaled_voltage())
 
 class ConcentrationProbe:
     def __init__(self): pass

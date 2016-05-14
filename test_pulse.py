@@ -27,14 +27,15 @@ def pulse(strengths = [-2, -1, 5, 25]):
 
     for strength in strengths:
         neuron_factory = NeuronFactory()
-        neuron = neuron_factory.create_neuron()
+        neuron_name = "Pulse %f" % strength
+        neuron = neuron_factory.create_neuron(probe_name=neuron_name)
 
         neuron_factory.step(5000)
         neuron_factory.register_driver(neuron,
             CurrentPulseDriver(current=strength, period=period, length=length))
         neuron_factory.step(30000)
 
-        data.append(neuron.soma.get_data("Pulse %f" % strength))
+        data.append(neuron_factory.get_probe_data(neuron_name))
     if not args.silent:
         plot(data, title="Pulse")
 
