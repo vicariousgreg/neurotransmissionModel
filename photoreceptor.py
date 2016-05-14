@@ -34,7 +34,15 @@ class Photoreceptor:
         self.vl=-54.4
 
         # Stabilize
-        for _ in xrange(20000): self.step(silent=True)
+        old_v = 0
+        stable = 0
+        while stable < 1000:
+            if old_v == self.v:
+                stable += 1
+            else:
+                stable = 0
+                old_v = self.v
+            self.step(0.0, silent=True)
         self.stable_voltage = self.v
 
     def step(self, light_activation=0.0, resolution=100, silent=False):

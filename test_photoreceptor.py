@@ -32,7 +32,7 @@ def transmit(
         axon = synapse.create_axon(
                     replenish_rate=0.1,
                     reuptake_rate=0.5,
-                    capacity=0.05,
+                    capacity=1.0, #0.05,
                     verbose=args.verbose)
         dendrite = synapse.create_dendrite(
                     density=0.5,

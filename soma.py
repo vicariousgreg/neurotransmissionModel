@@ -16,6 +16,7 @@ class Soma:
         self.time = 0
         self.firing = False
         self.last_spike = 0
+        self.gap_current = 0.0
 
         self.v=-65.0
         self.h=0.596
@@ -31,7 +32,15 @@ class Soma:
         self.vl=-54.4
 
         # Stabilize
-        for _ in xrange(3000): self.step(0.0, silent=True)
+        old_v = 0
+        stable = 0
+        while stable < 1000:
+            if old_v == self.v:
+                stable += 1
+            else:
+                stable = 0
+                old_v = self.v
+            self.step(0.0, silent=True)
         self.stable_voltage = self.v
 
     def step(self, ligand_activation, resolution=100, silent=False):
@@ -81,7 +90,7 @@ class Soma:
         ik  = self.gkbar * (self.n**4) * (self.v-self.vk)
         il  = self.gl * (self.v-self.vl)
 
-        self.v +=  time_coefficient*( self.iapp - ina - ik - il ) / self.cm
+        self.v +=  time_coefficient*( self.gap_current - self.iapp - ina - ik - il ) / self.cm
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
         self.m +=  time_coefficient*(minf - self.m)/taum
