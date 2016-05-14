@@ -35,7 +35,7 @@ class Neuron:
         #         - add a function to each receptor protein that takes
         #             the neuron and does something to it
         for dendrite in self.dendrites:
-            activation += 0.05*dendrite.get_concentration()
+            activation += dendrite.get_activation()
 
         # Activate the soma
         self.soma.step(activation, resolution=resolution)
@@ -46,7 +46,8 @@ class Neuron:
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic,
-            transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA):
+            transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
+            axon_delay=0, dendrite_strength=0.05):
         synapse = Synapse()
         axon = synapse.create_axon(
                     transporter=transporter,
@@ -55,7 +56,8 @@ class Neuron:
                     capacity=1.0)
         dendrite = synapse.create_dendrite(
                     receptor=receptor,
-                    density=0.05)
+                    density=0.05,
+                    strength=dendrite_strength)
         synapse.set_enzyme_concentration(1.0)
 
         presynaptic.axons.append(axon)

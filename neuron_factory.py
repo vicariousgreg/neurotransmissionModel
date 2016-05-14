@@ -11,6 +11,7 @@
 
 from environment import NeuronEnvironment
 from neuron import Neuron, NeuronTypes
+from molecule import Transporters, Receptors
 
 class NeuronFactory:
     def __init__(self):
@@ -36,8 +37,12 @@ class NeuronFactory:
         self.neurons.append(neuron)
         return neuron
 
-    def create_synapse(self, pre_neuron, post_neuron):
-        synapse = Neuron.create_synapse(pre_neuron, post_neuron)
+    def create_synapse(self, pre_neuron, post_neuron,
+            transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
+            axon_delay=0, dendrite_strength=0.05):
+        synapse = Neuron.create_synapse(pre_neuron, post_neuron,
+            transporter=transporter, receptor=receptor,
+            axon_delay=axon_delay, dendrite_strength=dendrite_strength)
         self.synapses.append(synapse)
         return synapse
 

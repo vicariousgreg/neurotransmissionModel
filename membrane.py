@@ -56,6 +56,13 @@ class Membrane(PoolCluster):
             for mol_id in self.affinities
             if mol_id != self.native_mol_id)
 
+    def get_total_concentration(self):
+        """
+        Gets the concentration of native molecule.
+        """
+        return sum(self.get_concentration(mol_id)
+            for mol_id in self.affinities)
+
     def unbind(self):
         """
         Unbinds any molecules bound to the membrane.
