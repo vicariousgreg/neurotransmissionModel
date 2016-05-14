@@ -1,4 +1,4 @@
-# Photoreceptor Model
+# Photoreceptor Soma Model
 #
 # Photoreceptors do not generate action potentials.  Instead, they have a base
 #     current that triggers the release of glutamate in the dark.  With light
@@ -10,17 +10,30 @@
 
 from math import exp
 
-class Photoreceptor:
-    def __init__(self):
+class PhotoreceptorSoma:
+    def __init__(self, environment=None):
         self.data = []
         self.stabilization_counter=0
         self.base_conductance = 0.8
         self.light_level = 0.0
+        self.gap_current = 0.0
+
+        self.environment = environment
+        self.neuron_id = environment.register(-65.0)
         self.reset()
+
+    def get_voltage(self):
+        return self.environment.get_voltage(self.neuron_id)
+
+    def set_voltage(self, v):
+        self.environment.set_voltage(self.neuron_id, v)
+
+    def adjust_voltage(self, delta):
+        self.environment.adjust_voltage(self.neuron_id, delta)
 
     def reset(self):
 
-        self.v=-65.0
+        self.set_voltage(-65.0)
         self.h=0.596
         self.n=0.318
         self.m=self.base_conductance
@@ -37,50 +50,54 @@ class Photoreceptor:
         old_v = 0
         stable = 0
         while stable < 1000:
-            if old_v == self.v:
+            self.environment.step()
+            new_v = self.get_voltage()
+            if old_v == new_v:
                 stable += 1
             else:
                 stable = 0
-                old_v = self.v
+                old_v = new_v
             self.step(0.0, silent=True)
-        self.stable_voltage = self.v
+        self.environment.step()
+        self.stable_voltage = self.get_voltage()
 
     def step(self, light_activation=0.0, resolution=100, silent=False):
         if light_activation == 0.0 and self.stabilization_counter > 1:
-            if not silent: self.data.append((self.v-self.stable_voltage)/100)
+            if not silent: self.data.append((self.get_voltage()-self.stable_voltage)/100)
             return
         time_coefficient = 1.0 / resolution
 
+        voltage = self.get_voltage()
         self.light_level += (light_activation - self.light_level) / 1000
         self.m = self.base_conductance - self.light_level
-        self.cycle(time_coefficient)
+        self.cycle(time_coefficient, voltage)
 
         if silent: return
 
-        self.data.append((self.v-self.stable_voltage)/100)
+        self.data.append((voltage-self.stable_voltage)/100)
 
-        if self.v == self.stable_voltage:
+        if voltage == self.stable_voltage:
             self.stabilization_counter += 1
         else:
             self.stabilization_counter = 0
 
 
-    def cycle(self, time_coefficient):
-        ah   = 0.07*exp(-(self.v+65.0)/20.0)
-        bh   = 1.0/( 1.0 + exp(-(self.v+35.0)/10.0) )
+    def cycle(self, time_coefficient, voltage):
+        ah   = 0.07*exp(-(voltage+65.0)/20.0)
+        bh   = 1.0/( 1.0 + exp(-(voltage+35.0)/10.0) )
         hinf = ah/(ah+bh)
         tauh = 1/(ah+bh)
 
-        an   = 0.01*(self.v + 55.0)/(1.0 - exp(-(self.v + 55.0)/10.0))
-        bn   = 0.125*exp(-(self.v + 65.0)/80.0)
+        an   = 0.01*(voltage + 55.0)/(1.0 - exp(-(voltage + 55.0)/10.0))
+        bn   = 0.125*exp(-(voltage + 65.0)/80.0)
         ninf = an/(an+bn)
         taun = 1.0/(an+bn)
 
-        ina = self.gnabar * (self.m**3) * self.h * (self.v-self.vna)
-        ik  = self.gkbar * (self.n**4) * (self.v-self.vk)
-        il  = self.gl * (self.v-self.vl)
+        ina = self.gnabar * (self.m**3) * self.h * (voltage-self.vna)
+        ik  = self.gkbar * (self.n**4) * (voltage-self.vk)
+        il  = self.gl * (voltage-self.vl)
 
-        self.v +=  time_coefficient*(-ina - ik - il ) / self.cm
+        self.adjust_voltage(time_coefficient*(-ina - ik - il ) / self.cm)
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
 

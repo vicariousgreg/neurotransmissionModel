@@ -5,25 +5,6 @@ from plot import plot
 from simulation import run
 from synapse import Synapse
 
-def axon_release(rs=[1,5,10, 100, 1000], print_synaptic_cleft=False):
-    data = []
-    syn = Synapse(verbose=args.verbose)
-    axon = syn.create_axon(
-                replenish_rate=0.0,
-                reuptake_rate=0.0,
-                verbose=args.verbose)
-
-    record_components = [("release %s" % str(r), axon)]
-    if print_synaptic_cleft:
-        record_components.append((
-            "synaptic cleft %s" % str(r),
-            syn.synaptic_cleft))
-
-    data += run(syn,
-        record_components = record_components,
-        iterations = 100)
-    if not args.silent: plot(data, title="Release (release time factor)")
-
 def axon_reuptake(rs=[0.1, 0.5, 1.0], print_synaptic_cleft=False):
     data = []
     for r in rs:

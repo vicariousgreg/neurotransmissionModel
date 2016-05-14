@@ -1,13 +1,19 @@
-# Environment
+# Environments
 #
-# When components with pools are created, they should be passed an environment
-#     and register with a pool_id.
+# Synapse Environment:
+#     When components with pools are created, they should be passed a 
+#         synapse environment and register with a pool_id.
+#     The environment holds concentrations of neurotransmitters for pools.
 #
-# The batch environment holds concentrations of neurotransmitters for pools.
-# An array is kept for previous and next concentrations to avoid race
-#     race conditions.  When a timestep is run, the buffers shift.
-# Concentrations are retrieved from prev_concentrations
-#     and set to next_concentrations.
+# Neuron Environment:
+#     When neurons are created, they should be passed a neuron environment
+#         and register their soma with a neuron_id.
+#     The environment holds the voltages of neuron somas.
+#     After registering, the neuron should stabilize its voltage and set it.
+#
+# An array is kept for previous and next values to avoid race conditions.
+#     When a timestep is run, the buffers shift.
+# Values are retrieved from the pervious array and set to the next array.
 
 from random import betavariate
 
@@ -18,7 +24,7 @@ def betav(maximum, noise=0.5, rate=1.0):
     b = ratio * a
     return maximum*(betavariate(a,b))
 
-class Environment:
+class SynapseEnvironment:
     def __init__(self, noise=0.0):
         self.prev_concentrations = []
         self.next_concentrations = []
@@ -26,7 +32,7 @@ class Environment:
             return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
 
-    def create_pool(self, baseline_concentration):
+    def register(self, baseline_concentration):
         pool_id = len(self.prev_concentrations)
         self.prev_concentrations.append(baseline_concentration)
         self.next_concentrations.append(baseline_concentration)
@@ -49,3 +55,30 @@ class Environment:
     def step(self):
         for i in xrange(len(self.prev_concentrations)):
             self.prev_concentrations[i]=self.next_concentrations[i]
+
+class NeuronEnvironment:
+    def __init__(self, noise=0.0):
+        self.prev_voltages = []
+        self.next_voltages = []
+        def beta(maximum, rate=1.0):
+            return betav(maximum, noise=noise, rate=rate)
+        self.beta = beta
+
+    def register(self, baseline_voltage=0.0):
+        neuron_id = len(self.prev_voltages)
+        self.prev_voltages.append(baseline_voltage)
+        self.next_voltages.append(baseline_voltage)
+        return neuron_id
+
+    def get_voltage(self, neuron_id):
+        return self.prev_voltages[neuron_id]
+
+    def set_voltage(self, neuron_id, new_voltage):
+        self.next_voltages[neuron_id] = new_voltage
+
+    def adjust_voltage(self, neuron_id, delta):
+        self.next_voltages[neuron_id] += delta
+
+    def step(self):
+        for i in xrange(len(self.prev_voltages)):
+            self.prev_voltages[i]=self.next_voltages[i]

@@ -6,11 +6,22 @@
 from math import exp
 
 class Soma:
-    def __init__(self, base_current=0.0):
+    def __init__(self, base_current=0.0, environment=None):
         self.data = []
         self.iapp = base_current
-        self.stabilization_counter=0
+        self.stabilization_counter = 0
+        self.environment = environment
+        self.neuron_id = environment.register(-65.0)
         self.reset()
+
+    def get_voltage(self):
+        return self.environment.get_voltage(self.neuron_id)
+
+    def set_voltage(self, v):
+        self.environment.set_voltage(self.neuron_id, v)
+
+    def adjust_voltage(self, delta):
+        self.environment.adjust_voltage(self.neuron_id, delta)
 
     def reset(self):
         self.time = 0
@@ -18,7 +29,7 @@ class Soma:
         self.last_spike = 0
         self.gap_current = 0.0
 
-        self.v=-65.0
+        self.set_voltage(-65.0)
         self.h=0.596
         self.n=0.318
         self.m=0.053
@@ -35,62 +46,70 @@ class Soma:
         old_v = 0
         stable = 0
         while stable < 1000:
-            if old_v == self.v:
+            self.environment.step()
+            new_v = self.get_voltage()
+            if old_v == new_v:
                 stable += 1
             else:
                 stable = 0
-                old_v = self.v
+                old_v = new_v
             self.step(0.0, silent=True)
-        self.stable_voltage = self.v
+        self.environment.step()
+        self.stable_voltage = self.get_voltage()
 
     def step(self, ligand_activation, resolution=100, silent=False):
         if ligand_activation == 0 and self.iapp == 0.0 \
                 and self.stabilization_counter > 1:
-            self.data.append(min(0.2, (self.v-self.stable_voltage)/100))
+            self.data.append(min(0.2, (self.get_voltage()-self.stable_voltage)/100))
             return
+        voltage = self.get_voltage()
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
-        self.cycle(time_coefficient)
+        voltage_delta = self.cycle(time_coefficient, voltage)
         if silent: return
 
-        self.data.append(min(0.2, (self.v-self.stable_voltage)/100))
+        self.data.append(min(0.2, (voltage-self.stable_voltage)/100))
 
-        if self.v > 0.0 and self.firing is False:
+        if voltage > 0.0 and self.firing is False:
             time = len(self.data)
             print(time - self.last_spike)
             self.last_spike = time
             self.firing = True
-        elif self.firing and self.v < 0.0:
+        elif self.firing and voltage < 0.0:
             self.firing = False
         self.time += 1
 
-        if self.v == self.stable_voltage:
+        if voltage == self.stable_voltage:
             self.stabilization_counter += 1
         else:
             self.stabilization_counter = 0
 
 
-    def cycle(self, time_coefficient):
-        am   = 0.1*(self.v+40.0)/( 1.0 - exp(-(self.v+40.0)/10.0) )
-        bm   = 4.0*exp(-(self.v+65.0)/18.0)
+    def cycle(self, time_coefficient, voltage):
+        """
+        Cycles the voltage and currents.
+        Voltage is a parameter to avoid accessing the voltage cache.
+        """
+        am   = 0.1*(voltage+40.0)/( 1.0 - exp(-(voltage+40.0)/10.0) )
+        bm   = 4.0*exp(-(voltage+65.0)/18.0)
         minf = am/(am+bm)
         taum = 1.0/(am+bm)
 
-        ah   = 0.07*exp(-(self.v+65.0)/20.0)
-        bh   = 1.0/( 1.0 + exp(-(self.v+35.0)/10.0) )
+        ah   = 0.07*exp(-(voltage+65.0)/20.0)
+        bh   = 1.0/( 1.0 + exp(-(voltage+35.0)/10.0) )
         hinf = ah/(ah+bh)
         tauh = 1/(ah+bh)
 
-        an   = 0.01*(self.v + 55.0)/(1.0 - exp(-(self.v + 55.0)/10.0))
-        bn   = 0.125*exp(-(self.v + 65.0)/80.0)
+        an   = 0.01*(voltage + 55.0)/(1.0 - exp(-(voltage + 55.0)/10.0))
+        bn   = 0.125*exp(-(voltage + 65.0)/80.0)
         ninf = an/(an+bn)
         taun = 1.0/(an+bn)
 
-        ina = self.gnabar * (self.m**3) * self.h * (self.v-self.vna)
-        ik  = self.gkbar * (self.n**4) * (self.v-self.vk)
-        il  = self.gl * (self.v-self.vl)
+        ina = self.gnabar * (self.m**3) * self.h * (voltage-self.vna)
+        ik  = self.gkbar * (self.n**4) * (voltage-self.vk)
+        il  = self.gl * (voltage-self.vl)
 
-        self.v +=  time_coefficient*( self.gap_current + self.iapp - ina - ik - il ) / self.cm
+        self.adjust_voltage(time_coefficient*( self.gap_current + self.iapp - ina - ik - il ) / self.cm)
         self.h +=  time_coefficient*(hinf - self.h)/tauh
         self.n +=  time_coefficient*(ninf - self.n)/taun
         self.m +=  time_coefficient*(minf - self.m)/taum

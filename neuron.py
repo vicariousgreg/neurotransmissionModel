@@ -1,21 +1,32 @@
 # Neuron Model
 
+from enum import enum
 from soma import Soma
 from synapse import Synapse
 from molecule import Transporters, Receptors
+from photoreceptor import PhotoreceptorSoma
+
+NeuronTypes = enum(
+    PHOTORECEPTOR = 0,
+    GANGLION = 1
+)
 
 class Neuron:
-    def __init__(self, base_current=0.0):
-        self.soma = Soma(base_current)
+    def __init__(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION, environment=None):
+        if neuron_type == NeuronTypes.PHOTORECEPTOR:
+            self.soma = PhotoreceptorSoma(environment)
+        elif neuron_type == NeuronTypes.GANGLION:
+            self.soma = Soma(base_current, environment)
         self.axons = []
         self.dendrites = []
         self.gap_junctions = []
+        self.environment = environment
 
     def step(self, activation=0.0, resolution=100):
         # Activate gap junctions
         gap_current = 0
         for other,conductance in self.gap_junctions:
-            df = conductance*(other.soma.v - self.soma.v)
+            df = conductance*(other.soma.get_voltage() - self.soma.get_voltage())
             gap_current += df
         self.soma.gap_current = gap_current
 
@@ -31,7 +42,7 @@ class Neuron:
 
         # Activate the axons
         for axon in self.axons:
-            axon.step(voltage = self.soma.v, resolution=resolution)
+            axon.step(voltage = self.soma.get_voltage(), resolution=resolution)
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic,

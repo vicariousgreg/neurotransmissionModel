@@ -3,9 +3,10 @@ import argparse
 from plot import plot
 
 from synapse import Synapse
-from photoreceptor import Photoreceptor
+from neuron import Neuron, NeuronTypes
+from environment import NeuronEnvironment
 
-def transmit(
+def test_photoreceptor(
         #spike_strengths=[0.5]):
         spike_strengths=[0.1, 0.5, 0.7]):
     data = []
@@ -27,16 +28,12 @@ def transmit(
     data.append(("current", current_data))
 
     for strength in spike_strengths:
-        soma = Photoreceptor()
-        synapse = Synapse(verbose=args.verbose)
-        axon = synapse.create_axon(
-                    replenish_rate=0.1,
-                    reuptake_rate=0.5,
-                    capacity=1.0, #0.05,
-                    verbose=args.verbose)
-        dendrite = synapse.create_dendrite(
-                    density=0.5,
-                    verbose=args.verbose)
+        environment = NeuronEnvironment()
+        neuron = Neuron(neuron_type=NeuronTypes.PHOTORECEPTOR, environment=environment)
+        post = Neuron(environment=environment)
+        synapse = Neuron.create_synapse(neuron, post)
+        axon = neuron.axons[0]
+        dendrite = post.dendrites[0]
         synapse.set_enzyme_concentration(0.5)
 
         cleft_data = []
@@ -44,9 +41,9 @@ def transmit(
 
         m=0.0
         for i in xrange(5000):
-            soma.step(m, resolution=100)
-            axon.step(voltage = soma.v, resolution=100)
+            neuron.step(m, resolution=100)
             synapse.step(i)
+            environment.step()
 
             cleft_data.append(synapse.synaptic_cleft.get_concentration())
             dendrite_data.append(dendrite.get_concentration())
@@ -56,14 +53,14 @@ def transmit(
             elif i % frequency == period:
                 m = 0.0
 
-            soma.step(m, resolution=100)
-            axon.step(voltage = soma.v, resolution=100)
+            neuron.step(m, resolution=100)
+            environment.step()
             synapse.step(i)
 
             cleft_data.append(synapse.synaptic_cleft.get_concentration())
             dendrite_data.append(dendrite.get_concentration())
 
-        data.append(soma.get_data("Photoreceptor %f" % strength))
+        data.append(neuron.soma.get_data("Photoreceptor %f" % strength))
         #data.append(axon.get_data())
         data.append(("dendrite %f" % strength, dendrite_data))
         #data.append(("synaptic cleft", cleft_data))
@@ -71,7 +68,7 @@ def transmit(
         plot(data, title="Photoreceptor test")
 
 def main():
-    transmit()
+    test_photoreceptor()
 
 def set_options():
     """

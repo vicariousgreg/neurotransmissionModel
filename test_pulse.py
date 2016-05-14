@@ -3,6 +3,8 @@ import argparse
 from plot import plot
 
 from soma import Soma
+from environment import NeuronEnvironment
+
 
 def pulse(strengths = [-2, -1, 5, 25]):
     data = []
@@ -24,16 +26,19 @@ def pulse(strengths = [-2, -1, 5, 25]):
     data.append(("current", current_data))
 
     for strength in strengths:
-        soma = Soma()
+        environment = NeuronEnvironment()
+        soma = Soma(environment=environment)
 
         for i in xrange(5000):
             soma.step(0.0, resolution=100)
+            environment.step()
         for i in xrange(30000):
             if i % frequency == 0:
                 soma.iapp = strength
             elif i % frequency == period:
                 soma.iapp = 0.0
             soma.step(0.0, resolution=100)
+            environment.step()
 
         data.append(soma.get_data("Pulse %f" % strength))
     if not args.silent:

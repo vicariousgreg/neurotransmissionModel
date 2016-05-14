@@ -13,7 +13,7 @@ class PoolCluster:
             be managed during timesteps externally.
         """
         self.pool_ids = dict([
-            (mol_id, environment.create_pool(concentration))
+            (mol_id, environment.register(concentration))
             for mol_id,concentration in concentrations.iteritems()])
         self.environment = environment
 

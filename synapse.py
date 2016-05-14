@@ -6,7 +6,7 @@ from molecule import Enzymes
 from axon import Axon
 from dendrite import Dendrite
 from synaptic_cleft import SynapticCleft
-from environment import Environment
+from environment import SynapseEnvironment
 
 class Synapse:
     def __init__(self, initial_enzyme_concentration=0.0, verbose=False):
@@ -14,7 +14,7 @@ class Synapse:
         Creates a synapse with an initialized synaptic cleft.
         An initial enzyme concentration can be specified.
         """
-        self.environment = Environment()
+        self.environment = SynapseEnvironment()
 
         self.synaptic_cleft = SynapticCleft(
             enzyme_concentration=initial_enzyme_concentration,
