@@ -45,10 +45,12 @@ class Neuron:
             axon.step(voltage = self.soma.get_voltage(), resolution=resolution)
 
     @staticmethod
-    def create_synapse(presynaptic, postsynaptic,
+    def create_synapse(presynaptic, postsynaptic, single_molecule=None,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
+            enzyme_concentration=1.0,
             axon_delay=None, dendrite_strength=0.05):
-        synapse = Synapse()
+        synapse = Synapse(initial_enzyme_concentration=enzyme_concentration,
+                                             single_molecule=single_molecule)
         axon = synapse.create_axon(
                     transporter=transporter,
                     replenish_rate=0.1,
@@ -59,7 +61,6 @@ class Neuron:
                     receptor=receptor,
                     density=0.05,
                     strength=dendrite_strength)
-        synapse.set_enzyme_concentration(1.0)
 
         presynaptic.axons.append(axon)
         postsynaptic.dendrites.append(dendrite)

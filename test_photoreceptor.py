@@ -9,13 +9,14 @@ def test_photoreceptor(
         spike_strengths=[0.5]):
         #spike_strengths=[0.1, 0.5, 0.7]):
     data = []
-    length = 7000
+    length = 5000
     period = 12000
+    rest_length = 5000
 
     current_data = []
-    for i in xrange(5000):
+    for i in xrange(rest_length):
         current_data.append(-0.5)
-    for i in xrange(5000, 35000):
+    for i in xrange(rest_length, args.iterations+rest_length):
         if i % period < length:
             current_data.append(-0.4)
         else:
@@ -36,14 +37,14 @@ def test_photoreceptor(
         axon_name="axon %f" % strength
         cleft_name="synaptic cleft %f" % strength
         dendrite_name="dendrite %f" % strength
-        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.0125,
+        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.015,
             axon_probe_name=axon_name, cleft_probe_name=cleft_name, dendrite_probe_name=dendrite_name)
         synapse.set_enzyme_concentration(0.5)
 
         cleft_data = []
         dendrite_data = []
 
-        neuron_factory.step(5000)
+        neuron_factory.step(rest_length)
         neuron_factory.register_driver(photoreceptor,
             ActivationPulseDriver(activation=strength, period=period, length=length))
         neuron_factory.step(args.iterations)
@@ -69,7 +70,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 30000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 60000, help = 
     """table""")
 
     return parser.parse_args()

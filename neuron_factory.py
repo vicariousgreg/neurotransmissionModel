@@ -55,13 +55,30 @@ class NeuronFactory:
 
     def create_synapse(self, pre_neuron, post_neuron,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
-            axon_delay=None, dendrite_strength=0.05,
+            enzyme_concentration=1.0,
+            axon_delay=None, dendrite_strength=0.05, single_molecule=True,
             axon_probe_name=None, cleft_probe_name=None, dendrite_probe_name=None):
+        # If single molecule is true, the synapse will save time and space by
+        #     assuming that only one molecule will move through it.  This means
+        #     that the proteins must use the same native molecule, and no
+        #     exogenous molecules can be admitted into the synapse.
+        if single_molecule:
+            # First, we must validate that the proteins use the same molecule.
+            if transporter.native_mol_id != receptor.native_mol_id:
+                raise ValueError
+            # Set the molecule.
+            molecule = transporter.native_mol_id
+        # Otherwise, set the molecule to none.
+        else: molecule = None
+
+        # Create synapse.
         synapse = Neuron.create_synapse(pre_neuron, post_neuron,
             transporter=transporter, receptor=receptor,
+            single_molecule = molecule, enzyme_concentration=enzyme_concentration,
             axon_delay=axon_delay, dendrite_strength=dendrite_strength)
         self.synapses.append(synapse)
 
+        # Set up probes.
         if axon_probe_name:
             axon = synapse.axons[0]
             probe = ConcentrationProbe(axon.native_mol_id)
