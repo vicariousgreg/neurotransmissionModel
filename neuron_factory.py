@@ -68,16 +68,16 @@ class CurrentPulseDriver:
         neuron.step()
 
 class ActivationPulseDriver:
-    def __init__(self, activation=0.0, period=1000, length=1, decrement=0):
+    def __init__(self, activation=0.0, period=1000, length=1, decrement=None):
         self.activation = activation
         self.period = period
         self.length = length
         self.decrement = decrement
 
     def drive(self, neuron, time):
-        if time % self.period == 0:
+        if time % self.period < self.length:
             neuron.step(self.activation)
-            if self.activation > 0.0:
+            if self.decrement and self.activation > 0.0:
                 self.activation -= self.decrement
         else:
             neuron.step()
