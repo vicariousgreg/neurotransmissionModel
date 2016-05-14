@@ -37,14 +37,15 @@ class Soma:
     def step(self, ligand_activation, resolution=100, silent=False):
         if ligand_activation == 0 and self.iapp == 0.0 \
                 and self.stabilization_counter > 1:
-            self.data.append(min(-0.45, self.v/100)+0.65)
+            self.data.append(min(0.2, (self.v-self.stable_voltage)/100))
             return
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
         self.cycle(time_coefficient)
         if silent: return
 
-        self.data.append(min(-0.45, self.v/100)+0.65)
+        self.data.append(min(0.2, (self.v-self.stable_voltage)/100))
+
         if self.v > 0.0 and self.firing is False:
             time = len(self.data)
             print(time - self.last_spike)

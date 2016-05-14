@@ -74,8 +74,12 @@ class SynapticCleft(PoolCluster):
 
             # For each receptive molecule:
             for mol_id,affinity in membrane.protein.affinities.iteritems():
-                try: mol_concentration = mol_concentrations[mol_id]
+                try:
+                    mol_concentration = mol_concentrations[mol_id]
                 except KeyError: continue
+
+                competing_proteins = mol_protein_count[mol_id]
+                if competing_proteins == 0: continue
 
                 protein_count = membrane.get_available_proteins(mol_id)
 
@@ -83,7 +87,7 @@ class SynapticCleft(PoolCluster):
                 mol_fraction = affinity * mol_concentration / competing_molecules
 
                 # Proportion of protein relative to competitors.
-                protein_fraction = affinity * protein_count / mol_protein_count[mol_id]
+                protein_fraction = affinity * protein_count / competing_proteins
 
                 # Calculate bound concentration.
                 k = (1 - (mol_fraction * protein_fraction))

@@ -10,6 +10,8 @@ class Photoreceptor:
         self.data = []
         self.iapp = base_current
         self.stabilization_counter=0
+        self.base_conductance = 0.8
+        self.light_level = 0.0
         self.reset()
 
     def reset(self):
@@ -17,8 +19,7 @@ class Photoreceptor:
         self.v=-65.0
         self.h=0.596
         self.n=0.318
-        #self.m=0.053
-        self.m=0.5
+        self.m=self.base_conductance
 
         self.cm=1.0
         self.gnabar=120.0
@@ -35,16 +36,17 @@ class Photoreceptor:
     def step(self, light_activation=0.0, resolution=100, silent=False):
         if light_activation == 0.0 and self.iapp == 0.0 \
                 and self.stabilization_counter > 1:
-            self.data.append(min(-0.45, self.v/100)+0.65)
+            self.data.append((self.v-self.stable_voltage)/100)
             return
         time_coefficient = 1.0 / resolution
 
-        self.m = 0.5 - light_activation
+        self.light_level += (light_activation - self.light_level) / 1000
+        self.m = self.base_conductance - self.light_level
         self.cycle(time_coefficient)
 
         if silent: return
 
-        self.data.append(min(-0.45, self.v/100)+0.65)
+        self.data.append((self.v-self.stable_voltage)/100)
 
         if self.v == self.stable_voltage:
             self.stabilization_counter += 1

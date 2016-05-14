@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from simulation import run
 from synapse import Synapse
 from soma import Soma
 

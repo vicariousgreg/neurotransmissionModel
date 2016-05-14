@@ -57,7 +57,8 @@ class Axon(TransporterMembrane):
         self.cycle(time_coefficient)
 
         if silent: return
-        self.data.append((self.ica/2000))
+        #self.data.append((self.ica/2000))
+        self.data.append(min(0.2, (self.v-self.stable_voltage)/100))
         self.time += 1
 
     def cycle(self, time_coefficient):

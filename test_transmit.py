@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from simulation import run
 from synapse import Synapse
 from soma import Soma
 
@@ -48,7 +47,7 @@ def transmit(spike_strengths=[0.10],
 
         data.append(pre_soma.get_data(name="pre strength: %f" % s))
         data.append(post_soma.get_data(name="post strength: %f" % s))
-        data.append(axon.get_data())
+        #data.append(axon.get_data())
         #data.append(("dendrite", dendrite_data))
         #data.append(("synaptic cleft", cleft_data))
     if not args.silent:
