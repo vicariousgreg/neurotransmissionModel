@@ -15,7 +15,6 @@ class PhotoreceptorSoma:
         self.stabilization_counter=0
         self.base_conductance = 0.8
         self.light_level = 0.0
-        self.gap_current = 0.0
 
         self.environment = environment
         self.neuron_id = environment.register(-65.0)
@@ -48,7 +47,7 @@ class PhotoreceptorSoma:
         # Stabilize
         old_v = 0
         stable = 0
-        while stable < 1000:
+        while stable < 10:
             self.environment.step()
             new_v = self.get_voltage()
             if old_v == new_v:

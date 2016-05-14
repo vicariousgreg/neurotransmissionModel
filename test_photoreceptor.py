@@ -36,7 +36,7 @@ def test_photoreceptor(
         axon_name="axon %f" % strength
         cleft_name="synaptic cleft %f" % strength
         dendrite_name="dendrite %f" % strength
-        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.015,
+        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.0125,
             axon_probe_name=axon_name, cleft_probe_name=cleft_name, dendrite_probe_name=dendrite_name)
         synapse.set_enzyme_concentration(0.5)
 

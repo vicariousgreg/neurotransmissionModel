@@ -10,13 +10,14 @@ def pulse(strengths = [-2, -1, 5, 25]):
     data = []
     length = 7000
     period = 10000
+    rest_length = 5000
 
     current_data = []
     current = -0.3
 
-    for i in xrange(5000):
+    for i in xrange(rest_length):
         current_data.append(-0.3)
-    for i in xrange(5000, 35000):
+    for i in xrange(rest_length, rest_length+args.iterations):
         if i % period == 0:
             current = -0.2
         elif i % period == length:
@@ -30,7 +31,7 @@ def pulse(strengths = [-2, -1, 5, 25]):
         neuron_name = "Pulse %f" % strength
         neuron = neuron_factory.create_neuron(probe_name=neuron_name)
 
-        neuron_factory.step(5000)
+        neuron_factory.step(rest_length)
         neuron_factory.register_driver(neuron,
             CurrentPulseDriver(current=strength, period=period, length=length))
         neuron_factory.step(args.iterations)

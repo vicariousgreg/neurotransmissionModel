@@ -44,7 +44,7 @@ class Soma:
         # Stabilize
         old_v = 0
         stable = 0
-        while stable < 1000:
+        while stable < 10:
             self.environment.step()
             new_v = self.get_voltage()
             if old_v == new_v:
