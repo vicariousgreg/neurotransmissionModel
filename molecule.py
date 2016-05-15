@@ -89,7 +89,7 @@ class Transporter:
             blocked by foreign molecules (reuptake inhibitors).  As with
             receptors, every molecule that interacts with the protein has a
             particular affinity for binding to it.  The native molecule has
-            a full affinity, and does not get bound (see TransporterMembrane).
+            a full affinity, and does not get bound (see axon.py)
         """
         self.native_mol_id = native_mol_id
         self.reuptake_inhibitors = []

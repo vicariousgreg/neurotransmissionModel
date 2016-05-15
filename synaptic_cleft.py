@@ -75,9 +75,10 @@ class SynapticCleft(PoolCluster):
             total_protein_count += count*affinity
 
         try:
-            axon_available = min(axon.density, axon.capacity-axon.get_native_concentration())
+            native_mol_id = axon.native_mol_id
+            axon_available = min(axon.density, axon.capacity-axon.get_concentration(native_mol_id))
             if axon_available > 0.0:
-                count,affinity = (axon_available, axon.affinities[mol_id])
+                count,affinity = (axon_available, axon.affinities[native_mol_id])
                 protein_count = count*affinity
                 total_protein_count += protein_count
 
@@ -90,7 +91,7 @@ class SynapticCleft(PoolCluster):
 
                 # Transfer molecules to axon.
                 axon.add_concentration(bound)
-                self.remove_concentration(bound, mol_id)
+                self.remove_concentration(bound, native_mol_id)
         except AttributeError: pass
 
         # Compute for each dendrite.
@@ -153,14 +154,14 @@ class SynapticCleft(PoolCluster):
             protein_mol_count[dendrite.protein] = 0.0
             for mol_id,affinity in dendrite.protein.affinities.iteritems():
                 if mol_id in mol_protein_count:
-                    mol_protein_count[mol_id] += dendrite.get_available_proteins(mol_id) * affinity
+                    mol_protein_count[mol_id] += dendrite.density * affinity
                     protein_mol_count[dendrite.protein] += mol_concentrations[mol_id] * affinity
 
         # Axon
         try:
-            axon_available = min(axon.density, axon.capacity-axon.get_native_concentration())
+            native_mol_id = axon.native_mol_id
+            axon_available = min(axon.density, axon.capacity-axon.get_concentration(native_mol_id))
             if axon_available > 0.0:
-                native_mol_id = axon.native_mol_id
                 count,affinity = (axon_available, axon.affinities[native_mol_id])
                 protein_count = count*affinity
 
@@ -218,7 +219,7 @@ class SynapticCleft(PoolCluster):
                 mol_fraction = affinity * mol_concentration / competing_molecules
 
                 # Proportion of protein relative to competitors.
-                protein_count = affinity * dendrite.get_available_proteins(mol_id)
+                protein_count = affinity * dendrite.density
                 protein_fraction = protein_count / competing_proteins
 
                 # Calculate bound concentration.

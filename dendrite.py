@@ -4,11 +4,10 @@
 #     from the synaptic cleft bind, modifying the membrane potential of the cell.
 
 from molecule import Receptors
-from membrane import ReceptorMembrane
 
-class Dendrite(ReceptorMembrane):
-    def __init__(self, receptor=Receptors.AMPA, density=1.0, strength=0.05,
-                                            environment=None, verbose=False):
+class Dendrite:
+    def __init__(self, receptor=Receptors.AMPA, density=1.0,
+                    strength=0.05, environment=None, verbose=False):
         """
         Dendrites hold receptors that are activated by neurochemicals in the
             synaptic cleft.
@@ -17,10 +16,16 @@ class Dendrite(ReceptorMembrane):
         |density| is the initial receptor density of the membrane.
         """
         if density > 1.0: raise ValueError
-        ReceptorMembrane.__init__(self, receptor, density, environment)
+        self.protein = receptor
+        self.native_mol_id = receptor.native_mol_id
+        self.density = density
+        self.affinities = receptor.affinities
         self.strength = strength
         self.bound = 0.0
         self.verbose = verbose
+
+    def get_concentration(self, mol_id=None):
+        return self.bound
 
     def bind(self, concentration):
         self.bound = concentration

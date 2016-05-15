@@ -31,11 +31,11 @@ class PhotoreceptorSoma:
         self.environment.adjust_voltage(self.neuron_id, delta)
 
     def reset(self):
-
         self.set_voltage(-65.0)
         self.h=0.596
         self.n=0.318
         self.m=self.base_conductance
+        self.iapp = 0.0
 
         self.cm=1.0
         self.gnabar=120.0

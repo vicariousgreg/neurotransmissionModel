@@ -7,7 +7,7 @@ from neuron import Neuron
 from soma import Soma
 from neuron_factory import NeuronFactory, ActivationPulseDriver
 
-def transmit(strength=0.3, delays=[None, 100]):
+def transmit(strength=0.25, delays=[None, 100]):
     data = []
     neuron_factory = NeuronFactory()
     if args.silent:
@@ -39,8 +39,8 @@ def transmit(strength=0.3, delays=[None, 100]):
         plot(data, title="Synaptic transmission")
 
 def main():
-    #transmit(strength = 0.3)
-    transmit(strength = 0.3, delays=[100])
+    transmit(strength = 0.25)
+    #transmit(strength = 0.2, delays=[100])
     #transmit(strength = 0.1, delays=[None])
 
 def set_options():

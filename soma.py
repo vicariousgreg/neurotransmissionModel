@@ -23,9 +23,7 @@ class Soma:
         self.environment.adjust_voltage(self.neuron_id, delta)
 
     def reset(self):
-        self.time = 0
         self.firing = False
-        self.last_spike = 0
         self.gap_current = 0.0
 
         self.set_voltage(-65.0)
@@ -64,12 +62,10 @@ class Soma:
         if silent: return
 
         if voltage > 0.0 and self.firing is False:
-            print(self.time - self.last_spike)
-            self.last_spike = self.time
+            print("SPIKE")
             self.firing = True
         elif self.firing and voltage < 0.0:
             self.firing = False
-        self.time += 1
 
         if ligand_activation == 0.0 and \
                 abs(voltage-self.stable_voltage) < 0.001:

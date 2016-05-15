@@ -6,21 +6,21 @@ from neuron import NeuronTypes
 from neuron_factory import NeuronFactory, ActivationPulseDriver
 
 def test_photoreceptor(
-        spike_strengths=[0.5]):
+        spike_strengths=[0.7]):
         #spike_strengths=[0.1, 0.5, 0.7]):
     data = []
-    length = 5000
-    period = 12000
+    length = 10000
+    period = 20000
     rest_length = 5000
 
     current_data = []
     for i in xrange(rest_length):
-        current_data.append(-0.3)
+        current_data.append(-0.4)
     for i in xrange(rest_length, args.iterations+rest_length):
         if i % period < length:
-            current_data.append(-0.2)
-        else:
             current_data.append(-0.3)
+        else:
+            current_data.append(-0.4)
 
     data.append(("current", current_data))
 
@@ -37,7 +37,7 @@ def test_photoreceptor(
         axon_name="axon %f" % strength
         cleft_name="synaptic cleft %f" % strength
         dendrite_name="dendrite %f" % strength
-        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.013,
+        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=0.005,
             axon_probe_name=axon_name, cleft_probe_name=cleft_name, dendrite_probe_name=dendrite_name)
         synapse.set_enzyme_concentration(0.5)
 
@@ -51,7 +51,7 @@ def test_photoreceptor(
 
         data.append(neuron_factory.get_probe_data(pre_neuron_name))
         data.append(neuron_factory.get_probe_data(post_neuron_name))
-        #data.append(neuron_factory.get_probe_data(axon_name))
+        data.append(neuron_factory.get_probe_data(axon_name))
         #data.append(neuron_factory.get_probe_data(cleft_name))
         data.append(neuron_factory.get_probe_data(dendrite_name))
     if not args.silent:

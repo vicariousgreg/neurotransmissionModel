@@ -47,7 +47,7 @@ class Neuron:
             activation += dendrite.get_activation()
 
         # Activate the soma
-        if activation > 0.0 or self.soma.stable_count < 10 or gap_current_changed:
+        if activation > 0.0 or self.soma.iapp > 0.0 or self.soma.stable_count < 10 or gap_current_changed:
             self.soma.step(activation, resolution=resolution)
 
         # Activate the axons
@@ -58,7 +58,7 @@ class Neuron:
     def create_synapse(presynaptic, postsynaptic, single_molecule=None,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             enzyme_concentration=1.0,
-            axon_delay=None, dendrite_strength=0.05):
+            axon_delay=None, dendrite_strength=0.0015):
         synapse = Synapse(initial_enzyme_concentration=enzyme_concentration,
                                              single_molecule=single_molecule)
         axon = synapse.create_axon(
@@ -69,7 +69,7 @@ class Neuron:
                     delay=axon_delay)
         dendrite = synapse.create_dendrite(
                     receptor=receptor,
-                    density=0.05,
+                    density=0.25,
                     strength=dendrite_strength)
 
         presynaptic.axons.append(axon)
