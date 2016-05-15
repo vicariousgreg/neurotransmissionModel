@@ -57,9 +57,6 @@ class Soma:
         self.stable_voltage = self.get_voltage()
 
     def step(self, ligand_activation, resolution=100, silent=False):
-        if ligand_activation == 0 and self.stable \
-                and self.gap_current == 0.0 and self.iapp == 0.0:
-            return
         voltage = self.get_voltage()
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation

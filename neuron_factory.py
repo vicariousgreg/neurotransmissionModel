@@ -29,15 +29,21 @@ class NeuronFactory:
 
     def step(self, count=1):
         for _ in xrange(count):
+            # Activate neurons.
             for neuron in self.neurons:
                 try: self.neuron_probes[neuron].record(neuron.soma)
                 except KeyError: pass
                 self.drivers.get(neuron, self.base_driver).drive(neuron, self.time)
+
+            # Activate synapses if they are active or have a releasing axon.
             for synapse in self.synapses:
                 for component in synapse.components:
                     try: self.concentration_probes[component].record(component)
                     except KeyError: pass
-                synapse.step(self.time)
+                if synapse.active or synapse.axon.releasing:
+                    synapse.step(self.time)
+
+            # Step the environment.
             self.neuron_environment.step()
             self.time += 1
 
@@ -80,13 +86,13 @@ class NeuronFactory:
 
         # Set up probes.
         if axon_probe_name:
-            axon = synapse.axons[0]
+            axon = synapse.axon
             probe = ConcentrationProbe(axon.native_mol_id)
             self.concentration_probes[axon] = probe
             self.probes[axon_probe_name] = probe
         if cleft_probe_name:
             cleft = synapse.synaptic_cleft
-            probe = ConcentrationProbe(synapse.axons[0].native_mol_id)
+            probe = ConcentrationProbe(synapse.axon.native_mol_id)
             self.concentration_probes[cleft] = probe
             self.probes[cleft_probe_name] = probe
         if dendrite_probe_name:

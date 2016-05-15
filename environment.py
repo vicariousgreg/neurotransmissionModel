@@ -57,9 +57,10 @@ class SynapseEnvironment:
             max(0.0, self.next_concentrations[pool_id])
 
     def step(self):
-        self.dirty = False
-        for i in xrange(len(self.prev_concentrations)):
-            self.prev_concentrations[i]=self.next_concentrations[i]
+        if self.dirty:
+            self.dirty = False
+            for i in xrange(len(self.prev_concentrations)):
+                self.prev_concentrations[i]=self.next_concentrations[i]
 
 class NeuronEnvironment:
     def __init__(self, noise=0.0):

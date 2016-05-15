@@ -20,15 +20,24 @@ class Neuron:
         self.axons = []
         self.dendrites = []
         self.gap_junctions = []
+        self.active_gap_junctions = False
         self.environment = environment
 
     def step(self, activation=0.0, resolution=100):
         # Activate gap junctions
         gap_current = 0
-        for other,conductance in self.gap_junctions:
-            df = conductance*(other.soma.get_voltage() - self.soma.get_voltage())
-            gap_current += df
-        self.soma.gap_current = gap_current
+        soma_voltage = self.soma.get_voltage()
+
+        # Check gap junctions.
+        gap_current_changed = False
+        if self.active_gap_junctions:
+            for other,conductance in self.gap_junctions:
+                df = conductance*(other.soma.get_voltage() - soma_voltage)
+                gap_current += df
+
+            if abs(gap_current - self.soma.gap_current) > 0.001:
+                gap_current_changed = True
+                self.soma.gap_current = gap_current
 
         # Gather input from dendrites.
         # TODO: Implement different activations based on dendrite
@@ -38,11 +47,12 @@ class Neuron:
             activation += dendrite.get_activation()
 
         # Activate the soma
-        self.soma.step(activation, resolution=resolution)
+        if activation > 0.0 or not self.soma.stable or gap_current_changed:
+            self.soma.step(activation, resolution=resolution)
 
         # Activate the axons
         for axon in self.axons:
-            axon.step(voltage = self.soma.get_voltage(), resolution=resolution)
+            axon.step(voltage = soma_voltage, resolution=resolution)
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, single_molecule=None,
@@ -71,3 +81,5 @@ class Neuron:
     def create_gap_junction(presynaptic, postsynaptic, conductance):
         presynaptic.gap_junctions.append((postsynaptic,conductance))
         postsynaptic.gap_junctions.append((presynaptic,conductance))
+        presynaptic.active_gap_junctions = True
+        postsynaptic.active_gap_junctions = True

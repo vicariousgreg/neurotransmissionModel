@@ -29,20 +29,21 @@ class Axon(TransporterMembrane):
         TransporterMembrane.__init__(self, transporter, reuptake_rate, capacity, environment)
 
         self.replenish_rate = replenish_rate
+        baseline_voltage = -62.0
 
         if delay:
             self.voltage_queue = deque()
-            for _ in xrange(delay): self.voltage_queue.appendleft(None)
-        else: self.voltage_queue = None
+            for _ in xrange(delay):
+                self.voltage_queue.appendleft(baseline_voltage)
+        else:
+            self.voltage_queue = None
+            self.v = baseline_voltage
 
         self.verbose = verbose
         self.releasing = False
         self.voltage_threshold=-64.0
-        self.v = -62.0
 
-    def step(self, voltage=None, resolution=100, silent=False):
-        time_coefficient = 1.0 / resolution
-
+    def step(self, voltage=None, resolution=100):
         # If there is a delay, use the queue.
         if self.voltage_queue:
             # Add voltage to queue
@@ -51,8 +52,6 @@ class Axon(TransporterMembrane):
             voltage = self.voltage_queue.pop()
 
         if voltage: self.v = voltage
-
-        if silent: return
         if not self.releasing and self.v > self.voltage_threshold:
             self.releasing = True
 
