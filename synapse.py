@@ -68,42 +68,17 @@ class Synapse:
         """
         Runs a timestep, which involves the following steps:
 
-        1. Release bound molecules from dendrites and axon.
-            These shouldn't stay here, but are there temporarily for the sake
-                of interaction with the larger system.  May change later.
-            Do not release native molecules from the axon!  They stay due to
-                the fact that transporters pass them through, but do not pass
-                reuptake inhibitors through.
-        2. Cycle environment.
-            This makes the previously released molecules available for
-                computation during the time step.
-            
-        3. Release neurotransmitters from axon into synaptic cleft.
-        4. Metabolize molecules in the synaptic cleft.
-        5. Bind molecules to dendrite receptors and axon transporters
-        6. Replenish axon neurotransmitter reserves
-        7. Final environment cycle
+        1. Release neurotransmitters from axon into synaptic cleft.
+        2. Step synaptic cleft.  This involves two steps:
+              - Metabolize molecules in the synaptic cleft.
+              - Bind molecules to dendrite receptors and axon transporters
+        3. Replenish axon neurotransmitter reserves
+        4. Cycle environment
         """
         changed = False
-        if self.active:
-            # 1: Release from Dendrites
-            for dendrite in self.dendrites:
-                for mol_id,concentration in dendrite.unbind():
-                    self.synaptic_cleft.add_concentration(concentration,mol_id)
 
-            # Release reuptake inhibitors from axon
-            try:
-                for mol_id,concentration in self.axon.unbind():
-                    self.synaptic_cleft.add_concentration(concentration,mol_id)
-            except AttributeError: pass
-
-            changed = changed or self.environment.dirty
-            # 2: Cycle environment
-            self.environment.step()
-
-        # 3: Release from axon
+        # 1: Release from axon
         try:
-            #if self.axon.releasing:
             released = self.axon.release()
             if released > 0.0:
                 self.synaptic_cleft.add_concentration(
@@ -113,22 +88,16 @@ class Synapse:
         changed = changed or self.environment.dirty
 
         if self.active:
-            # 4: Metabolize
-            self.synaptic_cleft.metabolize()
+            # 2: Step synaptic cleft
+            self.synaptic_cleft.step(dendrites=self.dendrites, axon=self.axon)
 
-            # 5: Bind to dendrites and axon
-            if self.axon:
-                self.synaptic_cleft.bind(self.dendrites + [self.axon])
-            else:
-                self.synaptic_cleft.bind(self.dendrites)
-
-            # 6: Replenish
+            # 3: Replenish
             try: self.axon.replenish()
             except AttributeError: pass
 
             changed = changed or self.environment.dirty
 
-        # 7. Cycle environment
+        # 4. Cycle environment
         self.environment.step()
 
         self.active = changed

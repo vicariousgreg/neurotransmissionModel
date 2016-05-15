@@ -18,7 +18,7 @@ class PhotoreceptorSoma:
 
         self.environment = environment
         self.neuron_id = environment.register(-65.0)
-        self.stable = False
+        self.stable_count = 0
         self.reset()
 
     def get_voltage(self):

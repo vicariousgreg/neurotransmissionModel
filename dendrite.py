@@ -8,7 +8,7 @@ from membrane import ReceptorMembrane
 
 class Dendrite(ReceptorMembrane):
     def __init__(self, receptor=Receptors.AMPA, density=1.0, strength=0.05,
-                        single_molecule=None, environment=None, verbose=False):
+                                            environment=None, verbose=False):
         """
         Dendrites hold receptors that are activated by neurochemicals in the
             synaptic cleft.
@@ -19,12 +19,11 @@ class Dendrite(ReceptorMembrane):
         if density > 1.0: raise ValueError
         ReceptorMembrane.__init__(self, receptor, density, environment)
         self.strength = strength
+        self.bound = 0.0
         self.verbose = verbose
 
-        if single_molecule:
-            self.get_activation = lambda: self.strength * self.get_native_concentration
-        else:
-            self.get_activation = self.get_all_activation
+    def bind(self, concentration):
+        self.bound = concentration
 
-    def get_all_activation(self):
-        return self.strength * self.get_total_concentration()
+    def get_activation(self):
+        return self.strength * self.bound

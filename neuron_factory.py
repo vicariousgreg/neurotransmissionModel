@@ -128,6 +128,7 @@ class CurrentPulseDriver:
     def drive(self, neuron, time):
         if time % self.period == 0:
             neuron.soma.iapp = self.current
+            neuron.soma.stable_count = 0
         elif time % self.period == self.length:
             neuron.soma.iapp = 0.0
         neuron.step()

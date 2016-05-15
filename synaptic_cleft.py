@@ -43,11 +43,11 @@ class SynapticCleft(PoolCluster):
             self.metabolize = self.complex_metabolize
         self.verbose = verbose
 
-    def step(self, membranes):
+    def step(self, dendrites, axon=None):
         self.metabolize()
-        self.bind(membranes)
+        self.bind(dendrites, axon)
 
-    def simple_bind(self, membranes):
+    def simple_bind(self, dendrites, axon=None):
         """
         Bound/Unbound fraction
         f = [L] / ( [L] + K_d )
@@ -68,38 +68,55 @@ class SynapticCleft(PoolCluster):
         total_protein_count = 0.0
 
         # Calculate densities of all proteins.
-        for membrane in membranes:
-            if membrane.density == 0.0: continue
-            count,affinity = (membrane.get_available_proteins(mol_id), membrane.affinities[mol_id])
-            protein_counts[membrane] = count*affinity
+        for dendrite in dendrites:
+            if dendrite.density == 0.0: continue
+            count,affinity = (dendrite.density, dendrite.affinities[mol_id])
+            protein_counts[dendrite] = count*affinity
             total_protein_count += count*affinity
 
-        # Compute for each protein-molecule pair.
-        for membrane in membranes:
-            # For each receptive molecule:
-            protein_count = protein_counts[membrane]
+        try:
+            axon_available = min(axon.density, axon.capacity-axon.get_native_concentration())
+            if axon_available > 0.0:
+                count,affinity = (axon_available, axon.affinities[mol_id])
+                protein_count = count*affinity
+                total_protein_count += protein_count
+
+                # Proportion of protein relative to competitors.
+                protein_fraction = protein_count / total_protein_count
+
+                # Calculate bound concentration.
+                k = (1 - (affinity*protein_fraction))
+                bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
+
+                # Transfer molecules to axon.
+                axon.add_concentration(bound)
+                self.remove_concentration(bound, mol_id)
+        except AttributeError: pass
+
+        # Compute for each dendrite.
+        for dendrite,protein_count in protein_counts.iteritems():
+            protein_count = protein_counts[dendrite]
 
             # Proportion of protein relative to competitors.
             protein_fraction = protein_count / total_protein_count
 
             # Calculate bound concentration.
-            k = (1 - protein_fraction)
+            k = (1 - (affinity*protein_fraction))
             bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
 
-            # Transfer molecules.
-            membrane.add_concentration(bound, mol_id)
-            self.remove_concentration(bound, mol_id)
+            # Acivate dendrite.
+            dendrite.bound = bound
 
             if self.verbose:
                 print("Concentrations:")
                 print(" P: %f      M: %f" % (protein_count, mol_concentration))
                 print("Proportions::")
-                print("fP: %f    fM: %f" % (protein_fraction, mol_fraction))
+                print("fP: %f" % protein_fraction)
                 print("Constant and final bound count:")
                 print("k: %f    bound: %f" % (k, bound))
                 print("")
 
-    def complex_bind(self, membranes):
+    def complex_bind(self, dendrites, axon=None):
         """
         Bound/Unbound fraction
         f = [L] / ( [L] + K_d )
@@ -128,25 +145,67 @@ class SynapticCleft(PoolCluster):
         if len(mol_concentrations) == 0: return
 
         # Calculate densities of all proteins.
-        for membrane in membranes:
-            if membrane.density == 0.0: continue
+        for dendrite in dendrites:
+            if dendrite.density == 0.0: continue
 
             # Register protein and its receptive molecules
             # Factor in affinity
-            protein_mol_count[membrane.protein] = 0.0
-            for mol_id,affinity in membrane.protein.affinities.iteritems():
+            protein_mol_count[dendrite.protein] = 0.0
+            for mol_id,affinity in dendrite.protein.affinities.iteritems():
                 if mol_id in mol_protein_count:
-                    mol_protein_count[mol_id] += membrane.get_available_proteins(mol_id) * affinity
-                    protein_mol_count[membrane.protein] += mol_concentrations[mol_id] * affinity
+                    mol_protein_count[mol_id] += dendrite.get_available_proteins(mol_id) * affinity
+                    protein_mol_count[dendrite.protein] += mol_concentrations[mol_id] * affinity
+
+        # Axon
+        try:
+            axon_available = min(axon.density, axon.capacity-axon.get_native_concentration())
+            if axon_available > 0.0:
+                native_mol_id = axon.native_mol_id
+                count,affinity = (axon_available, axon.affinities[native_mol_id])
+                protein_count = count*affinity
+
+                # Register protein and its receptive molecules
+                # Factor in affinity
+                protein_mol_count[axon.protein] = 0.0
+                for mol_id,affinity in axon.protein.affinities.iteritems():
+                    if mol_id in mol_protein_count:
+                        mol_protein_count[mol_id] += axon_available * affinity
+                        protein_mol_count[axon.protein] += mol_concentrations[mol_id] * affinity
+
+                # Check if native molecule is present.
+                mol_concentration = mol_concentrations[native_mol_id]
+
+                competing_proteins = mol_protein_count[native_mol_id]
+                if competing_proteins > 0:
+                    # How many molecules are competing for this protein?
+                    competing_molecules = protein_mol_count[axon.protein]
+
+                    # Proportion of molecule relative to competitors.
+                    mol_fraction = affinity * mol_concentration / competing_molecules
+
+                    # Proportion of protein relative to competitors.
+                    protein_fraction = protein_count / competing_proteins
+
+                    # Calculate bound concentration.
+                    k = (1 - (mol_fraction * protein_fraction * mol_fraction))
+                    bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
+
+                    # Transfer molecules.
+                    axon.add_concentration(bound, mol_id)
+                    self.remove_concentration(bound, mol_id)
+        except KeyError: pass
+        except AttributeError: pass
 
         # Compute for each protein-molecule pair.
-        for membrane in membranes:
+        for dendrite in dendrites:
+            dendrite.bound = 0
+
             # How many molecules are competing for this protein?
-            try: competing_molecules = protein_mol_count[membrane.protein]
+            try: competing_molecules = protein_mol_count[dendrite.protein]
             except KeyError: continue
 
             # For each receptive molecule:
-            for mol_id,affinity in membrane.protein.affinities.iteritems():
+            for mol_id,affinity in dendrite.protein.affinities.iteritems():
                 try:
                     mol_concentration = mol_concentrations[mol_id]
                 except KeyError: continue
@@ -154,21 +213,20 @@ class SynapticCleft(PoolCluster):
                 competing_proteins = mol_protein_count[mol_id]
                 if competing_proteins == 0: continue
 
-                protein_count = membrane.get_available_proteins(mol_id)
 
                 # Proportion of molecule relative to competitors.
                 mol_fraction = affinity * mol_concentration / competing_molecules
 
                 # Proportion of protein relative to competitors.
-                protein_fraction = affinity * protein_count / competing_proteins
+                protein_count = affinity * dendrite.get_available_proteins(mol_id)
+                protein_fraction = protein_count / competing_proteins
 
                 # Calculate bound concentration.
                 k = (1 - (mol_fraction * protein_fraction))
                 bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
 
                 # Transfer molecules.
-                membrane.add_concentration(bound, mol_id)
-                self.remove_concentration(bound, mol_id)
+                dendrite.bound += bound
 
                 if self.verbose:
                     print("Concentrations:")

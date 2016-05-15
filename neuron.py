@@ -47,7 +47,7 @@ class Neuron:
             activation += dendrite.get_activation()
 
         # Activate the soma
-        if activation > 0.0 or not self.soma.stable or gap_current_changed:
+        if activation > 0.0 or self.soma.stable_count < 10 or gap_current_changed:
             self.soma.step(activation, resolution=resolution)
 
         # Activate the axons
@@ -68,7 +68,6 @@ class Neuron:
                     capacity=1.0,
                     delay=axon_delay)
         dendrite = synapse.create_dendrite(
-                    single_molecule=single_molecule,
                     receptor=receptor,
                     density=0.05,
                     strength=dendrite_strength)

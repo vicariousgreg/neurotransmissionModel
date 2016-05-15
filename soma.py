@@ -8,7 +8,7 @@ from math import exp
 class Soma:
     def __init__(self, base_current=0.0, environment=None):
         self.iapp = base_current
-        self.stable = False
+        self.stable_count = 0
         self.environment = environment
         self.neuron_id = environment.register(-65.0)
         self.reset()
@@ -71,8 +71,11 @@ class Soma:
             self.firing = False
         self.time += 1
 
-        self.stable = (ligand_activation == 0.0 and \
-            abs(voltage-self.stable_voltage) < 0.001)
+        if ligand_activation == 0.0 and \
+                abs(voltage-self.stable_voltage) < 0.001:
+            self.stable_count += 1
+        else:
+            self.stable_count = 0
 
 
     def cycle(self, time_coefficient, voltage):
