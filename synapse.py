@@ -102,10 +102,11 @@ class Synapse:
 
         # 3: Release from axons
         for axon in self.axons:
-            released = axon.release()
-            if released > 0.0:
-                self.synaptic_cleft.add_concentration(
-                    released, mol_id=axon.native_mol_id)
+            if axon.releasing:
+                released = axon.release()
+                if released > 0.0:
+                    self.synaptic_cleft.add_concentration(
+                        released, mol_id=axon.native_mol_id)
 
         changed = changed or self.environment.dirty
 

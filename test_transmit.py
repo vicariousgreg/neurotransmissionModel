@@ -18,7 +18,8 @@ def transmit(strength=0.3, delays=[None, 100]):
         name="post delay: %s" % str(delay)
         post_neuron_names.append(name)
         post_neuron = neuron_factory.create_neuron(probe_name=name)
-        synapse = neuron_factory.create_synapse(pre_neuron, post_neuron, axon_delay=delay)
+        synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
+            axon_delay=delay)
 
     neuron_factory.register_driver(pre_neuron,
         ActivationPulseDriver(activation=strength, period=500, length=1, decrement=0.01))

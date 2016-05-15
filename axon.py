@@ -38,6 +38,7 @@ class Axon(TransporterMembrane):
         self.verbose = verbose
 
         self.stabilization_counter = 0
+        self.releasing = False
         self.reset()
 
 
@@ -80,6 +81,8 @@ class Axon(TransporterMembrane):
 
         if silent: return
         self.time += 1
+        if not self.releasing and self.v > self.stable_voltage:
+            self.releasing = True
 
     def cycle(self, time_coefficient):
         an   = 0.01*(self.v + 55.0)/(1.0 - exp(-(self.v + 55.0)/10.0))
@@ -108,6 +111,7 @@ class Axon(TransporterMembrane):
         ###
 
         if released == 0.0:
+            self.releasing = False
             return 0.0
 
         # Remove concentration.

@@ -15,12 +15,12 @@ def test_photoreceptor(
 
     current_data = []
     for i in xrange(rest_length):
-        current_data.append(-0.5)
+        current_data.append(-0.3)
     for i in xrange(rest_length, args.iterations+rest_length):
         if i % period < length:
-            current_data.append(-0.4)
+            current_data.append(-0.2)
         else:
-            current_data.append(-0.5)
+            current_data.append(-0.3)
 
     data.append(("current", current_data))
 
@@ -70,7 +70,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 60000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 70000, help = 
     """table""")
 
     return parser.parse_args()
