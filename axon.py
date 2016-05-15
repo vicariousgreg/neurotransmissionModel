@@ -36,35 +36,9 @@ class Axon(TransporterMembrane):
         else: self.voltage_queue = None
 
         self.verbose = verbose
-
-        self.stabilization_counter = 0
         self.releasing = False
-        self.reset()
-
-
-    def reset(self):
-        self.time = 0
-
-        self.v=-65.0
-        self.n=0.318
-
-        self.cm=1.0
-        self.gcabar=36.0
-        self.gl=0.3
-        self.vca=-65
-        self.vl=-54.4
-
-        # Stabilize
-        old_v = 0
-        stable = 0
-        while stable < 1000:
-            if old_v == self.v:
-                stable += 1
-            else:
-                stable = 0
-                old_v = self.v
-            self.step(0.0, silent=True)
-        self.stable_voltage = self.v
+        self.voltage_threshold=-64.0
+        self.v = -62.0
 
     def step(self, voltage=None, resolution=100, silent=False):
         time_coefficient = 1.0 / resolution
@@ -77,35 +51,21 @@ class Axon(TransporterMembrane):
             voltage = self.voltage_queue.pop()
 
         if voltage: self.v = voltage
-        self.cycle(time_coefficient)
 
         if silent: return
-        self.time += 1
-        if not self.releasing and self.v > self.stable_voltage:
+        if not self.releasing and self.v > self.voltage_threshold:
             self.releasing = True
-
-    def cycle(self, time_coefficient):
-        an   = 0.01*(self.v + 55.0)/(1.0 - exp(-(self.v + 55.0)/10.0))
-        bn   = 0.125*exp(-(self.v + 65.0)/80.0)
-        ninf = an/(an+bn)
-        taun = 1.0/(an+bn)
-
-        self.ica  = self.gcabar * (self.n**4) * (self.v-self.vca)
-        il  = self.gl * (self.v-self.vl)
-
-        self.v +=  time_coefficient*(-self.ica - il ) / self.cm
-        self.n +=  time_coefficient*(ninf - self.n)/taun
 
     def release(self):
         # Determine how many molecules to actually release.
 
         ### Non-stochastic release (faster)
-        released = max(0.0, (self.v - self.stable_voltage) / 500)
+        released = max(0.0, (self.v - self.voltage_threshold) / 500)
         ###
 
         ### Use beta distribution to release stochastically
         ### Rate 10 ensures low decrement.
-        #difference = (self.v - self.stable_voltage) / 500
+        #difference = (self.v - self.voltage_threshold) / 500
         #released = max(0, min(self.get_native_concentration(),
         #    self.environment.beta(difference, rate=10)))
         ###
@@ -146,4 +106,4 @@ class Axon(TransporterMembrane):
             print("Axon: %f" % self.get_concentration(self.native_mol_id))
 
     def get_scaled_voltage(self):
-        return min(0.2, (self.get_voltage()-self.stable_voltage)/100)
+        return min(0.2, (self.get_voltage()-self.voltage_threshold)/100)

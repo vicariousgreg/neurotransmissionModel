@@ -58,6 +58,7 @@ class Neuron:
                     capacity=1.0,
                     delay=axon_delay)
         dendrite = synapse.create_dendrite(
+                    single_molecule=single_molecule,
                     receptor=receptor,
                     density=0.05,
                     strength=dendrite_strength)

@@ -30,7 +30,7 @@ class Synapse:
         self.dendrites = []
         self.components = [self.synaptic_cleft]
 
-        self.done = False
+        self.active = True
 
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
@@ -85,7 +85,7 @@ class Synapse:
         7. Final environment cycle
         """
         changed = False
-        if not self.done:
+        if self.active:
             # 1: Release from Dendrites
             for dendrite in self.dendrites:
                 for mol_id,concentration in dendrite.unbind():
@@ -110,7 +110,7 @@ class Synapse:
 
         changed = changed or self.environment.dirty
 
-        if not self.done:
+        if self.active:
             # 4: Metabolize
             self.synaptic_cleft.metabolize()
 
@@ -126,6 +126,5 @@ class Synapse:
         # 7. Cycle environment
         self.environment.step()
 
-        if self.done != (not changed): print((not changed))
-        self.done = not changed
+        self.active = changed
 

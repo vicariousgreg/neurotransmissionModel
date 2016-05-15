@@ -8,7 +8,7 @@ from math import exp
 class Soma:
     def __init__(self, base_current=0.0, environment=None):
         self.iapp = base_current
-        self.stabilization_counter = 0
+        self.stable = False
         self.environment = environment
         self.neuron_id = environment.register(-65.0)
         self.reset()
@@ -57,8 +57,9 @@ class Soma:
         self.stable_voltage = self.get_voltage()
 
     def step(self, ligand_activation, resolution=100, silent=False):
-        if ligand_activation == 0 and self.stabilization_counter > 1 \
-            and self.gap_current == 0.0 and self.iapp == 0.0: return
+        if ligand_activation == 0 and self.stable \
+                and self.gap_current == 0.0 and self.iapp == 0.0:
+            return
         voltage = self.get_voltage()
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
@@ -73,10 +74,8 @@ class Soma:
             self.firing = False
         self.time += 1
 
-        if voltage == self.stable_voltage:
-            self.stabilization_counter += 1
-        else:
-            self.stabilization_counter = 0
+        self.stable = (ligand_activation == 0.0 and \
+            abs(voltage-self.stable_voltage) < 0.001)
 
 
     def cycle(self, time_coefficient, voltage):
