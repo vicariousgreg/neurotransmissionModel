@@ -6,23 +6,17 @@ from neuron import NeuronTypes
 from neuron_factory import NeuronFactory, ActivationPulseDriver
 
 def test_photoreceptor(
+        print_axon=True,
+        print_postsynaptic=True,
+        print_photoreceptor=True,
+        print_dendrite=False,
+        print_synaptic_cleft=False,
         spike_strengths=[0.7]):
-        #spike_strengths=[0.1, 0.5, 0.7]):
+
     data = []
-    length = 10000
+    length = 5000
     period = 20000
     rest_length = 5000
-
-    current_data = []
-    for i in xrange(rest_length):
-        current_data.append(-0.4)
-    for i in xrange(rest_length, args.iterations+rest_length):
-        if i % period < length:
-            current_data.append(-0.3)
-        else:
-            current_data.append(-0.4)
-
-    data.append(("current", current_data))
 
     for strength in spike_strengths:
         neuron_factory = NeuronFactory()
@@ -44,21 +38,38 @@ def test_photoreceptor(
         cleft_data = []
         dendrite_data = []
 
-        neuron_factory.step(rest_length)
+        driver_name = "Light activation %f" % strength
         neuron_factory.register_driver(photoreceptor,
-            ActivationPulseDriver(activation=strength, period=period, length=length))
-        neuron_factory.step(args.iterations)
+            ActivationPulseDriver(activation=strength, period=period,
+                length=length, delay=rest_length, record=True),
+            name = driver_name)
+        neuron_factory.step(rest_length+args.iterations)
 
-        data.append(neuron_factory.get_probe_data(pre_neuron_name))
-        data.append(neuron_factory.get_probe_data(post_neuron_name))
-        data.append(neuron_factory.get_probe_data(axon_name))
-        #data.append(neuron_factory.get_probe_data(cleft_name))
-        data.append(neuron_factory.get_probe_data(dendrite_name))
+        if print_photoreceptor: data.append(neuron_factory.get_probe_data(pre_neuron_name))
+        if print_postsynaptic: data.append(neuron_factory.get_probe_data(post_neuron_name))
+        if print_axon: data.append(neuron_factory.get_probe_data(axon_name))
+        if print_synaptic_cleft: data.append(neuron_factory.get_probe_data(cleft_name))
+        if print_dendrite: data.append(neuron_factory.get_probe_data(dendrite_name))
+    data.append(neuron_factory.get_driver_data(driver_name))
     if not args.silent:
         plot(data, title="Photoreceptor test")
 
 def main():
-    test_photoreceptor()
+    test_photoreceptor(
+        print_axon=True,
+        print_postsynaptic=True,
+        print_photoreceptor=True,
+        print_dendrite=False,
+        print_synaptic_cleft=False,
+        spike_strengths=[0.7])
+
+    test_photoreceptor(
+        print_axon=False,
+        print_postsynaptic=True,
+        print_photoreceptor=True,
+        print_dendrite=False,
+        print_synaptic_cleft=False,
+        spike_strengths=[0.5, 0.7])
 
 def set_options():
     """
@@ -70,7 +81,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 65000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 45000, help = 
     """table""")
 
     return parser.parse_args()

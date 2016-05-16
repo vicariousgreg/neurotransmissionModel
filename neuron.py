@@ -47,7 +47,7 @@ class Neuron:
             activation += dendrite.get_activation()
 
         # Activate the soma
-        if activation > 0.0 or self.soma.iapp > 0.0 or self.soma.stable_count < 10 or gap_current_changed:
+        if activation > 0.0 or self.soma.iapp != 0.0 or self.soma.stable_count < 10 or gap_current_changed:
             self.soma.step(activation, resolution=resolution)
 
         # Activate the axons

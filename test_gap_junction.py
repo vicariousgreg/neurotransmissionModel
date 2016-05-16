@@ -17,8 +17,9 @@ def test_gap_junction(strength1 = 0.00065, strength2 = 0.0):
     neuron3_name = "Control Neuron %f" % strength1
     neuron3 = neuron_factory.create_neuron(probe_name=neuron3_name)
 
-    driver1 = ConstantDriver(strength1)
-    driver2 = ConstantDriver(strength2)
+    rest_time = 1000
+    driver1 = ConstantDriver(strength1, delay=rest_time)
+    driver2 = ConstantDriver(strength2, delay=rest_time)
 
     neuron_factory.register_driver(neuron1, driver1)
     neuron_factory.register_driver(neuron2, driver2)
@@ -26,7 +27,7 @@ def test_gap_junction(strength1 = 0.00065, strength2 = 0.0):
 
     neuron_factory.create_gap_junction(neuron1, neuron2, 1.0)
 
-    neuron_factory.step(args.iterations)
+    neuron_factory.step(rest_time+args.iterations)
 
     data = [neuron_factory.get_probe_data(neuron1_name),
         neuron_factory.get_probe_data(neuron2_name),

@@ -18,8 +18,9 @@ class NeuronFactory:
         self.neuron_environment = NeuronEnvironment()
         self.neurons = []
         self.synapses = []
-        self.drivers = {}
 
+        self.drivers = {}
+        self.neuron_drivers = {}
         self.probes = {}
         self.neuron_probes = {}
         self.concentration_probes = {}
@@ -33,7 +34,7 @@ class NeuronFactory:
             for neuron in self.neurons:
                 try: self.neuron_probes[neuron].record(neuron.soma)
                 except KeyError: pass
-                self.drivers.get(neuron, self.base_driver).drive(neuron, self.time)
+                self.neuron_drivers.get(neuron, self.base_driver).drive(neuron, self.time)
 
             # Activate synapses if they are active or have a releasing axon.
             for synapse in self.synapses:
@@ -106,46 +107,75 @@ class NeuronFactory:
     def create_gap_junction(self, pre_neuron, post_neuron, conductance=1.0):
         Neuron.create_gap_junction(pre_neuron, post_neuron, conductance)
 
-    def register_driver(self, neuron, driver):
-        self.drivers[neuron] = driver
+    def register_driver(self, neuron, driver, name=None):
+        self.neuron_drivers[neuron] = driver
+        self.drivers[name] = driver
 
     def get_probe_data(self, name):
         return (name, self.probes[name].data)
 
-class ConstantDriver:
-    def __init__(self, activation=0.0):
-        self.activation = activation
+    def get_driver_data(self, name):
+        return (name, self.drivers[name].data)
 
-    def drive(self, neuron, time):
+class ConstantDriver:
+    def __init__(self, activation=0.0, delay=0):
+        self.activation = activation
+        self.delay = delay
+        if delay > 0: self.drive = self.predelay
+        else: self.drive = self.postdelay
+
+    def predelay(self, neuron, time):
+        if time-self.delay >= 0:
+            self.drive = self.postdelay
+            neuron.step(self.activation)
+        else: neuron.step(0.0)
+
+    def postdelay(self, neuron, time):
         neuron.step(self.activation)
 
 class CurrentPulseDriver:
-    def __init__(self, current=0.0, period=1000, length=500):
+    def __init__(self, current=0.0, period=1000, length=500,
+                        delay=0, record=False):
         self.current = current
         self.period = period
         self.length = length
+        self.delay = delay
+        self.record = record
+        self.data = []
+        self.on = False
 
     def drive(self, neuron, time):
-        if time % self.period == 0:
+        time -= self.delay
+        if time >= 0 and time % self.period == 0:
+            self.on = True
             neuron.soma.iapp = self.current
         elif time % self.period == self.length:
+            self.on = False
             neuron.soma.iapp = 0.0
+        if self.record: self.data.append(-0.2 if self.on else -0.3)
         neuron.step()
 
 class ActivationPulseDriver:
-    def __init__(self, activation=0.0, period=1000, length=1, decrement=None):
+    def __init__(self, activation=0.0, period=1000, length=1,
+                    delay=0, decrement=None, record=False):
         self.activation = activation
         self.period = period
         self.length = length
+        self.delay = delay
         self.decrement = decrement
+        self.record = record
+        self.data = []
 
     def drive(self, neuron, time):
-        if time % self.period < self.length:
+        time -= self.delay
+        if time >= 0 and time % self.period < self.length:
             neuron.step(self.activation)
-            if self.decrement and self.activation > 0.0:
+            if self.record: self.data.append(-0.3)
+            if self.decrement:
                 self.activation -= self.decrement
         else:
             neuron.step()
+            if self.record: self.data.append(-0.4)
 
 class VoltageProbe:
     def __init__(self):
