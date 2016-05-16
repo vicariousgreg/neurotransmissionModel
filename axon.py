@@ -60,7 +60,7 @@ class Axon:
     def remove_concentration(self, delta, mol_id=None):
         self.concentration -= delta
 
-    def step(self, voltage=None, resolution=100):
+    def step(self, voltage=None):
         # If there is a delay, use the queue.
         if self.delay is not None:
             # Add voltage to queue

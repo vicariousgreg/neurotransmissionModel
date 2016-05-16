@@ -52,7 +52,7 @@ class Neuron:
 
         # Activate the axons
         for axon in self.axons:
-            axon.step(voltage = soma_voltage, resolution=resolution)
+            axon.step(voltage = soma_voltage)
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, single_molecule=None,
