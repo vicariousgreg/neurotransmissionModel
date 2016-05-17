@@ -39,11 +39,12 @@ class Neuron:
         self.soma_stable = True
         self.synapses_stable = []
 
-    def step(self, activation=0.0, resolution=100):
+    def adjust_activation(self, delta):
+        self.activation += delta
+
+    def step(self, resolution=100):
         # Keep track of activated neurons.
         tokens = set()
-
-        self.activation = activation
 
         soma_voltage = self.soma.get_voltage()
 
@@ -87,7 +88,8 @@ class Neuron:
         # Add self if not stable
         if not self.soma_stable or not all(self.synapses_stable): tokens.add(self.neuron_id)
 
-        # Return set of active neurons
+        # Reset activation and return set of active neurons
+        self.activation = 0.0
         return tokens
 
     def apply_current(self, current):

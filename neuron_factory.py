@@ -25,7 +25,6 @@ class NeuronFactory:
         self.neuron_probes = {}
         self.concentration_probes = {}
 
-        self.base_driver = ConstantDriver(0.0)
         self.tokens = set()
         self.time = 0
         self.stable = 0
@@ -34,13 +33,15 @@ class NeuronFactory:
         for _ in xrange(count):
             new_tokens = set()
 
-            # Activate driven neurons
+            # Activate drivers
+            # Drivers do not step the neuron, but modify it to prepare for
+            #     a timestep.  If True is returned, the neuron should be
+            #     stepped during this timestep.
             for neuron,driver in self.neuron_drivers.iteritems():
-                response = driver.drive(neuron, self.time)
-                if response:
-                    new_tokens.update(response)
-                    try: self.tokens.remove(neuron.neuron_id)
-                    except KeyError: pass
+                if driver.drive(neuron, self.time):
+                    self.tokens.add(neuron.neuron_id)
+
+            #if len(self.tokens) > 0: print(tuple(self.tokens))
 
             # Activate neurons with tokens
             for neuron_id in self.tokens:
@@ -139,11 +140,13 @@ class ConstantDriver:
     def predelay(self, neuron, time):
         if time-self.delay >= 0:
             self.drive = self.postdelay
-            return neuron.step(self.activation)
-        else: return None
+            neuron.adjust_activation(self.activation)
+            return True
+        else: return False
 
     def postdelay(self, neuron, time):
-        neuron.step(self.activation)
+        neuron.adjust_activation(self.activation)
+        return True
 
 class CurrentPulseDriver:
     def __init__(self, current=0.0, period=1000, length=500,
@@ -164,10 +167,10 @@ class CurrentPulseDriver:
         elif time % self.period == self.length:
             self.on = False
             neuron.apply_current(0.0)
-            return neuron.step()
+            return True
         if self.record: self.data.append(-0.2 if self.on else -0.3)
-        if self.on: return neuron.step()
-        else: return None
+        if self.on: return True
+        else: return False
 
 class ActivationPulseDriver:
     def __init__(self, activation=0.0, period=1000, length=1,
@@ -186,10 +189,13 @@ class ActivationPulseDriver:
             if self.record: self.data.append(-0.3)
             if self.decrement:
                 self.activation = max(0.0, self.activation - self.decrement)
-            return neuron.step(self.activation)
+            if self.activation != 0.0:
+                neuron.adjust_activation(self.activation)
+                return True
+            else: return False
         else:
             if self.record: self.data.append(-0.4)
-            return None
+            return False
 
 class VoltageProbe:
     def __init__(self):
