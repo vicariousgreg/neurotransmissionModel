@@ -30,8 +30,6 @@ class Synapse:
         self.dendrites = []
         self.components = [self.synaptic_cleft]
 
-        self.active = True
-
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
         Sets the concentration of the given |enzymes| in the synaptic cleft.
@@ -62,7 +60,7 @@ class Synapse:
         self.components.append(dendrite)
         return dendrite
 
-    def step(self, time):
+    def step(self):
         """
         Runs a timestep, which involves the following steps:
 
@@ -70,10 +68,11 @@ class Synapse:
         2. Step synaptic cleft.  This involves two steps:
               - Metabolize molecules in the synaptic cleft.
               - Bind molecules to dendrite receptors and axon transporters
-        3. Replenish axon neurotransmitter reserves
-        4. Cycle environment
+        3. Cycle environment
+
+        Returns return of stepping environment, which is the stability of
+            the synapse (False if environment changed, else True).
         """
-        changed = False
 
         # 1: Release from axon
         try:
@@ -83,20 +82,8 @@ class Synapse:
                     released, mol_id=self.axon.native_mol_id)
         except AttributeError: pass
 
-        changed = changed or self.environment.dirty
-
-        if self.active:
-            # 2: Step synaptic cleft
-            self.synaptic_cleft.step(dendrites=self.dendrites, axon=self.axon)
-
-            # 3: Replenish
-            try: self.axon.replenish()
-            except AttributeError: pass
-
-            changed = changed or self.environment.dirty
+        # 2: Step synaptic cleft
+        self.synaptic_cleft.step(dendrites=self.dendrites, axon=self.axon)
 
         # 4. Cycle environment
-        self.environment.step()
-
-        self.active = changed
-
+        return self.environment.step()

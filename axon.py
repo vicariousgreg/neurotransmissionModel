@@ -61,6 +61,11 @@ class Axon:
         self.concentration -= delta
 
     def step(self, voltage=None):
+        """
+        Cycles the axon with an optional input |voltage| from the soma.
+        Returns whether the axon is stable (not releasing). This is used by the
+            neuron to determine if the synapse should be activated.
+        """
         # If there is a delay, use the queue.
         if self.delay is not None:
             # Add voltage to queue
@@ -70,9 +75,9 @@ class Axon:
 
         if voltage: self.voltage = voltage
         else: self.voltage = self.voltage_threshold
-        if not self.releasing and self.voltage > self.voltage_threshold:
+        if self.voltage > self.voltage_threshold and not self.releasing:
             self.releasing = True
-        return self.releasing
+        return self.replenish() and not self.releasing
 
     def release(self):
         # Determine how many molecules to actually release.
@@ -101,9 +106,10 @@ class Axon:
     def replenish(self):
         """
         Replenishes neurotransmitters if the axon is not at capacity.
+        Returns whether the axon is at capacity.
         """
         missing = self.capacity - self.get_concentration()
-        if missing <= 0 or self.replenish_rate == 0.0: return
+        if missing <= 0 or self.replenish_rate == 0.0: return True
         elif missing < 0.00001:
             self.set_concentration(self.capacity)
 
@@ -122,6 +128,8 @@ class Axon:
         if self.verbose:
             print("Regenerated %f" % sample)
             print("Axon: %f" % self.get_concentration())
+
+        return False
 
     def get_scaled_voltage(self):
         return min(0.2, (self.voltage-self.voltage_threshold)/100)

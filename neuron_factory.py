@@ -31,18 +31,15 @@ class NeuronFactory:
     def step(self, count=1):
         for _ in xrange(count):
             # Activate neurons.
+            # The neurons will activate synapses if necessary.
             for neuron in self.neurons:
                 try: self.neuron_probes[neuron].record(neuron.soma)
                 except KeyError: pass
                 self.neuron_drivers.get(neuron, self.base_driver).drive(neuron, self.time)
 
-            # Activate synapses if they are active or have a releasing axon.
-            for synapse in self.synapses:
-                for component in synapse.components:
-                    try: self.concentration_probes[component].record(component)
-                    except KeyError: pass
-                if synapse.active or synapse.axon.releasing:
-                    synapse.step(self.time)
+            # Record components with probes
+            for component,probe in self.concentration_probes.iteritems():
+                probe.record(component)
 
             # Step the environment.
             self.neuron_environment.step()
@@ -148,10 +145,10 @@ class CurrentPulseDriver:
         time -= self.delay
         if time >= 0 and time % self.period == 0:
             self.on = True
-            neuron.soma.iapp = self.current
+            neuron.apply_current(self.current)
         elif time % self.period == self.length:
             self.on = False
-            neuron.soma.iapp = 0.0
+            neuron.apply_current(0.0)
         if self.record: self.data.append(-0.2 if self.on else -0.3)
         neuron.step()
 

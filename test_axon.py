@@ -37,12 +37,14 @@ def axon_replenish(rs=[0.1, 0.5, 1.0]):
                     reuptake_rate=0.0,
                     verbose=args.verbose)
         axon.set_concentration(0.0)
+        axon_recording = []
 
-        record_components = [("replenish %s" % str(r), axon)]
+        for _ in xrange(50):
+            axon_recording.append(axon.get_concentration())
+            axon.replenish()
+        axon_recording.append(axon.get_concentration())
+        data.append(("replenish %s" % str(r), axon_recording))
 
-        data += simulate_synapse(syn,
-            record_components = record_components,
-            iterations = 50)
     if not args.silent: plot(data, title="Replenish (replenish rate)")
 
 

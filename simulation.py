@@ -13,7 +13,7 @@ def simulate_synapse(synapse, record_components = [], molecule = Molecule_IDs.GL
         if verbose: ",".join("%-20s" % str(x[-1]) for x in data)
 
     for t in xrange(iterations):
-        synapse.step(t)
+        synapse.step()
         record(t)
 
     return data

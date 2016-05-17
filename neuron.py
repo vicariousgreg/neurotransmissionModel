@@ -13,34 +13,42 @@ NeuronTypes = enum(
 
 class Neuron:
     def __init__(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION, environment=None):
+        self.environment = environment
+
+        # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = PhotoreceptorSoma(environment)
             self.axon_threshold = -9999
         elif neuron_type == NeuronTypes.GANGLION:
             self.soma = Soma(base_current, environment)
             self.axon_threshold = -55.0
-        self.axons = []
+
+        # Inputs
         self.dendrites = []
         self.gap_junctions = []
         self.active_gap_junctions = False
-        self.environment = environment
+
+        # Outputs
+        self.axons = []
+        self.synapses = []
+
+        # Active flags
+        self.soma_stable = False
+        self.synapses_stable = []
 
     def step(self, activation=0.0, resolution=100):
-        # Track activity to return
-        active = False
-
-        # Activate gap junctions
-        gap_current = 0
         soma_voltage = self.soma.get_voltage()
 
-        # Check gap junctions.
+        # Check gap junctions if active
         if self.active_gap_junctions:
+            gap_current = 0
             for other,conductance in self.gap_junctions:
                 df = conductance*(other.soma.get_voltage() - soma_voltage)
                 gap_current += df
 
+            # Destabilize soma if new current is significantly different
             if abs(gap_current - self.soma.gap_current) > 0.001:
-                active = True
+                self.soma_stable = False
                 self.soma.gap_current = gap_current
 
         # Gather input from dendrites.
@@ -50,20 +58,28 @@ class Neuron:
         for dendrite in self.dendrites:
             activation += dendrite.get_activation()
 
-        active = active or activation > 0.0
+        # Activate the soma
+        if activation > 0.0 or not self.soma_stable:
+            self.soma_stable = self.soma.step(activation, resolution=resolution)
 
         # Activate the axons
+        # If they are releasing, their synapse should be activated
         if soma_voltage < self.axon_threshold: soma_voltage = None
-        for axon in self.axons:
-            active = active or axon.step(voltage = soma_voltage)
+        for i,axon in enumerate(self.axons):
+            if not axon.step(voltage = soma_voltage):
+                self.synapses_stable[i] = False
 
-        # Activate the soma
-        if active or self.soma.iapp != 0.0 or self.soma.stable_count < 10:
-            self.soma.step(activation, resolution=resolution)
-            active = True
+        # Cycle synapses if active.
+        for i,synapse in enumerate(self.synapses):
+            if not self.synapses_stable[i]:
+                self.synapses_stable[i] = synapse.step()
 
-        # Return active flag.
-        return active
+        # Return stability.
+        return self.soma_stable and all(self.synapses_stable)
+
+    def apply_current(self, current):
+        self.soma.iapp = current
+        self.soma_stable = False
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, single_molecule=None,
@@ -84,6 +100,8 @@ class Neuron:
                     strength=dendrite_strength)
 
         presynaptic.axons.append(axon)
+        presynaptic.synapses.append(synapse)
+        presynaptic.synapses_stable.append(False)
         postsynaptic.dendrites.append(dendrite)
         return synapse
 

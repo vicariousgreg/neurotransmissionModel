@@ -13,7 +13,7 @@ def external_current(rs=[-2, -1, 0, 1, 5, 10]):
         neuron = neuron_factory.create_neuron(probe_name=neuron_name)
 
         neuron_factory.step(args.iterations/10)
-        neuron.soma.iapp = r
+        neuron.apply_current(r)
         neuron_factory.step(args.iterations)
 
         data.append(neuron_factory.get_probe_data(neuron_name))

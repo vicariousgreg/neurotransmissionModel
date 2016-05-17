@@ -21,22 +21,6 @@ def synaptic_cleft_metabolize(rs=[0.01, 0.1, 0.5, 1.0, 2.0]):
     if not args.silent:
         plot(data, title="Metabolize (enzyme concentration)") #, file_name="metabolize.jpg")
 
-def synaptic_cleft_bind(rs=[0.01, 0.1, 0.5, 1.0]):
-    data = []
-
-    for r in rs:
-        syn = Synapse(verbose=args.verbose)
-        dendrite = syn.create_dendrite(density=r)
-        syn.synaptic_cleft.set_concentration(1.0)
-
-        record_components = [(
-            "metabolize %s" % str(r),
-            syn.synaptic_cleft)]
-
-        data += simulate_synapse(syn, record_components=record_components, iterations=50)
-    if not args.silent:
-        plot(data, title="Bind (dendrite density)")
-
 def main():
     synaptic_cleft_metabolize()
     synaptic_cleft_bind()

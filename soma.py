@@ -79,6 +79,7 @@ class Soma:
         else:
             self.stable_count = 0
 
+        return self.stable_count > 10 and self.iapp == 0.0
 
     def cycle(self, time_coefficient, voltage):
         """
