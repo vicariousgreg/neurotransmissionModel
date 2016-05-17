@@ -109,13 +109,12 @@ Transporters = enum(
 """ METABOLISM """
 ##################
 
-def metabolize(enzyme_count, mol_count, metab_rate, environment):
+def metabolize(enzyme_count, mol_count, metab_rate):
     """
     Returns the number of molecules destroyed during metabolism.
     |enzyme_count| is the number of enzymes in the pool.
     |mol_count| is the number of molecules in the pool.
     |rate| is the metabolic rate.
-    The |environment| provides the stochastic method for metablism.
 
     Enzyme degredation
     V_0 = V_max * [S] / ( [S] + K_M )

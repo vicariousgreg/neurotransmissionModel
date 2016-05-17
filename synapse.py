@@ -48,7 +48,6 @@ class Synapse:
         """
         Creates an axon and adds it to the synapse.
         """
-        args["environment"] = self.environment
         axon = Axon(**args)
         self.axon = axon
         self.components.append(axon)
@@ -58,7 +57,6 @@ class Synapse:
         """
         Creates a dendrite and adds it to the synapse.
         """
-        args["environment"] = self.environment
         dendrite = Dendrite(**args)
         self.dendrites.append(dendrite)
         self.components.append(dendrite)

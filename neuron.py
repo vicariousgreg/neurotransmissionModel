@@ -26,19 +26,21 @@ class Neuron:
         self.environment = environment
 
     def step(self, activation=0.0, resolution=100):
+        # Track activity to return
+        active = False
+
         # Activate gap junctions
         gap_current = 0
         soma_voltage = self.soma.get_voltage()
 
         # Check gap junctions.
-        gap_current_changed = False
         if self.active_gap_junctions:
             for other,conductance in self.gap_junctions:
                 df = conductance*(other.soma.get_voltage() - soma_voltage)
                 gap_current += df
 
             if abs(gap_current - self.soma.gap_current) > 0.001:
-                gap_current_changed = True
+                active = True
                 self.soma.gap_current = gap_current
 
         # Gather input from dendrites.
@@ -48,14 +50,20 @@ class Neuron:
         for dendrite in self.dendrites:
             activation += dendrite.get_activation()
 
-        # Activate the soma
-        if activation > 0.0 or self.soma.iapp != 0.0 or self.soma.stable_count < 10 or gap_current_changed:
-            self.soma.step(activation, resolution=resolution)
+        active = active or activation > 0.0
 
         # Activate the axons
         if soma_voltage < self.axon_threshold: soma_voltage = None
         for axon in self.axons:
-            axon.step(voltage = soma_voltage)
+            active = active or axon.step(voltage = soma_voltage)
+
+        # Activate the soma
+        if active or self.soma.iapp != 0.0 or self.soma.stable_count < 10:
+            self.soma.step(activation, resolution=resolution)
+            active = True
+
+        # Return active flag.
+        return active
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, single_molecule=None,

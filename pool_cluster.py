@@ -17,9 +17,6 @@ class PoolCluster:
             for mol_id,concentration in concentrations.iteritems()])
         self.environment = environment
 
-    def get_total_concentration(self):
-        return sum(self.get_concentration(mol_id) for mol_id in self.pool_ids)
-
     def get_concentration(self, mol_id=Molecule_IDs.GLUTAMATE):
         return self.environment.get_concentration(self.pool_ids[mol_id])
 

@@ -256,7 +256,7 @@ class SynapticCleft(PoolCluster):
         if mol_count <= 0.0: return
         elif mol_count < 0.0001: destroyed = mol_count
         else: 
-            destroyed = metabolize(enzyme_count, mol_count, rate, self.environment)
+            destroyed = metabolize(enzyme_count, mol_count, rate)
         self.remove_concentration(destroyed, mol_id)
         if self.verbose:
             print("Destroyed %f of mol %d" % (destroyed, mol_id))

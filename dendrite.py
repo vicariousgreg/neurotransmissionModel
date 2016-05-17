@@ -7,7 +7,7 @@ from molecule import Receptors
 
 class Dendrite:
     def __init__(self, receptor=Receptors.AMPA, density=1.0,
-                    strength=0.05, environment=None, verbose=False):
+                    strength=0.05, verbose=False):
         """
         Dendrites hold receptors that are activated by neurochemicals in the
             synaptic cleft.
@@ -25,9 +25,15 @@ class Dendrite:
         self.verbose = verbose
 
     def get_concentration(self, mol_id=None):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         return self.bound
 
     def bind(self, concentration):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         self.bound = concentration
 
     def get_activation(self):

@@ -7,11 +7,11 @@ from math import exp
 from collections import deque
 
 from molecule import Transporters
+from environment import betav
 
 class Axon:
     def __init__(self, transporter=Transporters.GLUTAMATE, reuptake_rate=0.5,
-                    capacity=1.0, replenish_rate=0.1, delay=None,
-                    environment=False, verbose=False):
+                    capacity=1.0, replenish_rate=0.1, delay=None, verbose=False):
         """
         Axons keep track of activation and release neurotransmitters over
             time.  Neurotransmitters are regenerated via reuptake and
@@ -42,7 +42,7 @@ class Axon:
                 self.voltage_queue.appendleft(baseline_voltage)
         else:
             self.voltage_queue = None
-            self.v = baseline_voltage
+            self.voltage = baseline_voltage
 
         self.verbose = verbose
         self.releasing = False
@@ -68,23 +68,24 @@ class Axon:
             # Remove voltage from queue
             voltage = self.voltage_queue.pop()
 
-        if voltage: self.v = voltage
-        else: self.v = self.voltage_threshold
-        if not self.releasing and self.v > self.voltage_threshold:
+        if voltage: self.voltage = voltage
+        else: self.voltage = self.voltage_threshold
+        if not self.releasing and self.voltage > self.voltage_threshold:
             self.releasing = True
+        return self.releasing
 
     def release(self):
         # Determine how many molecules to actually release.
 
         ### Non-stochastic release (faster)
-        released = max(0.0, (self.v - self.voltage_threshold) / 500)
+        released = max(0.0, (self.voltage - self.voltage_threshold) / 500)
         ###
 
         ### Use beta distribution to release stochastically
         ### Rate 10 ensures low decrement.
-        #difference = (self.v - self.voltage_threshold) / 500
+        #difference = (self.voltage - self.voltage_threshold) / 500
         #released = max(0, min(self.get_concentration(),
-        #    self.environment.beta(difference, rate=10)))
+        #    betav(difference, rate=10)))
         ###
 
         if released == 0.0:
@@ -113,7 +114,7 @@ class Axon:
         ###
 
         ### Use beta distribution to replenish stochastically
-        #sample = self.environment.beta(missing, rate=self.replenish_rate)
+        #sample = betav(missing, rate=self.replenish_rate)
         ###
 
         self.add_concentration(sample)
@@ -123,4 +124,4 @@ class Axon:
             print("Axon: %f" % self.get_concentration())
 
     def get_scaled_voltage(self):
-        return min(0.2, (self.get_voltage()-self.voltage_threshold)/100)
+        return min(0.2, (self.voltage-self.voltage_threshold)/100)

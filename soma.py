@@ -14,9 +14,15 @@ class Soma:
         self.reset()
 
     def get_voltage(self):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         return self.environment.get_voltage(self.neuron_id)
 
     def set_voltage(self, v):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         self.environment.set_voltage(self.neuron_id, v)
 
     def adjust_voltage(self, delta):
@@ -50,11 +56,11 @@ class Soma:
             else:
                 stable = 0
                 old_v = new_v
-            self.step(0.0, silent=True)
+            self.step(silent=True)
         self.environment.step()
         self.stable_voltage = self.get_voltage()
 
-    def step(self, ligand_activation, resolution=100, silent=False):
+    def step(self, ligand_activation=0.0, resolution=100, silent=False):
         voltage = self.get_voltage()
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation

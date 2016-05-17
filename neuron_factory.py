@@ -172,7 +172,7 @@ class ActivationPulseDriver:
             neuron.step(self.activation)
             if self.record: self.data.append(-0.3)
             if self.decrement:
-                self.activation -= self.decrement
+                self.activation = max(0.0, self.activation - self.decrement)
         else:
             neuron.step()
             if self.record: self.data.append(-0.4)
