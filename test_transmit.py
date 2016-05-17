@@ -39,8 +39,8 @@ def transmit(strength=0.25, delays=[None, 100]):
         plot(data, title="Synaptic transmission")
 
 def main():
-    transmit(strength = 0.25)
-    #transmit(strength = 0.2, delays=[100])
+    #transmit(strength = 0.25)
+    transmit(strength = 0.25, delays=[None])
     #transmit(strength = 0.1, delays=[None])
 
 def set_options():

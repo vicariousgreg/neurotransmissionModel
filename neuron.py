@@ -15,8 +15,10 @@ class Neuron:
     def __init__(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION, environment=None):
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = PhotoreceptorSoma(environment)
+            self.axon_threshold = -9999
         elif neuron_type == NeuronTypes.GANGLION:
             self.soma = Soma(base_current, environment)
+            self.axon_threshold = -55.0
         self.axons = []
         self.dendrites = []
         self.gap_junctions = []
@@ -51,6 +53,7 @@ class Neuron:
             self.soma.step(activation, resolution=resolution)
 
         # Activate the axons
+        if soma_voltage < self.axon_threshold: soma_voltage = None
         for axon in self.axons:
             axon.step(voltage = soma_voltage)
 

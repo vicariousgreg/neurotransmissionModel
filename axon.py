@@ -64,11 +64,12 @@ class Axon:
         # If there is a delay, use the queue.
         if self.delay is not None:
             # Add voltage to queue
-            self.voltage_queue.appendleft(voltage - 0.1*self.delay)
+            self.voltage_queue.appendleft(voltage)
             # Remove voltage from queue
             voltage = self.voltage_queue.pop()
 
         if voltage: self.v = voltage
+        else: self.v = self.voltage_threshold
         if not self.releasing and self.v > self.voltage_threshold:
             self.releasing = True
 
