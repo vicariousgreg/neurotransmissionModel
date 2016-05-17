@@ -75,6 +75,16 @@ class NeuronFactory:
         self.tokens.add(neuron.neuron_id)
         return neuron
 
+    def create_neuron_grid(self, width, height,
+            base_current=0.0, neuron_type=NeuronTypes.PHOTORECEPTOR):
+        output = []
+        for i in xrange(height):
+            row = []
+            for j in xrange(width):
+                row.append(self.create_neuron(base_current, neuron_type))
+            output.append(row)
+        return output
+
     def create_synapse(self, pre_neuron, post_neuron,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             enzyme_concentration=1.0,

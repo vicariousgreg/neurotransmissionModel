@@ -12,7 +12,7 @@ from math import exp
 
 class PhotoreceptorSoma:
     def __init__(self, environment=None):
-        self.stabilization_counter=0
+        self.stable_count=0
         self.base_conductance = 0.8
         self.light_level = 0.0
 
@@ -59,9 +59,9 @@ class PhotoreceptorSoma:
             self.step(0.0, silent=True)
         self.environment.step()
         self.stable_voltage = self.get_voltage()
+        self.prev_voltage = self.stable_voltage
 
     def step(self, light_activation=0.0, resolution=100, silent=False):
-        if light_activation == 0.0 and self.stabilization_counter > 1: return
         time_coefficient = 1.0 / resolution
 
         voltage = self.get_voltage()
@@ -71,11 +71,12 @@ class PhotoreceptorSoma:
 
         if silent: return
 
-        if voltage == self.stable_voltage:
-            self.stabilization_counter += 1
+        if voltage == self.prev_voltage:
+            self.stable_count += 1
         else:
-            self.stabilization_counter = 0
-
+            self.stable_count = 0
+        self.prev_voltage = voltage
+        return self.stable_count > 10 and self.iapp == 0.0
 
     def cycle(self, time_coefficient, voltage):
         ah   = 0.07*exp(-(voltage+65.0)/20.0)
