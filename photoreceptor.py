@@ -22,12 +22,21 @@ class PhotoreceptorSoma:
         self.reset()
 
     def get_voltage(self):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         return self.environment.get_voltage(self.neuron_id)
 
     def set_voltage(self, v):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         self.environment.set_voltage(self.neuron_id, v)
 
     def adjust_voltage(self, delta):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
         self.environment.adjust_voltage(self.neuron_id, delta)
 
     def reset(self):

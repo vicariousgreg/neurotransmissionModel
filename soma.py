@@ -32,10 +32,11 @@ class Soma:
         self.firing = False
         self.gap_current = 0.0
 
-        self.set_voltage(-65.0)
-        self.h=0.596
-        self.n=0.318
-        self.m=0.053
+        self.stable_voltage = -64.9997224337
+        self.set_voltage(self.stable_voltage)
+        self.h=0.596111046355
+        self.n=0.31768116758
+        self.m=0.0529342176209
 
         self.cm=1.0
         self.gnabar=120.0
@@ -45,12 +46,15 @@ class Soma:
         self.vk=-77.0
         self.vl=-54.4
 
+
         # Stabilize
+        '''
         old_v = 0
         stable = 0
         while stable < 10:
             self.environment.step()
             new_v = self.get_voltage()
+            print(new_v)
             if old_v == new_v:
                 stable += 1
             else:
@@ -58,7 +62,7 @@ class Soma:
                 old_v = new_v
             self.step(silent=True)
         self.environment.step()
-        self.stable_voltage = self.get_voltage()
+        '''
 
     def step(self, ligand_activation=0.0, resolution=100, silent=False):
         voltage = self.get_voltage()

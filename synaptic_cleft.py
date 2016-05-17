@@ -33,8 +33,8 @@ class SynapticCleft(PoolCluster):
             self.bind = self.simple_bind
             self.enzymes = [enzyme_concentration]
             mol = Molecules[active_molecules[0]]
-            self.metabolize = lambda: self.metabolize_molecule(\
-                active_molecules[0], self.enzymes[0], mol.metab_rate)
+            self.metab_rate = mol.metab_rate
+            self.metabolize = self.simple_metabolize
         else:
             PoolCluster.__init__(self,
                 dict([(mol_id, 0.0) for mol_id in active_molecules]),
@@ -243,6 +243,10 @@ class SynapticCleft(PoolCluster):
                     print("Constant and final bound count:")
                     print("k: %f    bound: %f" % (k, bound))
                     print("")
+
+    def simple_metabolize(self):
+        self.metabolize_molecule(\
+            self.active_molecules[0], self.enzymes[0], self.metab_rate)
 
     def complex_metabolize(self):
         """

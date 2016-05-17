@@ -30,7 +30,7 @@ def test_grid(image=simple_image):
     for _ in xrange(args.iterations):
         neuron_data.append(neuron_grid[0][0].soma.get_scaled_voltage())
         neuron_factory.step()
-        if len(neuron_factory.tokens) == 0: break
+        if not any(x for x in neuron_factory.active): break
 
     activity = []
     for row in neuron_grid:

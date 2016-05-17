@@ -1,5 +1,6 @@
 # Neuron Model
 
+from multiprocessing import Value
 from enum import enum
 from soma import Soma
 from synapse import Synapse
@@ -27,7 +28,7 @@ class Neuron:
 
         # Inputs
         self.dendrites = []
-        self.activation = 0.0
+        self.activation = Value('d', 0.0)
         self.gap_junctions = []
         self.active_gap_junctions = False
 
@@ -40,7 +41,7 @@ class Neuron:
         self.synapses_stable = []
 
     def adjust_activation(self, delta):
-        self.activation += delta
+        self.activation.value += delta
 
     def step(self, resolution=100):
         # Keep track of activated neurons.
@@ -67,8 +68,8 @@ class Neuron:
             dendrite.activate(self)
 
         # Activate the soma
-        if self.activation != 0.0 or not self.soma_stable:
-            self.soma_stable = self.soma.step(self.activation, resolution=resolution)
+        if self.activation.value != 0.0 or not self.soma_stable:
+            self.soma_stable = self.soma.step(self.activation.value, resolution=resolution)
 
         # Activate the axons
         # If they are releasing, their synapse should be activated
@@ -89,7 +90,7 @@ class Neuron:
         if not self.soma_stable or not all(self.synapses_stable): tokens.add(self.neuron_id)
 
         # Reset activation and return set of active neurons
-        self.activation = 0.0
+        self.activation.value = 0.0
         return tokens
 
     def apply_current(self, current):

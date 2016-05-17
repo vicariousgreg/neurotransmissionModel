@@ -9,12 +9,14 @@
 # Probes can be added to any component to take measurements of voltage, current,
 #     or concentration over the course of the simulation.
 
+from multiprocessing import Array
+from math import ceil
 from environment import NeuronEnvironment
 from neuron import Neuron, NeuronTypes
 from molecule import Transporters, Receptors, Molecule_IDs
 
 class NeuronFactory:
-    def __init__(self):
+    def __init__(self, num_threads=3):
         self.neuron_environment = NeuronEnvironment()
         self.neurons = []
         self.synapses = []
@@ -25,13 +27,26 @@ class NeuronFactory:
         self.neuron_probes = {}
         self.concentration_probes = {}
 
-        self.tokens = set()
+        self.num_threads = num_threads
         self.time = 0
         self.stable = 0
 
+    def initialize(self):
+        # Create the boolean buffers
+        self.active = Array('b', [True] * len(self.neurons), lock=False)
+        length = int(ceil(float(len(self.neurons)) / self.num_threads))
+
+        self.assignments = []
+        for i in xrange(self.num_threads):
+            self.assignments.append((i * length, min(len(self.neurons), (i+1)*length)))
+     
     def step(self, count=1):
+        # Hacky way of initializing without placing burden on caller.
+        try: self.active
+        except: self.initialize()
+
         for _ in xrange(count):
-            new_tokens = set()
+            tokens = set()
 
             # Activate drivers
             # Drivers do not step the neuron, but modify it to prepare for
@@ -39,13 +54,13 @@ class NeuronFactory:
             #     stepped during this timestep.
             for neuron,driver in self.neuron_drivers.iteritems():
                 if driver.drive(neuron, self.time):
-                    self.tokens.add(neuron.neuron_id)
+                    self.active[neuron.neuron_id] = True
 
-            #if len(self.tokens) > 0: print(tuple(self.tokens))
+            #if len(tokens) > 0: print(tuple(tokens))
 
             # Activate neurons with tokens
-            for neuron_id in self.tokens:
-                new_tokens.update(self.neurons[neuron_id].step())
+            for i in xrange(self.num_threads):
+                tokens.update(self.step_assignment(i))
 
             # Record neuron somas
             for neuron,probe in self.neuron_probes.iteritems():
@@ -58,7 +73,19 @@ class NeuronFactory:
             # Step the environment.
             if self.neuron_environment.step(): self.stable += 1
             self.time += 1
-            self.tokens = new_tokens
+            
+            for i in xrange(len(self.active)): self.active[i] = False
+            for token in tokens: self.active[token] = True
+            #print([x for x in self.active])
+
+    def step_assignment(self, index):
+        new_tokens = set()
+        for neuron_id in xrange(*self.assignments[index]):
+            if self.active[neuron_id]:
+                #print(neuron_id)
+                new_tokens.update(self.neurons[neuron_id].step())
+        #raw_input()
+        return new_tokens
 
     def create_neuron(self, base_current=0.0,
             neuron_type=NeuronTypes.GANGLION, probe_name=None):
@@ -72,7 +99,6 @@ class NeuronFactory:
             probe = VoltageProbe()
             self.probes[probe_name] = probe
             self.neuron_probes[neuron] = probe
-        self.tokens.add(neuron.neuron_id)
         return neuron
 
     def create_neuron_grid(self, width, height,
@@ -128,7 +154,6 @@ class NeuronFactory:
 
     def create_gap_junction(self, pre_neuron, post_neuron, conductance=1.0):
         Neuron.create_gap_junction(pre_neuron, post_neuron, conductance)
-        self.tokens.update((pre_neuron.neuron_id, post_neuron.neuron_id))
 
     def register_driver(self, neuron, driver, name=None):
         self.neuron_drivers[neuron] = driver
