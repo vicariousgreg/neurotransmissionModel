@@ -33,7 +33,7 @@ class Axon:
         self.concentration = capacity
 
         self.replenish_rate = replenish_rate
-        baseline_voltage = -62.0
+        baseline_voltage = -65.0
 
         self.delay = delay
         if delay:
@@ -73,7 +73,8 @@ class Axon:
             # Remove voltage from queue
             voltage = self.voltage_queue.pop()
 
-        if voltage: self.voltage = voltage
+        if voltage:
+            self.voltage = voltage
         else: self.voltage = self.voltage_threshold
         if self.voltage > self.voltage_threshold and not self.releasing:
             self.releasing = True

@@ -35,9 +35,6 @@ def test_photoreceptor(
             axon_probe_name=axon_name, cleft_probe_name=cleft_name, dendrite_probe_name=dendrite_name)
         synapse.set_enzyme_concentration(0.5)
 
-        cleft_data = []
-        dendrite_data = []
-
         driver_name = "Light activation %f" % strength
         neuron_factory.register_driver(photoreceptor,
             ActivationPulseDriver(activation=strength, period=period,
