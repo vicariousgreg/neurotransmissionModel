@@ -27,6 +27,7 @@ class Neuron:
 
         # Inputs
         self.dendrites = []
+        self.activation = 0.0
         self.gap_junctions = []
         self.active_gap_junctions = False
 
@@ -41,6 +42,8 @@ class Neuron:
     def step(self, activation=0.0, resolution=100):
         # Keep track of activated neurons.
         tokens = set()
+
+        self.activation = activation
 
         soma_voltage = self.soma.get_voltage()
 
@@ -57,16 +60,14 @@ class Neuron:
                 self.soma.gap_current = gap_current
                 tokens.add(other.neuron_id)
 
-        # Gather input from dendrites.
-        # TODO: Implement different activations based on dendrite
-        #         - add a function to each receptor protein that takes
-        #             the neuron and does something to it
+        # Activate the neuron from each dendrite
+        # This will check the receptor type and decide how to modify the neuron
         for dendrite in self.dendrites:
-            activation += dendrite.get_activation()
+            dendrite.activate(self)
 
         # Activate the soma
-        if activation > 0.0 or not self.soma_stable:
-            self.soma_stable = self.soma.step(activation, resolution=resolution)
+        if self.activation != 0.0 or not self.soma_stable:
+            self.soma_stable = self.soma.step(self.activation, resolution=resolution)
 
         # Activate the axons
         # If they are releasing, their synapse should be activated
@@ -94,14 +95,14 @@ class Neuron:
         self.soma_stable = False
 
     @staticmethod
-    def create_synapse(presynaptic, postsynaptic, single_molecule=None,
+    def create_synapse(presynaptic, postsynaptic, active_molecules=None,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             enzyme_concentration=1.0,
             axon_delay=None, dendrite_strength=0.0015):
         synapse = Synapse(
             postsynaptic_id=postsynaptic.neuron_id,
             initial_enzyme_concentration=enzyme_concentration,
-            single_molecule=single_molecule)
+            active_molecules=active_molecules)
         axon = synapse.create_axon(
                     transporter=transporter,
                     replenish_rate=0.1,

@@ -42,5 +42,7 @@ class Dendrite:
         """
         self.bound += concentration
 
-    def get_activation(self):
-        return self.strength * self.bound
+    def activate(self, neuron):
+        self.protein.activation_function(self.strength,
+            self.get_concentration(),
+            neuron)

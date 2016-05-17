@@ -9,38 +9,39 @@
 # Synaptic neurotransmitters bind stochastically to postsynaptic neuron
 #     receptors and presynaptic transporters.
 
-from molecule import Molecules, Enzymes, metabolize
+from molecule import Molecules, Enzymes, metabolize, Molecule_IDs
 from pool_cluster import PoolCluster
 
 class SynapticCleft(PoolCluster):
-    def __init__(self, enzyme_concentration=1.0, single_molecule=None,
-                                        environment=None, verbose=False):
+    def __init__(self, enzyme_concentration=1.0,
+                    active_molecules=None,
+                    environment=None, verbose=False):
         """
         A synaptic cleft contains pools of molecules and enzymes.
         |enzyme_concentration| is the intial concentration of enzymes.
-        If |single_molecule| is provided, the synaptic cleft will assume that
-            only that molecule will be introduced into the synapse.  This saves
-            a lot of computation.
+        If only one |active_molecule| is provided, the synaptic cleft will
+            assume that only that molecule will be introduced into the synapse.
+            This saves a lot of computation.
         """
         # If single molecule is indicated, set up functions and pool for time
         #     and space efficiency.
-        self.single_molecule = single_molecule
-        if single_molecule is not None:
+        self.active_molecules = active_molecules
+        if len(active_molecules) == 1:
             PoolCluster.__init__(self,
-                dict([(single_molecule, 0.0)]),
+                dict([(active_molecules[0], 0.0)]),
                 environment)
             self.bind = self.simple_bind
-            mol = Molecules[single_molecule]
-            self.enzymes = enzyme_concentration
+            self.enzymes = [enzyme_concentration]
+            mol = Molecules[active_molecules[0]]
             self.metabolize = lambda: self.metabolize_molecule(\
-                single_molecule, self.enzymes, mol.metab_rate)
+                active_molecules[0], self.enzymes[0], mol.metab_rate)
         else:
             PoolCluster.__init__(self,
-                dict([(mol.mol_id, 0.0) for mol in Molecules]),
+                dict([(mol_id, 0.0) for mol_id in active_molecules]),
                 environment)
             self.bind = self.complex_bind
-            self.enzymes = [enzyme_concentration] * Enzymes.size
             self.metabolize = self.complex_metabolize
+        self.enzymes = [enzyme_concentration] * Enzymes.size
         self.verbose = verbose
 
     def step(self, dendrites, axon=None):
@@ -59,7 +60,7 @@ class SynapticCleft(PoolCluster):
         This simpler version is less computationally expensive, but only works
             if the synaptic cleft contains only one molecule.
         """
-        mol_id = self.single_molecule
+        mol_id = self.active_molecules[0]
         mol_concentration = self.get_concentration(mol_id)
         if mol_concentration <= 0.0:
             for dendrite in dendrites: dendrite.set_bound(0.0)
@@ -207,8 +208,10 @@ class SynapticCleft(PoolCluster):
             try: competing_molecules = protein_mol_count[dendrite.protein]
             except KeyError: continue
 
-            # For each receptive molecule:
-            for mol_id,affinity in dendrite.protein.affinities.iteritems():
+            # For each receptive agonist molecule, bind to dendrite.
+            # Skip antagonists, which will be competitive inhibitors, as they
+            #     contribute to the overall molecule count.
+            for mol_id in dendrite.protein.agonists:
                 try:
                     mol_concentration = mol_concentrations[mol_id]
                 except KeyError: continue
@@ -216,6 +219,7 @@ class SynapticCleft(PoolCluster):
                 competing_proteins = mol_protein_count[mol_id]
                 if competing_proteins == 0: continue
 
+                affinity = dendrite.protein.affinities[mol_id]
 
                 # Proportion of molecule relative to competitors.
                 mol_fraction = affinity * mol_concentration / competing_molecules

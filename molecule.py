@@ -48,7 +48,7 @@ Molecule_IDs = enum(
 #################
 
 class Receptor:
-    def __init__(self, native_mol_id, native_affinity, voltage_dependent=False):
+    def __init__(self, native_mol_id, native_affinity, activation_function):
         """
         Receptors have a native molecule specified by |native_mol_id|,
             foreign agonists, and foreign antagonists.  Any molecule that
@@ -58,10 +58,10 @@ class Receptor:
             cell.
         """
         self.native_mol_id = native_mol_id
-        self.voltage_dependent = voltage_dependent
         self.agonists = [native_mol_id]
         self.antagonists = []
         self.affinities = dict([(native_mol_id, native_affinity)])
+        self.activation_function = activation_function
 
     def add_agonist(self, mol_id, affinity):
         self.agonists.append(mol_id)
@@ -71,10 +71,20 @@ class Receptor:
         self.antagonists.append(mol_id)
         self.affinities[mol_id] = affinity
 
+def epsp(strength, activation, neuron):
+    neuron.activation += strength*activation
+
+def voltage_epsp(strength, activation, neuron):
+    if neuron.soma.get_voltage() > -60.0:
+        neuron.activation += strength*activation
+
+def ipsp(strength, activation, neuron):
+    neuron.activation -= strength*activation
+
 Receptors = enum(
-    AMPA = Receptor(Molecule_IDs.GLUTAMATE, 0.8),
-    NMDA = Receptor(Molecule_IDs.GLUTAMATE, 0.4, voltage_dependent=True),
-    GABA = Receptor(Molecule_IDs.GABA, 0.9)
+    AMPA = Receptor(Molecule_IDs.GLUTAMATE, 0.8, epsp),
+    NMDA = Receptor(Molecule_IDs.GLUTAMATE, 0.4, voltage_epsp),
+    GABA = Receptor(Molecule_IDs.GABA, 0.9, ipsp)
 )
 
 

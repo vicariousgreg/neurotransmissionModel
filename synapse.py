@@ -2,7 +2,7 @@
 #
 # The synapse contains axons, dendrites, and a synaptic cleft.
 
-from molecule import Enzymes
+from molecule import Enzymes, Molecule_IDs
 from axon import Axon
 from dendrite import Dendrite
 from synaptic_cleft import SynapticCleft
@@ -10,7 +10,7 @@ from environment import SynapseEnvironment
 
 class Synapse:
     def __init__(self, postsynaptic_id=None, initial_enzyme_concentration=0.0,
-                    single_molecule=None, verbose=False):
+                    active_molecules=[Molecule_IDs.GLUTAMATE], verbose=False):
         """
         Creates a synapse with an initialized synaptic cleft.
         An initial enzyme concentration can be specified.
@@ -25,7 +25,7 @@ class Synapse:
 
         self.synaptic_cleft = SynapticCleft(
             enzyme_concentration=initial_enzyme_concentration,
-            single_molecule = single_molecule,
+            active_molecules = active_molecules,
             environment=self.environment, verbose=verbose)
         self.axon = None
         self.dendrites = []
@@ -34,14 +34,8 @@ class Synapse:
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
         Sets the concentration of the given |enzymes| in the synaptic cleft.
-
-        If the synapse is single molecule, then we can ignore |enzymes| and
-            simply set the concentration.
         """
-        if self.synaptic_cleft.single_molecule is not None:
-            self.synaptic_cleft.enzymes = e_c
-        else:
-            for i in enzymes: self.synaptic_cleft.enzymes[i] = e_c
+        for i in enzymes: self.synaptic_cleft.enzymes[i] = e_c
 
     def create_axon(self, **args):
         """

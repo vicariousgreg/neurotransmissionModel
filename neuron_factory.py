@@ -11,7 +11,7 @@
 
 from environment import NeuronEnvironment
 from neuron import Neuron, NeuronTypes
-from molecule import Transporters, Receptors
+from molecule import Transporters, Receptors, Molecule_IDs
 
 class NeuronFactory:
     def __init__(self):
@@ -77,25 +77,23 @@ class NeuronFactory:
     def create_synapse(self, pre_neuron, post_neuron,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             enzyme_concentration=1.0,
-            axon_delay=None, dendrite_strength=0.05, single_molecule=True,
+            axon_delay=None, dendrite_strength=0.05, active_molecules=[Molecule_IDs.GLUTAMATE],
             axon_probe_name=None, cleft_probe_name=None, dendrite_probe_name=None):
         # If single molecule is true, the synapse will save time and space by
         #     assuming that only one molecule will move through it.  This means
         #     that the proteins must use the same native molecule, and no
         #     exogenous molecules can be admitted into the synapse.
-        if single_molecule:
-            # First, we must validate that the proteins use the same molecule.
-            if transporter.native_mol_id != receptor.native_mol_id:
-                raise ValueError
-            # Set the molecule.
-            molecule = transporter.native_mol_id
-        # Otherwise, set the molecule to none.
-        else: molecule = None
+        # First, we must validate that the proteins use the same molecule.
+        # Then we ensure that the molecule is in active_molecules.
+        if transporter.native_mol_id != receptor.native_mol_id:
+            raise ValueError
+        if transporter.native_mol_id not in active_molecules:
+            active_molecules.append(transporter.native_mol_id)
 
         # Create synapse.
         synapse = Neuron.create_synapse(pre_neuron, post_neuron,
             transporter=transporter, receptor=receptor,
-            single_molecule = molecule, enzyme_concentration=enzyme_concentration,
+            active_molecules = active_molecules, enzyme_concentration=enzyme_concentration,
             axon_delay=axon_delay, dendrite_strength=dendrite_strength)
         self.synapses.append(synapse)
 
