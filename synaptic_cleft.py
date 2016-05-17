@@ -61,7 +61,9 @@ class SynapticCleft(PoolCluster):
         """
         mol_id = self.single_molecule
         mol_concentration = self.get_concentration(mol_id)
-        if mol_concentration <= 0.0: return
+        if mol_concentration <= 0.0:
+            for dendrite in dendrites: dendrite.set_bound(0.0)
+            return
 
         # Map of molecules to total concentrations of receptive proteins
         protein_counts = dict()
@@ -106,7 +108,7 @@ class SynapticCleft(PoolCluster):
             bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
 
             # Acivate dendrite.
-            dendrite.bound = bound
+            dendrite.set_bound(bound)
 
             if self.verbose:
                 print("Concentrations:")
@@ -199,7 +201,7 @@ class SynapticCleft(PoolCluster):
 
         # Compute for each protein-molecule pair.
         for dendrite in dendrites:
-            dendrite.bound = 0
+            dendrite.set_bound(0)
 
             # How many molecules are competing for this protein?
             try: competing_molecules = protein_mol_count[dendrite.protein]
@@ -227,7 +229,7 @@ class SynapticCleft(PoolCluster):
                 bound = protein_count * (mol_concentration**2) / ( mol_concentration + k )
 
                 # Transfer molecules.
-                dendrite.bound += bound
+                dendrite.bind(bound)
 
                 if self.verbose:
                     print("Concentrations:")

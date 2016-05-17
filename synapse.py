@@ -86,4 +86,4 @@ class Synapse:
         self.synaptic_cleft.step(dendrites=self.dendrites, axon=self.axon)
 
         # 4. Cycle environment
-        return self.environment.step()
+        return self.environment.step()# and all(dendrite.bound == 0.0 for dendrite in self.dendrites)

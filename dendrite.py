@@ -30,11 +30,17 @@ class Dendrite:
         """
         return self.bound
 
-    def bind(self, concentration):
+    def set_bound(self, concentration):
         """
         NEEDS TO BE THREAD SAFE
         """
         self.bound = concentration
+
+    def bind(self, concentration):
+        """
+        NEEDS TO BE THREAD SAFE
+        """
+        self.bound += concentration
 
     def get_activation(self):
         return self.strength * self.bound
