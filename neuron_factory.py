@@ -26,28 +26,44 @@ class NeuronFactory:
         self.concentration_probes = {}
 
         self.base_driver = ConstantDriver(0.0)
+        self.tokens = set()
         self.time = 0
+        self.stable = 0
 
     def step(self, count=1):
         for _ in xrange(count):
-            # Activate neurons.
-            # The neurons will activate synapses if necessary.
+            new_tokens = set()
+
+            # Activate driven neurons
+            for neuron,driver in self.neuron_drivers.iteritems():
+                response = driver.drive(neuron, self.time)
+                if response:
+                    new_tokens.update(response)
+                    try: self.tokens.remove(neuron.neuron_id)
+                    except KeyError: pass
+
+            # Activate neurons with tokens
+            for neuron_id in self.tokens:
+                new_tokens.update(self.neurons[neuron_id].step())
+
+            # Record neuron somas
             for neuron,probe in self.neuron_probes.iteritems():
                 probe.record(neuron.soma)
-            for neuron in self.neurons:
-                self.neuron_drivers.get(neuron, self.base_driver).drive(neuron, self.time)
 
             # Record components with probes
             for component,probe in self.concentration_probes.iteritems():
                 probe.record(component)
 
             # Step the environment.
-            self.neuron_environment.step()
+            if self.neuron_environment.step(): self.stable += 1
             self.time += 1
+            self.tokens = new_tokens
 
     def create_neuron(self, base_current=0.0,
             neuron_type=NeuronTypes.GANGLION, probe_name=None):
-        neuron = Neuron(base_current=base_current,
+        neuron = Neuron(
+            neuron_id=len(self.neurons),
+            base_current=base_current,
             neuron_type=neuron_type,
             environment=self.neuron_environment)
         self.neurons.append(neuron)
@@ -55,6 +71,7 @@ class NeuronFactory:
             probe = VoltageProbe()
             self.probes[probe_name] = probe
             self.neuron_probes[neuron] = probe
+        self.tokens.add(neuron.neuron_id)
         return neuron
 
     def create_synapse(self, pre_neuron, post_neuron,
@@ -102,6 +119,7 @@ class NeuronFactory:
 
     def create_gap_junction(self, pre_neuron, post_neuron, conductance=1.0):
         Neuron.create_gap_junction(pre_neuron, post_neuron, conductance)
+        self.tokens.update((pre_neuron.neuron_id, post_neuron.neuron_id))
 
     def register_driver(self, neuron, driver, name=None):
         self.neuron_drivers[neuron] = driver
@@ -123,8 +141,8 @@ class ConstantDriver:
     def predelay(self, neuron, time):
         if time-self.delay >= 0:
             self.drive = self.postdelay
-            neuron.step(self.activation)
-        else: neuron.step(0.0)
+            return neuron.step(self.activation)
+        else: return None
 
     def postdelay(self, neuron, time):
         neuron.step(self.activation)
@@ -148,8 +166,10 @@ class CurrentPulseDriver:
         elif time % self.period == self.length:
             self.on = False
             neuron.apply_current(0.0)
+            return neuron.step()
         if self.record: self.data.append(-0.2 if self.on else -0.3)
-        neuron.step()
+        if self.on: return neuron.step()
+        else: return None
 
 class ActivationPulseDriver:
     def __init__(self, activation=0.0, period=1000, length=1,
@@ -165,13 +185,13 @@ class ActivationPulseDriver:
     def drive(self, neuron, time):
         time -= self.delay
         if time >= 0 and time % self.period < self.length:
-            neuron.step(self.activation)
             if self.record: self.data.append(-0.3)
             if self.decrement:
                 self.activation = max(0.0, self.activation - self.decrement)
+            return neuron.step(self.activation)
         else:
-            neuron.step()
             if self.record: self.data.append(-0.4)
+            return None
 
 class VoltageProbe:
     def __init__(self):

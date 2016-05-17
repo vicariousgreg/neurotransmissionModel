@@ -75,6 +75,7 @@ class NeuronEnvironment:
         def beta(maximum, rate=1.0):
             return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
+        self.dirty = False
 
     def register(self, baseline_voltage=0.0):
         neuron_id = len(self.prev_voltages)
@@ -86,11 +87,21 @@ class NeuronEnvironment:
         return self.prev_voltages[neuron_id]
 
     def set_voltage(self, neuron_id, new_voltage):
+        self.dirty = True
         self.next_voltages[neuron_id] = new_voltage
 
     def adjust_voltage(self, neuron_id, delta):
+        self.dirty = True
         self.next_voltages[neuron_id] += delta
 
     def step(self):
-        for i in xrange(len(self.prev_voltages)):
-            self.prev_voltages[i]=self.next_voltages[i]
+        """
+        Cycles the environment.
+        Returns whether the environment is stable (not dirty, no changes)
+        """
+        if self.dirty:
+            self.dirty = False
+            for i in xrange(len(self.prev_voltages)):
+                self.prev_voltages[i]=self.next_voltages[i]
+            return False
+        else: return True

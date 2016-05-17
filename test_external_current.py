@@ -3,7 +3,7 @@ import argparse
 from plot import plot
 
 from synapse import Synapse
-from neuron_factory import NeuronFactory
+from neuron_factory import NeuronFactory, CurrentPulseDriver
 
 def external_current(rs=[-2, -1, 0, 1, 5, 10]):
     data = []
@@ -12,8 +12,9 @@ def external_current(rs=[-2, -1, 0, 1, 5, 10]):
         neuron_name = "current: %f" % r
         neuron = neuron_factory.create_neuron(probe_name=neuron_name)
 
+        neuron_factory.register_driver(neuron,
+            CurrentPulseDriver(current=r, period=1, length=1, delay=args.iterations/10))
         neuron_factory.step(args.iterations/10)
-        neuron.apply_current(r)
         neuron_factory.step(args.iterations)
 
         data.append(neuron_factory.get_probe_data(neuron_name))

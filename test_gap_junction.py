@@ -6,7 +6,7 @@ from neuron import Neuron
 from environment import NeuronEnvironment
 from neuron_factory import NeuronFactory, ConstantDriver
 
-def test_gap_junction(strength1 = 0.00065, strength2 = 0.0):
+def test_gap_junction(strength1 = 0.0015, strength2 = 0.0):
     neuron_factory = NeuronFactory()
     neuron1_name = "G Neuron %f" % strength1
     neuron1 = neuron_factory.create_neuron(probe_name=neuron1_name)

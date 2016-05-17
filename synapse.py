@@ -9,7 +9,7 @@ from synaptic_cleft import SynapticCleft
 from environment import SynapseEnvironment
 
 class Synapse:
-    def __init__(self, initial_enzyme_concentration=0.0,
+    def __init__(self, postsynaptic_id=None, initial_enzyme_concentration=0.0,
                     single_molecule=None, verbose=False):
         """
         Creates a synapse with an initialized synaptic cleft.
@@ -21,6 +21,7 @@ class Synapse:
             time and space by only checking for that molecule.
         """
         self.environment = SynapseEnvironment()
+        self.postsynaptic_id = postsynaptic_id
 
         self.synaptic_cleft = SynapticCleft(
             enzyme_concentration=initial_enzyme_concentration,

@@ -12,8 +12,10 @@ NeuronTypes = enum(
 )
 
 class Neuron:
-    def __init__(self, base_current=0.0, neuron_type=NeuronTypes.GANGLION, environment=None):
+    def __init__(self, neuron_id=None, base_current=0.0,
+                    neuron_type=NeuronTypes.GANGLION, environment=None):
         self.environment = environment
+        self.neuron_id = neuron_id
 
         # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
@@ -37,6 +39,9 @@ class Neuron:
         self.synapses_stable = []
 
     def step(self, activation=0.0, resolution=100):
+        # Keep track of activated neurons.
+        tokens = set()
+
         soma_voltage = self.soma.get_voltage()
 
         # Check gap junctions if active
@@ -50,6 +55,7 @@ class Neuron:
             if abs(gap_current - self.soma.gap_current) > 0.001:
                 self.soma_stable = False
                 self.soma.gap_current = gap_current
+                tokens.add(other.neuron_id)
 
         # Gather input from dendrites.
         # TODO: Implement different activations based on dendrite
@@ -68,14 +74,20 @@ class Neuron:
         for i,axon in enumerate(self.axons):
             if not axon.step(voltage = soma_voltage):
                 self.synapses_stable[i] = False
+                tokens.add(self.synapses[i].postsynaptic_id)
 
         # Cycle synapses if active.
         for i,synapse in enumerate(self.synapses):
             if not self.synapses_stable[i]:
-                self.synapses_stable[i] = synapse.step()
+                s = synapse.step()
+                self.synapses_stable[i] = s
+                if not s: tokens.add(self.synapses[i].postsynaptic_id)
 
-        # Return stability.
-        return self.soma_stable and all(self.synapses_stable)
+        # Add self if not stable
+        if not self.soma_stable or not all(self.synapses_stable): tokens.add(self.neuron_id)
+
+        # Return set of active neurons
+        return tokens
 
     def apply_current(self, current):
         self.soma.iapp = current
@@ -86,8 +98,10 @@ class Neuron:
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             enzyme_concentration=1.0,
             axon_delay=None, dendrite_strength=0.0015):
-        synapse = Synapse(initial_enzyme_concentration=enzyme_concentration,
-                                             single_molecule=single_molecule)
+        synapse = Synapse(
+            postsynaptic_id=postsynaptic.neuron_id,
+            initial_enzyme_concentration=enzyme_concentration,
+            single_molecule=single_molecule)
         axon = synapse.create_axon(
                     transporter=transporter,
                     replenish_rate=0.1,
