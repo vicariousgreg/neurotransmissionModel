@@ -23,7 +23,6 @@ def synaptic_cleft_metabolize(rs=[0.01, 0.1, 0.5, 1.0, 2.0]):
 
 def main():
     synaptic_cleft_metabolize()
-    synaptic_cleft_bind()
 
 def set_options():
     """

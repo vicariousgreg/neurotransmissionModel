@@ -32,9 +32,9 @@ class NeuronFactory:
         for _ in xrange(count):
             # Activate neurons.
             # The neurons will activate synapses if necessary.
+            for neuron,probe in self.neuron_probes.iteritems():
+                probe.record(neuron.soma)
             for neuron in self.neurons:
-                try: self.neuron_probes[neuron].record(neuron.soma)
-                except KeyError: pass
                 self.neuron_drivers.get(neuron, self.base_driver).drive(neuron, self.time)
 
             # Record components with probes
@@ -98,7 +98,6 @@ class NeuronFactory:
             probe = ConcentrationProbe(dendrite.native_mol_id)
             self.concentration_probes[dendrite] = probe
             self.probes[dendrite_probe_name] = probe
-
         return synapse
 
     def create_gap_junction(self, pre_neuron, post_neuron, conductance=1.0):

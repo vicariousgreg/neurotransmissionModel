@@ -33,7 +33,7 @@ class Neuron:
         self.synapses = []
 
         # Active flags
-        self.soma_stable = False
+        self.soma_stable = True
         self.synapses_stable = []
 
     def step(self, activation=0.0, resolution=100):
@@ -101,7 +101,7 @@ class Neuron:
 
         presynaptic.axons.append(axon)
         presynaptic.synapses.append(synapse)
-        presynaptic.synapses_stable.append(False)
+        presynaptic.synapses_stable.append(True)
         postsynaptic.dendrites.append(dendrite)
         return synapse
 
