@@ -31,7 +31,7 @@ def temporal_summation(num_pre = 3):
 
     neuron_factory.step(args.iterations)
 
-    print("Saved %d out of %d cycles." % (neuron_factory.stable, neuron_factory.time))
+    print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))
 
     for pre_neuron_name in pre_neuron_names:
         data.append(neuron_factory.get_probe_data(pre_neuron_name))

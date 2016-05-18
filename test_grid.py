@@ -16,7 +16,7 @@ def test_grid(image=simple_image):
     height = len(image)
     width = len(image[0])
 
-    neuron_factory = NeuronFactory()
+    neuron_factory = NeuronFactory(num_threads=1)
     neuron_grid = neuron_factory.create_neuron_grid(width, height, base_current=0.0)
 
     neuron_data = []
@@ -30,7 +30,8 @@ def test_grid(image=simple_image):
     for _ in xrange(args.iterations):
         neuron_data.append(neuron_grid[0][0].soma.get_scaled_voltage())
         neuron_factory.step()
-        if not any(x for x in neuron_factory.active): break
+        if neuron_factory.stable: break
+    neuron_factory.close()
 
     activity = []
     for row in neuron_grid:
@@ -45,7 +46,7 @@ def test_grid(image=simple_image):
 
     #if not args.silent:
     #    plot([("neuron", neuron_data)], title="Photoreceptor test")
-    #print("Saved %d out of %d cycles." % (neuron_factory.stable, neuron_factory.time))
+    #print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))
 
 def main():
     test_grid()

@@ -94,12 +94,12 @@ class NeuronEnvironment:
 
         self.prev_voltages = []
         self.next_voltages = []
+        self.dirty = Value('b', True, lock=False)
 
     def initialize(self):
         # Create thread safe arrays.
         self.prev_voltages = Array('d', self.prev_voltages, lock=False)
         self.next_voltages = Array('d', self.next_voltages, lock=False)
-        self.dirty = Value('b', True, lock=False)
 
     def register(self, baseline_voltage=0.0):
         neuron_id = len(self.prev_voltages)
@@ -108,18 +108,13 @@ class NeuronEnvironment:
         return neuron_id
 
     def get_voltage(self, neuron_id):
-        try: self.dirty
-        except: self.initialize()
         return self.prev_voltages[neuron_id]
 
     def set_voltage(self, neuron_id, new_voltage):
-        try: self.dirty.value = True
-        except: self.initialize()
         self.next_voltages[neuron_id] = new_voltage
 
     def adjust_voltage(self, neuron_id, delta):
-        try: self.dirty.value = True
-        except: self.initialize()
+        self.dirty.value = True
         self.next_voltages[neuron_id] += delta
 
     def step(self):
@@ -127,8 +122,6 @@ class NeuronEnvironment:
         Cycles the environment.
         Returns whether the environment is stable (not dirty, no changes)
         """
-        try: self.dirty
-        except: self.initialize()
         if self.dirty.value:
             self.dirty.value = False
             for i in xrange(len(self.prev_voltages)):

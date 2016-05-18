@@ -32,7 +32,7 @@ def transmit(strength=0.25, delays=[None, 100]):
         ActivationPulseDriver(activation=strength, period=500, length=1, decrement=0.01))
     neuron_factory.step(args.iterations)
 
-    print("Saved %d out of %d cycles." % (neuron_factory.stable, neuron_factory.time))
+    print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))
 
     if not args.silent:
         data.append(neuron_factory.get_probe_data(pre_neuron_name))

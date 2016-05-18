@@ -48,29 +48,11 @@ class Soma:
         self.vk=-77.0
         self.vl=-54.4
 
-
-        # Stabilize
-        '''
-        old_v = 0
-        stable = 0
-        while stable < 10:
-            self.environment.step()
-            new_v = self.get_voltage()
-            print(new_v)
-            if old_v == new_v:
-                stable += 1
-            else:
-                stable = 0
-                old_v = new_v
-            self.step(silent=True)
-        self.environment.step()
-        '''
-
     def step(self, ligand_activation=0.0, resolution=100, silent=False):
         voltage = self.get_voltage()
         time_coefficient = 1.0 / resolution
         self.m += ligand_activation
-        voltage_delta = self.cycle(time_coefficient, voltage)
+        self.cycle(time_coefficient, voltage)
         if silent: return
 
         if voltage > 0.0 and self.firing is False:
