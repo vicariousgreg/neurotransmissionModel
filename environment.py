@@ -35,33 +35,39 @@ class SynapseEnvironment:
             return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
 
-        self.prev_concentrations = Array('d', [], lock=False)
-        self.next_concentrations = Array('d', [], lock=False)
-        self.dirty = Value('b', False, lock=False)
+        self.prev_concentrations = []
+        self.next_concentrations = []
 
+    def initialize(self):
+        # Create thread safe arrays.
+        self.prev_concentrations = Array('d', self.prev_concentrations, lock=False)
+        self.next_concentrations = Array('d', self.next_concentrations, lock=False)
+        self.dirty = Value('b', True, lock=False)
+        
     def register(self, baseline_concentration):
         pool_id = len(self.prev_concentrations)
-        self.prev_concentrations = Array('d',
-            list(self.prev_concentrations) + [baseline_concentration],
-            lock=False)
-        self.next_concentrations = Array('d',
-            list(self.next_concentrations) + [baseline_concentration],
-            lock=False)
+        self.prev_concentrations.append(baseline_concentration)
+        self.next_concentrations.append(baseline_concentration)
         return pool_id
 
     def get_concentration(self, pool_id):
+        try: self.dirty
+        except: self.initialize()
         return self.prev_concentrations[pool_id]
 
     def set_concentration(self, pool_id, new_concentration):
-        self.dirty.value = True
+        try: self.dirty.value = True
+        except: self.initialize()
         self.next_concentrations[pool_id] = new_concentration
 
     def add_concentration(self, pool_id, molecules):
-        self.dirty.value = True
+        try: self.dirty.value = True
+        except: self.initialize()
         self.next_concentrations[pool_id] += molecules
 
     def remove_concentration(self, pool_id, molecules):
-        self.dirty.value = True
+        try: self.dirty.value = True
+        except: self.initialize()
         self.next_concentrations[pool_id] -= molecules
         self.next_concentrations[pool_id] = \
             max(0.0, self.next_concentrations[pool_id])
@@ -71,6 +77,8 @@ class SynapseEnvironment:
         Cycles the environment.
         Returns whether the environment is stable (not dirty, no changes)
         """
+        try: self.dirty
+        except: self.initialize()
         if self.dirty.value:
             self.dirty.value = False
             for i in xrange(len(self.prev_concentrations)):
@@ -84,29 +92,34 @@ class NeuronEnvironment:
             return betav(maximum, noise=noise, rate=rate)
         self.beta = beta
 
-        self.prev_voltages = Array('d', [], lock=False)
-        self.next_voltages = Array('d', [], lock=False)
-        self.dirty = Value('b', False, lock=False)
+        self.prev_voltages = []
+        self.next_voltages = []
+
+    def initialize(self):
+        # Create thread safe arrays.
+        self.prev_voltages = Array('d', self.prev_voltages, lock=False)
+        self.next_voltages = Array('d', self.next_voltages, lock=False)
+        self.dirty = Value('b', True, lock=False)
 
     def register(self, baseline_voltage=0.0):
         neuron_id = len(self.prev_voltages)
-        self.prev_voltages = Array('d',
-            list(self.prev_voltages) + [baseline_voltage],
-            lock=False)
-        self.next_voltages = Array('d',
-            list(self.next_voltages) + [baseline_voltage],
-            lock=False)
+        self.prev_voltages.append(baseline_voltage)
+        self.next_voltages.append(baseline_voltage)
         return neuron_id
 
     def get_voltage(self, neuron_id):
+        try: self.dirty
+        except: self.initialize()
         return self.prev_voltages[neuron_id]
 
     def set_voltage(self, neuron_id, new_voltage):
-        self.dirty.value = True
+        try: self.dirty.value = True
+        except: self.initialize()
         self.next_voltages[neuron_id] = new_voltage
 
     def adjust_voltage(self, neuron_id, delta):
-        self.dirty.value = True
+        try: self.dirty.value = True
+        except: self.initialize()
         self.next_voltages[neuron_id] += delta
 
     def step(self):
@@ -114,6 +127,8 @@ class NeuronEnvironment:
         Cycles the environment.
         Returns whether the environment is stable (not dirty, no changes)
         """
+        try: self.dirty
+        except: self.initialize()
         if self.dirty.value:
             self.dirty.value = False
             for i in xrange(len(self.prev_voltages)):

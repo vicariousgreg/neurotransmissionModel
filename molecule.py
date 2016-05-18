@@ -72,14 +72,14 @@ class Receptor:
         self.affinities[mol_id] = affinity
 
 def epsp(strength, activation, neuron):
-    neuron.adjust_activation(strength*activation)
+    neuron.internal_activate(strength*activation)
 
 def voltage_epsp(strength, activation, neuron):
     if neuron.soma.get_voltage() > -60.0:
-        neuron.adjust_activation(strength*activation)
+        neuron.internal_activate(strength*activation)
 
 def ipsp(strength, activation, neuron):
-    neuron.adjust_activation(-strength*activation)
+    neuron.internal_activate(-strength*activation)
 
 Receptors = enum(
     AMPA = Receptor(Molecule_IDs.GLUTAMATE, 0.8, epsp),

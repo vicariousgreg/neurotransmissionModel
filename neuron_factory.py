@@ -34,6 +34,7 @@ class NeuronFactory:
     def initialize(self):
         # Create the boolean buffers
         self.active = Array('b', [True] * len(self.neurons), lock=False)
+        self.num_threads = min(self.num_threads, len(self.neurons))
         length = int(ceil(float(len(self.neurons)) / self.num_threads))
 
         self.assignments = []
@@ -175,12 +176,12 @@ class ConstantDriver:
     def predelay(self, neuron, time):
         if time-self.delay >= 0:
             self.drive = self.postdelay
-            neuron.adjust_activation(self.activation)
+            neuron.external_activate(self.activation)
             return True
         else: return False
 
     def postdelay(self, neuron, time):
-        neuron.adjust_activation(self.activation)
+        neuron.external_activate(self.activation)
         return True
 
 class CurrentPulseDriver:
@@ -225,7 +226,7 @@ class ActivationPulseDriver:
             if self.decrement:
                 self.activation = max(0.0, self.activation - self.decrement)
             if self.activation != 0.0:
-                neuron.adjust_activation(self.activation)
+                neuron.external_activate(self.activation)
                 return True
             else: return False
         else:

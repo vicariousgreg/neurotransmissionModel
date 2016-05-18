@@ -17,9 +17,10 @@ class PhotoreceptorSoma:
         self.light_level = 0.0
 
         self.environment = environment
-        self.neuron_id = environment.register(-65.0)
+        self.stable_voltage = -40.1323467956
+        self.neuron_id = environment.register(self.stable_voltage)
         self.stable_count = 0
-        self.reset()
+        self.reset(reset_voltage=False)
 
     def get_voltage(self):
         """
@@ -39,10 +40,11 @@ class PhotoreceptorSoma:
         """
         self.environment.adjust_voltage(self.neuron_id, delta)
 
-    def reset(self):
-        self.set_voltage(-65.0)
-        self.h=0.596
-        self.n=0.318
+    def reset(self, reset_voltage=True):
+        self.prev_voltage = self.stable_voltage
+        if reset_voltage: self.set_voltage(-65.0)
+        self.h=0.0511587915373
+        self.n=0.677131688462
         self.m=self.base_conductance
         self.iapp = 0.0
 
@@ -53,22 +55,6 @@ class PhotoreceptorSoma:
         self.vna=50.0
         self.vk=-77.0
         self.vl=-54.4
-
-        # Stabilize
-        old_v = 0
-        stable = 0
-        while stable < 10:
-            self.environment.step()
-            new_v = self.get_voltage()
-            if old_v == new_v:
-                stable += 1
-            else:
-                stable = 0
-                old_v = new_v
-            self.step(0.0, silent=True)
-        self.environment.step()
-        self.stable_voltage = self.get_voltage()
-        self.prev_voltage = self.stable_voltage
 
     def step(self, light_activation=0.0, resolution=100, silent=False):
         time_coefficient = 1.0 / resolution

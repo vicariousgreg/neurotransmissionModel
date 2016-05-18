@@ -10,8 +10,9 @@ class Soma:
         self.iapp = base_current
         self.stable_count = 0
         self.environment = environment
-        self.neuron_id = environment.register(-65.0)
-        self.reset()
+        self.stable_voltage = -64.9997224337
+        self.neuron_id = environment.register(self.stable_voltage)
+        self.reset(reset_voltage=False)
 
     def get_voltage(self):
         """
@@ -28,12 +29,13 @@ class Soma:
     def adjust_voltage(self, delta):
         self.environment.adjust_voltage(self.neuron_id, delta)
 
-    def reset(self):
+    def reset(self, reset_voltage=True):
         self.firing = False
         self.gap_current = 0.0
 
-        self.stable_voltage = -64.9997224337
-        self.set_voltage(self.stable_voltage)
+        # Only reset if indicated
+        # This can break the environment if other neurons aren't yet registered
+        if reset_voltage: self.set_voltage(self.stable_voltage)
         self.h=0.596111046355
         self.n=0.31768116758
         self.m=0.0529342176209

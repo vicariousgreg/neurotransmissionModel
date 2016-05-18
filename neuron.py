@@ -28,7 +28,8 @@ class Neuron:
 
         # Inputs
         self.dendrites = []
-        self.activation = Value('d', 0.0)
+        self.external_activation = Value('d', 0.0)
+        self.internal_activation = 0.0
         self.gap_junctions = []
         self.active_gap_junctions = False
 
@@ -40,8 +41,11 @@ class Neuron:
         self.soma_stable = True
         self.synapses_stable = []
 
-    def adjust_activation(self, delta):
-        self.activation.value += delta
+    def external_activate(self, delta):
+        self.external_activation.value += delta
+
+    def internal_activate(self, delta):
+        self.internal_activation += delta
 
     def step(self, resolution=100):
         # Keep track of activated neurons.
@@ -67,9 +71,11 @@ class Neuron:
         for dendrite in self.dendrites:
             dendrite.activate(self)
 
+        activation = self.external_activation.value + self.internal_activation
+
         # Activate the soma
-        if self.activation.value != 0.0 or not self.soma_stable:
-            self.soma_stable = self.soma.step(self.activation.value, resolution=resolution)
+        if activation != 0.0 or not self.soma_stable:
+            self.soma_stable = self.soma.step(activation, resolution=resolution)
 
         # Activate the axons
         # If they are releasing, their synapse should be activated
@@ -90,7 +96,8 @@ class Neuron:
         if not self.soma_stable or not all(self.synapses_stable): tokens.add(self.neuron_id)
 
         # Reset activation and return set of active neurons
-        self.activation.value = 0.0
+        self.external_activation.value = 0.0
+        self.internal_activation = 0.0
         return tokens
 
     def apply_current(self, current):
