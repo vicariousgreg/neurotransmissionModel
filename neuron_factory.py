@@ -9,7 +9,7 @@
 # Probes can be added to any component to take measurements of voltage, current,
 #     or concentration over the course of the simulation.
 
-from multiprocessing import Array, Queue, Process
+from multiprocessing import Array, Process
 from math import ceil
 from environment import NeuronEnvironment
 from neuron import Neuron, NeuronTypes
@@ -30,7 +30,7 @@ class NeuronFactory:
         self.num_threads = num_threads
         self.time = 0
         self.stable_count = 0
-        self.stable = True
+        self.stable = False
 
     def initialize(self):
         self.neuron_environment.initialize()
@@ -38,60 +38,54 @@ class NeuronFactory:
 
         if self.num_threads == 1:
             self.multithreaded = False
-            self.active = [True] * len(self.neurons)
+            self.prev_active = [False] * len(self.neurons)
+            self.next_active = [False] * len(self.neurons)
         else:
             self.multithreaded = True
             # Create the boolean buffers
-            self.active = Array('b', [True] * len(self.neurons), lock=False)
+            self.prev_active = Array('b', [False] * len(self.neurons), lock=False)
+            self.next_active = Array('b', [False] * len(self.neurons), lock=False)
             length = int(ceil(float(len(self.neurons)) / self.num_threads))
 
+            # Create workers
             self.workers = []
-            self.worker_in_queues = []
-            self.worker_out_queues = []
             for i in xrange(self.num_threads):
                 start_index,stop_index = (i * length, min(len(self.neurons), (i+1)*length))
-                in_queue = Queue()
-                out_queue = Queue()
-                self.worker_in_queues.append(in_queue)
-                self.worker_out_queues.append(out_queue)
                 self.workers.append(Process(
                     target=self.work,
-                    args=(start_index, stop_index, in_queue, out_queue)))
+                    args=(start_index, stop_index)))
 
+        # Activate drivers
+        # Drivers do not step the neuron, but modify it to prepare for
+        #     a timestep.  If True is returned, the neuron should be
+        #     stepped during this timestep.
+        for neuron,driver in self.neuron_drivers.iteritems():
+            if driver.drive(neuron, self.time):
+                self.prev_active[neuron.neuron_id] = True
+                self.stable = False
+
+        if self.multithreaded:
             for worker in self.workers: worker.start()
 
     def close(self):
         if self.multithreaded:
-            for queue in self.worker_in_queues: queue.put(False)
+            for worker in self.workers: worker.terminate()
      
     def step(self, count=1):
         # Hacky way of initializing without placing burden on caller.
-        try: self.active
+        try: self.prev_active
         except: self.initialize()
 
         for _ in xrange(count):
-            tokens = set()
-
-            # Activate drivers
-            # Drivers do not step the neuron, but modify it to prepare for
-            #     a timestep.  If True is returned, the neuron should be
-            #     stepped during this timestep.
-            for neuron,driver in self.neuron_drivers.iteritems():
-                if driver.drive(neuron, self.time):
-                    self.active[neuron.neuron_id] = True
-                    self.stable = False
-
-            # Tell workers to perform computation
-            if self.multithreaded:
-                if not self.stable:
-                    for queue in self.worker_in_queues:
-                        queue.put(True)
-                    for queue in self.worker_out_queues:
-                        tokens.update(queue.get())
-            else:
+            # If no other threads, do it yourself
+            if not self.multithreaded:
+                tokens = set()
                 for i in xrange(len(self.neurons)):
-                    if self.active[i]:
+                    if self.prev_active[i]:
                        tokens.update( self.neurons[i].step())
+                       self.prev_active[i] = False
+                for token in tokens:
+                    self.next_active[token] = True
 
             # Record neuron somas
             for neuron,probe in self.neuron_probes.iteritems():
@@ -102,28 +96,40 @@ class NeuronFactory:
                 probe.record(component)
 
             # Step the environment.
-            if self.neuron_environment.step(): self.stable += 1
+            self.neuron_environment.step()
             self.time += 1
+            if self.time % 100 == 0: print(self.time)
             
-            if not self.stable:
-                for i in xrange(len(self.active)): self.active[i] = False
-            if len(tokens) > 0:
-                self.stable = False
-                for token in tokens: self.active[token] = True
-            else:
+            # Wait for workers to finish up tasks
+            # If single threaded, this loop won't run
+            while any(x == True for x in self.prev_active): pass
+
+            # If there are no threads to run next, we are stable for now
+            if not any(x for x in self.next_active):
                 self.stable_count += 1
                 self.stable = True
+                print("**********************")
 
-    def work(self, start_index, stop_index, in_queue, out_queue):
-        while in_queue.get():
-            #print("Worker", start_index)
-            new_tokens = set()
+            # Activate drivers
+            # Drivers do not step the neuron, but modify it to prepare for
+            #     a timestep.  If True is returned, the neuron should be
+            #     stepped during this timestep.
+            for neuron,driver in self.neuron_drivers.iteritems():
+                if driver.drive(neuron, self.time):
+                    self.next_active[neuron.neuron_id] = True
+
+            # Move buffers
+            for i in xrange(len(self.next_active)):
+                self.prev_active[i] = self.next_active[i]
+                self.next_active[i] = False
+
+    def work(self, start_index, stop_index):
+        while True:
             for neuron_id in xrange(start_index, stop_index):
-                if self.active[neuron_id]:
-                    #print(neuron_id)
-                    new_tokens.update(self.neurons[neuron_id].step())
-            #if len(new_tokens) > 0: print(new_tokens)
-            out_queue.put(new_tokens)
+                if self.prev_active[neuron_id]:
+                    for i in self.neurons[neuron_id].step():
+                        self.next_active[i] = True
+                    self.prev_active[neuron_id] = False
 
     def create_neuron(self, base_current=0.0,
             neuron_type=NeuronTypes.GANGLION, probe_name=None):
