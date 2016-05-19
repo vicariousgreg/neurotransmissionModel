@@ -8,9 +8,9 @@ from neuron_factory import NeuronFactory, CurrentPulseDriver
 
 def pulse(strengths = [-2, -1, 5, 25]):
     data = []
-    length = 7000
-    period = 10000
-    rest_length = 1000
+    length = 70
+    period = 100
+    rest_length = 10
 
     for strength in strengths:
         neuron_factory = NeuronFactory()
@@ -21,7 +21,7 @@ def pulse(strengths = [-2, -1, 5, 25]):
         neuron_factory.register_driver(neuron,
             CurrentPulseDriver(current=strength, period=period, length=length, delay=rest_length, record=True),
             name = driver_name)
-        neuron_factory.step(rest_length+args.iterations)
+        neuron_factory.step(args.iterations)
 
         data.append(neuron_factory.get_probe_data(neuron_name))
     data.append(neuron_factory.get_driver_data(driver_name))
@@ -41,7 +41,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 39000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 300, help = 
     """table""")
 
     return parser.parse_args()

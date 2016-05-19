@@ -86,7 +86,6 @@ class NeuronFactory:
             # Step the environment.
             self.neuron_environment.step()
             self.time += 1
-            print(self.time)
             if self.time % 100 == 0: print(self.time)
 
             # Wait for workers to finish up tasks

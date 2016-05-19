@@ -7,9 +7,7 @@ from neuron import NeuronTypes
 from neuron_factory import NeuronFactory, ConstantDriver
 
 simple_image = [
-    [0, 100, 255],
-    [255, 100, 0],
-    [100, 0, 255],
+    [0, 50, 100, 150, 200, 250, 255]
 ]
 
 def test_grid(image=simple_image):
@@ -25,18 +23,17 @@ def test_grid(image=simple_image):
         for j in xrange(width):
             neuron_factory.register_driver(
                 neuron_grid[i][j],
-                ConstantDriver(activation=image[i][j]*0.8/255))
+                ConstantDriver(activation=image[i][j]))
 
     for _ in xrange(args.iterations):
         neuron_data.append(neuron_grid[0][0].soma.get_scaled_voltage())
         neuron_factory.step()
-        if neuron_factory.stable: break
     neuron_factory.close()
 
     activity = []
     for row in neuron_grid:
         activity +=  \
-            [abs(255.0 * neuron.soma.get_scaled_voltage() / 0.2574)
+            [neuron.soma.get_scaled_voltage()
                 for neuron in row]
     print(activity)
 
@@ -44,8 +41,8 @@ def test_grid(image=simple_image):
     im.putdata(activity)
     im.save('test.png')
 
-    #if not args.silent:
-    #    plot([("neuron", neuron_data)], title="Photoreceptor test")
+    if not args.silent:
+        plot([("neuron", neuron_data)], title="Photoreceptor test")
     #print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))
 
 def main():
@@ -61,7 +58,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 50000, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 100, help = 
     """table""")
 
     return parser.parse_args()

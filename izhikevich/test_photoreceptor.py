@@ -14,9 +14,9 @@ def test_photoreceptor(
         spike_strengths=[0.7]):
 
     data = []
-    length = 10
-    period = 50
-    rest_length = 25
+    length = 60
+    period = 100
+    rest_length = 10
 
     for strength in spike_strengths:
         neuron_factory = NeuronFactory()
@@ -58,7 +58,7 @@ def main():
         print_photoreceptor=True,
         print_dendrite=False,
         print_synaptic_cleft=False,
-        spike_strengths=[10])
+        spike_strengths=[100])
 
     test_photoreceptor(
         print_axon=False,
