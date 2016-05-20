@@ -43,11 +43,15 @@ class PulseDriver:
 class Probe:
     def __init__(self):
         self.data = manager.list()
-        self.last_reading = None
         self.length = 0
 
     def record(self, reading, time):
-        data = [self.last_reading] * (time - self.length)
+        """
+        Records a |reading|.
+        Because neurons will not record while stable, the recorded value is
+            inserted to fill the data array up to |time|.
+        """
         self.last_reading = reading
-        data.append(reading)
+        data = [reading] * (time - self.length)
+        self.length = time
         self.data.append(data)

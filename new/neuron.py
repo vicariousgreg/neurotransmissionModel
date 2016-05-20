@@ -93,14 +93,6 @@ class Neuron:
         soma_voltage = self.soma.get_voltage()
         old_current = self.current
 
-        ### Record to probes.
-        # Do it now because of time synchronization.  Recording now ensures
-        #     consistency between thread safe data access and local thread
-        #     data access.
-        try: self.probe.record(self, soma_voltage, time)
-        except AttributeError: pass
-        for synapse in self.synapses: synapse.record(time)
-
         ### Calculate current
         # Start with base curent.
         new_current = self.base_current
@@ -122,6 +114,14 @@ class Neuron:
 
         # If unstable, perform computations.
         if not self.stable:
+            ### Record to probes.
+            # Do it now because of time synchronization.  Recording now ensures
+            #     consistency between thread safe data access and local thread
+            #     data access.
+            try: self.probe.record(self, soma_voltage, time)
+            except AttributeError: pass
+            for synapse in self.synapses: synapse.record(time)
+
             # Activate the axons
             # If they are releasing, their synapse should be activated
             # The axons will cascade computation to the synaptic cleft, which
