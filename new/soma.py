@@ -5,7 +5,7 @@ class Soma:
         self.stable_count = 0
         self.environment = environment
         self.stable_voltage = -70
-        self.neuron_id = environment.register(self.stable_voltage)
+        self.env_id = environment.register(self.stable_voltage)
         self.resolution = resolution
         self.time_coefficient = 1.0 / resolution
         self.reset(reset_voltage=False)
@@ -14,13 +14,13 @@ class Soma:
         """
         NEEDS TO BE THREAD SAFE
         """
-        return self.environment.get_voltage(self.neuron_id)
+        return self.environment.get(self.env_id)
 
     def set_voltage(self, v):
         """
         NEEDS TO BE THREAD SAFE
         """
-        self.environment.set_voltage(self.neuron_id, v)
+        self.environment.set(self.env_id, v)
 
     def reset(self, reset_voltage=True):
         self.u = -14.0
@@ -77,7 +77,6 @@ class Soma:
         """
         if voltage > 30:
             voltage = self.c
-            current = 0
             self.u = self.u + self.d
 
         for _ in xrange(self.resolution):

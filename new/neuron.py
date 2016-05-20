@@ -21,10 +21,12 @@ class Neuron:
         # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = PhotoreceptorSoma(environment)
-            self.axon_threshold = -9999
+            self.axon_minimum = -999
+            self.axon_maximum = self.soma.stable_voltage
         elif neuron_type == NeuronTypes.GANGLION:
             self.soma = Soma(environment)
-            self.axon_threshold = -55.0
+            self.axon_minimum = -55.0
+            self.axon_maximum = 0
 
         # Inputs
         self.dendrites = []
@@ -32,24 +34,22 @@ class Neuron:
         self.active_gap_junctions = False
 
         # Currents
+        self.current = base_current
         self.base_current = base_current
-        self.ligand_current = Value('d', 0.0)
-        self.gap_current = Value('d', 0.0)
+        self.ligand_current = 0.0
+        self.gap_current = 0.0
         self.external_current = Value('d', 0.0)
-
-        # Soma
-        self.soma = Soma(environment)
 
         # Outputs
         self.axons = []
-        self.probes = []
+        self.probe = None
 
         # Active flags
         self.soma_stable = False
         self.axons_stable = []
 
-    def add_probe(self, probe):
-        self.probes.append(probe)
+    def set_probe(self, probe):
+        self.probe = probe
 
     def set_external_current(self, current):
         self.external_current.value = current
@@ -63,14 +63,16 @@ class Neuron:
         self.ligand_current.value += delta
 
     def activate_dendrites(self):
-        old_current = self.clear_ligand_curent()
+        old_current = self.ligand_current
 
         # Activate the neuron from each dendrite
         # This will check the receptor type and decide how to modify the neuron
+        # * This operation has side effects!
         for dendrite in self.dendrites:
             dendrite.activate(self)
 
-        return self.ligand_current.value == old_current
+        # Return stable if the current hasn't changed significantly.
+        return abs(self.ligand_current - old_current) < 0.001
 
     def activate_gap_junctions(self, soma_voltage):
         # Check gap junctions if active
@@ -81,45 +83,46 @@ class Neuron:
 
         # Change current and return False for destable if different enough.
         if abs(new_gap_current - self.gap_current.value) > 0.001:
-            self.gap_current.value = new_gap_current
+            self.gap_current = new_gap_current
             return False
         # Otherwise return stable.
         else: return True
 
     def step(self, time):
         soma_voltage = self.soma.get_voltage()
-        stable_current = True
+        old_current = self.current
 
+        # Start with base curent.
+        new_current = self.base_current
+
+        # Add gap current.
         if self.active_gap_junctions:
-            stable_current &=  self.activate_gap_junctions(soma_voltage)
+            new_current += self.activate_gap_junctions(soma_voltage)
 
-        stable_current &= self.activate_dendrites()
+        # Add ligand current.
+        new_current += self.activate_dendrites()
 
-        total_current = sum(self.base_current,
-            self.ligand_current.value,
-            self.gap_current.value,
-            self.external_current.value),
+        # Add external current.
+        new_current += self.external_current.value
+
+        if abs(old_current - new_current) < 0.001:
+            self.current = old_current
+            self.stable = False
 
         # Activate the soma
-        if not stable_current or not self.soma_stable:
-            self.soma_stable = self.soma.step(total_current)
+        if not self.stable:
+            stable = self.soma.step(total_current)
 
-        for probe in self.probes: probe.record(self, time)
+            # Activate the axons
+            # If they are releasing, their synapse should be activated
+            # The axons will cascade computation to the synaptic cleft, which
+            #     will modify postsynaptic dendrites.
+            for axon in self.axons:
+                stable &= axon.step(self.soma.firing)
 
-        '''
-        # Activate the axons
-        # If they are releasing, their synapse should be activated
-        if soma_voltage < self.axon_threshold: soma_voltage = None
-        for i,axon in enumerate(self.axons):
-            if not axon.step(self.soma.firing):
-                self.synapses_stable[i] = False
-
-        # Cycle synapses if active.
-        for i,synapse in enumerate(self.synapses):
-            if not self.synapses_stable[i]:
-                s = synapse.step()
-                self.synapses_stable[i] = s
-        '''
+        # Record to probe.
+        try: probe.record(self, time)
+        except AttributeError: pass
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, active_molecules=None,
@@ -135,7 +138,9 @@ class Neuron:
                     replenish_rate=0.1,
                     reuptake_rate=0.5,
                     capacity=1.0,
-                    delay=axon_delay)
+                    delay=axon_delay,
+                    voltage_minimum = self.axon_minimum,
+                    voltage_maximum = self.axon_maximum)
         dendrite = synapse.create_dendrite(
                     receptor=receptor,
                     density=0.25,
