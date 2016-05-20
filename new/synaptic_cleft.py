@@ -39,6 +39,9 @@ class SynapticCleft:
         self.axon = None
         self.dendrites = []
 
+    def get_total_concentration(self):
+        return sum(self.concentrations.values())
+
     def get_concentration(self, mol_id):
         return self.concentrations[mol_id]
 

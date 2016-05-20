@@ -20,11 +20,24 @@ class Synapse:
             time and space by only checking for that molecule.
         """
         self.postsynaptic_id = postsynaptic_id
+        self.probe = None
 
         self.synaptic_cleft = SynapticCleft(
             enzyme_concentration=initial_enzyme_concentration,
             active_molecules = active_molecules,
             verbose=verbose)
+
+    def set_probe(self, probe):
+        self.probe = probe
+
+    def record(self, time):
+        if self.probe:
+            data = [
+                self.axon.get_voltage(),
+                self.axon.get_concentration(),
+                self.synaptic_cleft.get_total_concentration()
+            ] + [dendrite.get_bound() for dendrite in self.dendrites]
+            self.probe.record(tuple(data))
 
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """

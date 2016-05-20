@@ -89,5 +89,5 @@ class Soma:
         self.u += self.a * ((self.b * voltage) - self.u)
         self.set_voltage(voltage)
 
-    def get_scaled_voltage(self):
+    def get_adjusted_voltage(self):
         return (min(self.get_voltage(), 30) - self.stable_voltage) / 100

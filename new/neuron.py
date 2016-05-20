@@ -17,6 +17,7 @@ class Neuron:
                     neuron_type=NeuronTypes.GANGLION, environment=None):
         self.environment = environment
         self.neuron_id = neuron_id
+        self.synapses = []
 
         # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
@@ -92,6 +93,15 @@ class Neuron:
         soma_voltage = self.soma.get_voltage()
         old_current = self.current
 
+        ### Record to probes.
+        # Do it now because of time synchronization.  Recording now ensures
+        #     consistency between thread safe data access and local thread
+        #     data access.
+        try: self.probe.record(self, soma_voltage, time)
+        except AttributeError: pass
+        for synapse in self.synapses: synapse.record(time)
+
+        ### Calculate current
         # Start with base curent.
         new_current = self.base_current
 
@@ -105,24 +115,19 @@ class Neuron:
         # Add external current.
         new_current += self.external_current.value
 
+        # Destabilize if the current has changed.
         if abs(old_current - new_current) < 0.001:
             self.current = old_current
             self.stable = False
 
-        # Activate the soma
+        # If unstable, perform computations.
         if not self.stable:
-            stable = self.soma.step(total_current)
-
             # Activate the axons
             # If they are releasing, their synapse should be activated
             # The axons will cascade computation to the synaptic cleft, which
             #     will modify postsynaptic dendrites.
-            for axon in self.axons:
-                stable &= axon.step(self.soma.firing)
-
-        # Record to probe.
-        try: probe.record(self, time)
-        except AttributeError: pass
+            axons_stable = all([axon.step(soma_voltage) for axon in self.axons])
+            self.stable = self.soma.step(total_current) & axons_stable
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, active_molecules=None,

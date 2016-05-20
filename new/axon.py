@@ -72,20 +72,22 @@ class Axon:
     def remove_concentration(self, delta):
         self.concentration -= delta
 
-    def step(self, voltage=self.minimum_voltage):
+    def step(self, voltage):
         """
         Cycles the axon.
         """
         # If there is a delay, use the queue.
         if self.delay > 0:
-            # Add spike to queue
-            self.delay_queue.appendleft(min(voltage, self.voltage_maximum))
-            # Remove spike from queue
+            # Add voltage to queue.  Bound between min and max.
+            self.delay_queue.appendleft(
+                max(self.voltage_minimum,
+                    min(voltage, self.voltage_maximum)))
+            # Remove voltage from queue.
             self.voltage = self.delay_queue.pop()
 
         stable = self.replenish()
         stable &= self.release()
-        return stable & self.synaptic_cleft.step()
+        return self.synaptic_cleft.step() & stable
 
     def release(self):
         """
@@ -125,5 +127,5 @@ class Axon:
 
         return False
 
-    def get_scaled_voltage(self):
+    def get_adjusted_voltage(self):
         return min((self.voltage-self.minimum_voltage)/100)

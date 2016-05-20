@@ -42,5 +42,5 @@ class PhotoreceptorSoma:
 
         return old_voltage == voltage and old_light_level == self.light_level
 
-    def get_scaled_voltage(self):
+    def get_adjusted_voltage(self):
         return (min(self.get_voltage(), 30) - self.stable_voltage) / 100
