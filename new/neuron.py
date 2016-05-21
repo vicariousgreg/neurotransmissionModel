@@ -96,7 +96,7 @@ class Neuron:
         new_current += self.external_current.value
 
         # Destabilize if the current has changed.
-        if abs(old_current - new_current) > 0.001:
+        if abs(old_current - new_current) > 0.000001:
             self.current = new_current
             self.stable = False
 
