@@ -37,7 +37,7 @@ class Synapse:
                 self.axon.get_concentration(),
                 self.synaptic_cleft.get_total_concentration()
             ] + [dendrite.get_bound() for dendrite in self.dendrites]
-            self.probe.record(tuple(data))
+            self.probe.record(tuple(data), time)
 
     def set_enzyme_concentration(self, e_c, enzymes=range(Enzymes.size)):
         """
@@ -49,7 +49,7 @@ class Synapse:
         """
         Creates an axon and adds it to the synapse.
         """
-        if self.axon is not None:
+        if self.synaptic_cleft.axon is not None:
             raise ValueError("Cannot have two axons on one synapse!")
         axon = Axon(self.synaptic_cleft, **args)
         self.synaptic_cleft.axon = axon

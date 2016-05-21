@@ -39,6 +39,8 @@ class SynapticCleft:
         self.axon = None
         self.dendrites = []
 
+        self.stable = True
+
     def get_total_concentration(self):
         return sum(self.concentrations.values())
 
@@ -94,7 +96,7 @@ class SynapticCleft:
         try:
             axon = self.axon
             native_mol_id = axon.native_mol_id
-            axon_available = min(axon.density, axon.capacity-axon.get_concentration(native_mol_id))
+            axon_available = min(axon.density, axon.capacity-axon.get_concentration())
             if axon_available > 0.0:
                 count,affinity = (axon_available, axon.affinities[native_mol_id])
                 protein_count = count*affinity
@@ -183,7 +185,7 @@ class SynapticCleft:
         try:
             axon = self.axon
             native_mol_id = axon.native_mol_id
-            axon_available = min(axon.density, axon.capacity-axon.get_concentration(native_mol_id))
+            axon_available = min(axon.density, axon.capacity-axon.get_concentration())
             if axon_available > 0.0:
                 count,affinity = (axon_available, axon.affinities[native_mol_id])
                 protein_count = count*affinity

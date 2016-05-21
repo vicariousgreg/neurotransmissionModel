@@ -54,4 +54,4 @@ class Probe:
         self.last_reading = reading
         data = [reading] * (time - self.length)
         self.length = time
-        self.data.append(data)
+        self.data += data

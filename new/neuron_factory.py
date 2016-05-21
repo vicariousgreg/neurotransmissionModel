@@ -14,6 +14,7 @@ from math import ceil
 from environment import Environment
 from neuron import Neuron, NeuronTypes
 from molecule import Transporters, Receptors, Molecule_IDs
+from tools import Probe
 
 class NeuronFactory:
     def __init__(self, num_threads=1):
@@ -77,7 +78,6 @@ class NeuronFactory:
             # Step the environment.
             self.environment.step()
             self.time += 1
-            print(self.time)
             if self.time % 100 == 0: print(self.time)
 
             # Activate neurons and wait for workers.
@@ -86,7 +86,8 @@ class NeuronFactory:
                     self.active[i] = True
                 while any(x == True for x in self.active): pass
             # If no other threads, do it yourself
-            else: for neuron in self.neurons: neuron.step()
+            else:
+                for neuron in self.neurons: neuron.step(self.time)
 
             # Activate drivers
             self.drive()
@@ -95,18 +96,18 @@ class NeuronFactory:
         while True:
             for neuron_id in xrange(start_index, stop_index):
                 if self.active[neuron_id]:
-                    self.neurons[neuron_id].step()
+                    self.neurons[neuron_id].step(self.time)
                     self.active[neuron_id] = False
 
     def create_neuron(self, base_current=0.0,
-            neuron_type=NeuronTypes.GANGLION, probe_name=None):
+            neuron_type=NeuronTypes.GANGLION, probe=False):
         neuron = Neuron(
             neuron_id=len(self.neurons),
             base_current=base_current,
             neuron_type=neuron_type,
             environment=self.environment)
         self.neurons.append(neuron)
-        if probe_name: neuron.set_probe(Probe())
+        if probe: neuron.set_probe(Probe())
 
         return neuron
 

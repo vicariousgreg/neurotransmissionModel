@@ -23,7 +23,7 @@ class Dendrite:
         self.affinities = receptor.affinities
         self.strength = strength
         self.environment = environment
-        self.env_id = environment.register(self.stable_voltage)
+        self.env_id = environment.register(0.0)
         self.verbose = verbose
 
     def get_bound(self):
@@ -42,6 +42,7 @@ class Dendrite:
         """
         NEEDS TO BE THREAD SAFE
         """
+        print("bind", concentration)
         self.environment.adjust(self.env_id, concentration)
 
     def activate(self, neuron):

@@ -10,7 +10,8 @@ from molecule import Transporters
 class Axon:
     def __init__(self, synaptic_cleft, transporter=Transporters.GLUTAMATE,
                         reuptake_rate=0.5, capacity=1.0, replenish_rate=0.1,
-                        delay=0, voltage_minimum=-70.0, verbose=False):
+                        delay=0, voltage_minimum=-70.0, voltage_maximum=30.0,
+                        verbose=False):
         """
         Axons keep track of activation and release neurotransmitters over
             time.  Neurotransmitters are regenerated via reuptake and
@@ -84,6 +85,7 @@ class Axon:
                     min(voltage, self.voltage_maximum)))
             # Remove voltage from queue.
             self.voltage = self.delay_queue.pop()
+        else: self.voltage = voltage
 
         stable = self.replenish()
         stable &= self.release()
@@ -95,8 +97,9 @@ class Axon:
         Returns whether the axon is stable (no release).
         """
         # Determine how many molecules to actually release.
-        if self.voltage > self.minimum_voltage:
-            released = min(self.concentration) #, f(self.voltage)) ### CHANGE ME
+        if self.voltage > self.voltage_minimum:
+            released = 1.0
+            #released = min(self.concentration) #, f(self.voltage)) ### CHANGE ME
 
             # Remove concentration.
             self.remove_concentration(released)
@@ -128,4 +131,4 @@ class Axon:
         return False
 
     def get_adjusted_voltage(self):
-        return min((self.voltage-self.minimum_voltage)/100)
+        return min((self.voltage-self.voltage_minimum)/100)

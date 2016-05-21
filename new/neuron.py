@@ -38,7 +38,6 @@ class Neuron:
         self.current = base_current
         self.base_current = base_current
         self.ligand_current = 0.0
-        self.gap_current = 0.0
         self.external_current = Value('d', 0.0)
 
         # Outputs
@@ -46,7 +45,7 @@ class Neuron:
         self.probe = None
 
         # Active flags
-        self.soma_stable = False
+        self.stable = False
         self.axons_stable = []
 
     def set_probe(self, probe):
@@ -56,38 +55,29 @@ class Neuron:
         self.external_current.value = current
 
     def clear_ligand_current(self):
-        old = self.ligand_current.value
-        self.ligand_current.value = 0.0
+        old = self.ligand_current
+        self.ligand_current = 0.0
         return old
 
     def change_ligand_current(self, delta):
-        self.ligand_current.value += delta
+        self.ligand_current += delta
 
     def activate_dendrites(self):
-        old_current = self.ligand_current
-
         # Activate the neuron from each dendrite
         # This will check the receptor type and decide how to modify the neuron
         # * This operation has side effects!
+        self.ligand_current = 0.0
         for dendrite in self.dendrites:
             dendrite.activate(self)
-
-        # Return stable if the current hasn't changed significantly.
-        return abs(self.ligand_current - old_current) < 0.001
+        return self.ligand_current
 
     def activate_gap_junctions(self, soma_voltage):
         # Check gap junctions if active
-        new_gap_current = 0
+        gap_current = 0
         for other,conductance in self.gap_junctions:
             df = conductance*(other.soma.get_voltage() - soma_voltage)
-            new_gap_current += df
-
-        # Change current and return False for destable if different enough.
-        if abs(new_gap_current - self.gap_current.value) > 0.001:
-            self.gap_current = new_gap_current
-            return False
-        # Otherwise return stable.
-        else: return True
+            gap_current += df
+        return gap_current
 
     def step(self, time):
         soma_voltage = self.soma.get_voltage()
@@ -108,8 +98,8 @@ class Neuron:
         new_current += self.external_current.value
 
         # Destabilize if the current has changed.
-        if abs(old_current - new_current) < 0.001:
-            self.current = old_current
+        if abs(old_current - new_current) > 0.001:
+            self.current = new_current
             self.stable = False
 
         # If unstable, perform computations.
@@ -118,7 +108,7 @@ class Neuron:
             # Do it now because of time synchronization.  Recording now ensures
             #     consistency between thread safe data access and local thread
             #     data access.
-            try: self.probe.record(self, soma_voltage, time)
+            try: self.probe.record(soma_voltage, time)
             except AttributeError: pass
             for synapse in self.synapses: synapse.record(time)
 
@@ -127,7 +117,7 @@ class Neuron:
             # The axons will cascade computation to the synaptic cleft, which
             #     will modify postsynaptic dendrites.
             axons_stable = all([axon.step(soma_voltage) for axon in self.axons])
-            self.stable = self.soma.step(total_current) & axons_stable
+            self.stable = self.soma.step(new_current) & axons_stable
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, active_molecules=None,
@@ -144,16 +134,16 @@ class Neuron:
                     reuptake_rate=0.5,
                     capacity=1.0,
                     delay=axon_delay,
-                    voltage_minimum = self.axon_minimum,
-                    voltage_maximum = self.axon_maximum)
+                    voltage_minimum = presynaptic.axon_minimum,
+                    voltage_maximum = presynaptic.axon_maximum)
         dendrite = synapse.create_dendrite(
                     receptor=receptor,
                     density=0.25,
-                    strength=dendrite_strength)
+                    strength=dendrite_strength,
+                    environment=presynaptic.environment)
 
         presynaptic.axons.append(axon)
         presynaptic.synapses.append(synapse)
-        presynaptic.synapses_stable.append(True)
         postsynaptic.dendrites.append(dendrite)
         return synapse
 

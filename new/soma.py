@@ -57,13 +57,12 @@ class Soma:
         voltage = self.get_voltage()
         self.cycle(voltage, current)
 
-        if ligand_activation == 0.0 and \
-                abs(voltage-self.stable_voltage) < 0.001:
+        if abs(voltage-self.stable_voltage) < 0.001:
             self.stable_count += 1
         else:
             self.stable_count = 0
 
-        return self.stable_count > 10 and self.current == 0.0
+        return self.stable_count > 10
 
     def cycle(self, voltage, current):
         """
@@ -85,7 +84,7 @@ class Soma:
                 break
             else:
                 delta_v = (0.04 * voltage * voltage) + (5*voltage) + 140 - self.u + current
-                voltage += time_coefficient * delta_v
+                voltage += self.time_coefficient * delta_v
         self.u += self.a * ((self.b * voltage) - self.u)
         self.set_voltage(voltage)
 
