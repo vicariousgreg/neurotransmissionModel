@@ -111,13 +111,13 @@ class NeuronFactory:
 
         return neuron
 
-    def create_neuron_grid(self, width, height,
-            base_current=0.0, neuron_type=NeuronTypes.PHOTORECEPTOR):
+    def create_neuron_grid(self, width, height, base_current=0.0,
+            neuron_type=NeuronTypes.PHOTORECEPTOR, probe=False):
         output = []
         for i in xrange(height):
             row = []
             for j in xrange(width):
-                row.append(self.create_neuron(base_current, neuron_type))
+                row.append(self.create_neuron(base_current, neuron_type, probe=probe))
             output.append(row)
         return output
 

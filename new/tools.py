@@ -7,16 +7,15 @@ from multiprocessing import Manager
 manager = Manager()
 
 class ConstantDriver:
-    def __init__(self, activation=0.0, delay=0):
-        self.activation = activation
+    def __init__(self, current=0.0, delay=0):
+        self.current = current
         self.delay = delay
-        if delay > 0: self.drive = self.predelay
-        else: self.drive = self.postdelay
+        self.drive = self.predelay
 
     def predelay(self, neuron, time):
         if time-self.delay >= 0:
             self.drive = self.postdelay
-            neuron.set_external_current(self.activation)
+            neuron.set_external_current(self.current)
 
     def postdelay(self, neuron, time):
         pass
