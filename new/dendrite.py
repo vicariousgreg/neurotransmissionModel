@@ -3,7 +3,6 @@
 # Models a receptor pool of a postsynaptic neuron, to which neurotransmitters
 #     from the synaptic cleft bind, modifying the membrane potential of the cell.
 
-from multiprocessing import Value
 from molecule import Receptors
 
 class Dendrite:
@@ -42,7 +41,6 @@ class Dendrite:
         """
         NEEDS TO BE THREAD SAFE
         """
-        print("bind", concentration)
         self.environment.adjust(self.env_id, concentration)
 
     def activate(self, neuron):

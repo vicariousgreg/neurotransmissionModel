@@ -4,7 +4,6 @@
 #     neurotransmitters into and out of the synaptic cleft.
 
 from collections import deque
-
 from molecule import Transporters
 
 class Axon:
@@ -98,13 +97,12 @@ class Axon:
         """
         # Determine how many molecules to actually release.
         if self.voltage > self.voltage_minimum:
-            released = 1.0
+            released = 2.0
             #released = min(self.concentration) #, f(self.voltage)) ### CHANGE ME
 
             # Remove concentration.
             self.remove_concentration(released)
             if self.verbose: print("Released %f molecules" % released)
-            print("Released %f molecules" % released)
             self.synaptic_cleft.add_concentration(released, self.native_mol_id)
             return False
         else: return True
@@ -114,19 +112,21 @@ class Axon:
         Replenishes neurotransmitters if the axon is not at capacity.
         Returns whether the axon is stable (at capacity).
         """
+        # Determine concentration to replenish
+        # Because of the asymptotic nature of regeneration, once the difference
+        #     becomes negligible, simply fill to capacity to save time.
         missing = self.capacity - self.get_concentration()
-        if missing <= 0 or self.replenish_rate == 0.0: return True
+        if missing <= 0.0 or self.replenish_rate == 0.0: return True
         elif missing < 0.00001:
             self.set_concentration(self.capacity)
-
-        # Determine concentration to replenish
-        sample = self.replenish_rate * missing
-
-        self.add_concentration(sample)
+            return True
+        else:
+            sample = self.replenish_rate * missing
+            self.add_concentration(sample)
 
         if self.verbose:
-            print("Regenerated %f" % sample)
-            print("Axon: %f" % self.get_concentration())
+            print("Axon regen %f (%f / %f)" %
+                (sample, self.get_concentration(), self.capacity))
 
         return False
 

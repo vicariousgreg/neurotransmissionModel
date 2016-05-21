@@ -42,7 +42,7 @@ def transmit(strength=0.25, delays=[None, 100]):
 
 def main():
     #transmit(strength = -0.5)
-    transmit(strength = 100, delays=[None])
+    transmit(strength = 100, delays=[10])
     #transmit(strength = 0.1, delays=[None])
 
 def set_options():
