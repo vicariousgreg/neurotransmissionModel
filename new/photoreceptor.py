@@ -21,26 +21,31 @@ class PhotoreceptorSoma:
         """
         NEEDS TO BE THREAD SAFE
         """
-        return self.environment.get_voltage(self.env_id)
+        return self.environment.get(self.env_id)
 
     def set_voltage(self, v):
         """
         NEEDS TO BE THREAD SAFE
         """
-        self.environment.set_voltage(self.env_id, v)
+        self.environment.set(self.env_id, v)
+
+    def adjust(self, old_current, new_current):
+        return old_current + ((new_current - old_current) / 2)
 
     def step(self, current=0.0):
-        old_light_level = self.light_level
-        self.light_level += (light_activation - self.light_level) / 10
+        old_current = self.current
+        current = self.adjust(old_current, current)
+        self.current = current
 
         old_voltage = self.get_voltage()
         voltage = old_voltage
+
         for _ in xrange(self.resolution):
             delta_v = (0.04 * voltage * voltage) + (5*voltage) + 140 + current
             voltage += self.time_coefficient * delta_v
         self.set_voltage(voltage)
 
-        return old_voltage == voltage and old_light_level == self.light_level
+        return old_voltage == voltage and old_current == current
 
     def get_adjusted_voltage(self):
         return (min(self.get_voltage(), 30) - self.stable_voltage) / 100

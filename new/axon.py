@@ -124,12 +124,15 @@ class Axon:
                 return 0.0
 
     def graded_release(self, voltage):
+        threshold = -100.0
+        maximum = -82.0
+
         # If the voltage is too low, don't release.
-        if voltage < -70.0: return 0.0
+        if voltage < threshold: return 0.0
         # Otherwise, compute release based on voltage.
         else:
-            voltage = min(-40.0, voltage)
-            return (voltage + 70.0) / 30.0
+            voltage = min(maximum, voltage)
+            return (voltage - threshold) / (maximum - threshold)
 
     def release(self, voltage):
         """

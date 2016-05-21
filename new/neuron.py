@@ -128,7 +128,7 @@ class Neuron:
             active_molecules=active_molecules)
         axon = synapse.create_axon(
                     transporter=transporter,
-                    replenish_rate=0.1,
+                    replenish_rate=0.5,
                     reuptake_rate=0.5,
                     capacity=1.0,
                     delay=axon_delay,
