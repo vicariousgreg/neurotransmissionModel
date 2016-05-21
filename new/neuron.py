@@ -22,12 +22,10 @@ class Neuron:
         # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = PhotoreceptorSoma(environment)
-            self.axon_minimum = -999
-            self.axon_maximum = self.soma.stable_voltage
+            self.spiking = False
         elif neuron_type == NeuronTypes.GANGLION:
             self.soma = Soma(environment)
-            self.axon_minimum = -55.0
-            self.axon_maximum = 0
+            self.spiking = True
 
         # Inputs
         self.dendrites = []
@@ -134,8 +132,7 @@ class Neuron:
                     reuptake_rate=0.5,
                     capacity=1.0,
                     delay=axon_delay,
-                    voltage_minimum = presynaptic.axon_minimum,
-                    voltage_maximum = presynaptic.axon_maximum)
+                    spiking = presynaptic.spiking)
         dendrite = synapse.create_dendrite(
                     receptor=receptor,
                     density=0.25,

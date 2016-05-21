@@ -33,7 +33,6 @@ class Synapse:
     def record(self, time):
         if self.probe:
             data = [
-                self.axon.get_voltage(),
                 self.axon.get_concentration(),
                 self.synaptic_cleft.get_total_concentration()
             ] + [dendrite.get_bound() for dendrite in self.dendrites]

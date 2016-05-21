@@ -4,13 +4,29 @@
 #     neurotransmitters into and out of the synaptic cleft.
 
 from collections import deque
+from sys import maxint
+from scipy.stats import erlang
 from molecule import Transporters
+
+er = erlang(2)
+
+def erlang_generator():
+    """
+    Creates an erlang generator.
+    """
+    prev = 0.0
+
+    for x in xrange(1, maxint):
+        curr = er.cdf(x)
+        diff = curr - prev
+        if diff < 0.001: break
+        prev = curr
+        yield diff
 
 class Axon:
     def __init__(self, synaptic_cleft, transporter=Transporters.GLUTAMATE,
                         reuptake_rate=0.5, capacity=1.0, replenish_rate=0.1,
-                        delay=0, voltage_minimum=-70.0, voltage_maximum=30.0,
-                        verbose=False):
+                        delay=0, spiking=True, verbose=False):
         """
         Axons keep track of activation and release neurotransmitters over
             time.  Neurotransmitters are regenerated via reuptake and
@@ -38,23 +54,24 @@ class Axon:
         """
         self.synaptic_cleft = synaptic_cleft
         self.protein = transporter
+        self.affinities = transporter.affinities
         self.native_mol_id = transporter.native_mol_id
+
         self.capacity = capacity
         self.density = reuptake_rate
-        self.affinities = transporter.affinities
         self.concentration = capacity
-
         self.replenish_rate = replenish_rate
 
-        self.voltage_minimum = voltage_minimum
-        self.voltage_maximum = voltage_maximum
-        self.voltage = self.voltage_minimum
+        if spiking:
+            self.release_generator = None
+            self.release_function = self.spike_release
+        else:
+            self.release_function = self.graded_release
 
-        self.delay = delay
         if delay:
             self.delay_queue = deque()
             for _ in xrange(delay):
-                self.delay_queue.appendleft(self.voltage_minimum)
+                self.delay_queue.appendleft(-70.0)
         else:
             self.delay_queue = None
 
@@ -77,35 +94,61 @@ class Axon:
         Cycles the axon.
         """
         # If there is a delay, use the queue.
-        if self.delay > 0:
-            # Add voltage to queue.  Bound between min and max.
-            self.delay_queue.appendleft(
-                max(self.voltage_minimum,
-                    min(voltage, self.voltage_maximum)))
+        try:
+            self.delay_queue.appendleft(voltage)
             # Remove voltage from queue.
-            self.voltage = self.delay_queue.pop()
-        else: self.voltage = voltage
+            voltage = self.delay_queue.pop()
+        except AttributeError: pass
 
         stable = self.replenish()
-        stable &= self.release()
+        stable &= self.release(voltage)
         return self.synaptic_cleft.step() & stable
 
-    def release(self):
+    def spike_release(self, voltage):
+        # If the voltage exceeds the threshold for spiking, create a release
+        #     generator (erlang distribution).  Return the first call.
+        if voltage > 30:
+            gen = erlang_generator()
+            self.release_generator = gen
+            return next(gen)
+
+        # Otherwise, attempt to access the release generator, and return the
+        #     results of the next() call.  If that fails, the release is
+        #     complete for the previous spike, and 0.0 can be returned.
+        else:
+            try:
+                return next(self.release_generator)
+            except TypeError: return 0.0
+            except StopIteration:
+                self.release_generator = None
+                return 0.0
+
+    def graded_release(self, voltage):
+        # If the voltage is too low, don't release.
+        if voltage < -70.0: return 0.0
+        # Otherwise, compute release based on voltage.
+        else:
+            voltage = min(-40.0, voltage)
+            return (voltage + 70.0) / 30.0
+
+    def release(self, voltage):
         """
         Releases neurochemical into the synaptic cleft.
         Returns whether the axon is stable (no release).
         """
         # Determine how many molecules to actually release.
-        if self.voltage > self.voltage_minimum:
-            released = 2.0
-            #released = min(self.concentration) #, f(self.voltage)) ### CHANGE ME
-
+        # If none are to be released, return True (indicating stability)
+        released = min(self.concentration, self.release_function(voltage))
+        if released == 0.0:
+            return True
+        else:
             # Remove concentration.
             self.remove_concentration(released)
-            if self.verbose: print("Released %f molecules" % released)
+            if self.verbose:
+                print("Axon release %f (%f / %f)" %
+                    (released, self.get_concentration(), self.capacity))
             self.synaptic_cleft.add_concentration(released, self.native_mol_id)
             return False
-        else: return True
 
     def replenish(self):
         """
@@ -117,7 +160,7 @@ class Axon:
         #     becomes negligible, simply fill to capacity to save time.
         missing = self.capacity - self.get_concentration()
         if missing <= 0.0 or self.replenish_rate == 0.0: return True
-        elif missing < 0.00001:
+        elif missing < 0.001:
             self.set_concentration(self.capacity)
             return True
         else:
@@ -129,6 +172,3 @@ class Axon:
                 (sample, self.get_concentration(), self.capacity))
 
         return False
-
-    def get_adjusted_voltage(self):
-        return min((self.voltage-self.voltage_minimum)/100)

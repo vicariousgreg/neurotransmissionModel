@@ -4,7 +4,7 @@ class Soma:
     def __init__(self, environment=None, resolution=100):
         self.stable_count = 0
         self.environment = environment
-        self.stable_voltage = -70
+        self.stable_voltage = -70.0
         self.env_id = environment.register(self.stable_voltage)
         self.resolution = resolution
         self.time_coefficient = 1.0 / resolution
@@ -55,7 +55,7 @@ class Soma:
 
     def step(self, current=0.0):
         voltage = self.get_voltage()
-        self.cycle(voltage, current)
+        voltage = self.cycle(voltage, current)
 
         if abs(voltage-self.stable_voltage) < 0.001:
             self.stable_count += 1
@@ -87,6 +87,7 @@ class Soma:
                 voltage += self.time_coefficient * delta_v
         self.u += self.a * ((self.b * voltage) - self.u)
         self.set_voltage(voltage)
+        return voltage
 
     def get_adjusted_voltage(self):
         return (min(self.get_voltage(), 30) - self.stable_voltage) / 100
