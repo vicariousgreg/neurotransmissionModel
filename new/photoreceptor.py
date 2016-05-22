@@ -6,11 +6,11 @@
 #     The end result is high release in the dark, low release in the light.
 
 class PhotoreceptorSoma:
-    def __init__(self, environment=None, resolution=100):
+    def __init__(self, environment=None, record=False, resolution=100):
         self.current = 0
         self.environment = environment
         self.stable_voltage = -82.6556443707
-        self.env_id = environment.register(self.stable_voltage)
+        self.env_id = environment.register(self.stable_voltage, record=record)
         self.resolution = resolution
         self.time_coefficient = 1.0 / resolution
 

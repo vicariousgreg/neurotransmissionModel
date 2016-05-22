@@ -10,13 +10,13 @@ def external_current(rs=[-5, 2, 3, 5]):
     data = []
     for r in rs:
         neuron_factory = NeuronFactory()
-        neuron = neuron_factory.create_neuron(probe=True)
+        neuron = neuron_factory.create_neuron(record=True)
 
         neuron_factory.register_driver(neuron,
             PulseDriver(current=r, period=1, length=1, delay=args.iterations/10))
         neuron_factory.step(args.iterations)
 
-        data.append(("Current %f" % r, neuron.probe.data))
+        data.append(("Current %f" % r, neuron.get_record()))
     if not args.silent:
         plot(data, title="External current")
 

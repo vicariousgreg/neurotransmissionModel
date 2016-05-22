@@ -13,7 +13,7 @@ NeuronTypes = enum(
 )
 
 class Neuron:
-    def __init__(self, neuron_id=None, base_current=0.0,
+    def __init__(self, neuron_id=None, base_current=0.0, record=False,
                     neuron_type=NeuronTypes.GANGLION, environment=None):
         self.environment = environment
         self.neuron_id = neuron_id
@@ -21,10 +21,10 @@ class Neuron:
 
         # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
-            self.soma = PhotoreceptorSoma(environment)
+            self.soma = PhotoreceptorSoma(environment, record=record)
             self.spiking = False
         elif neuron_type == NeuronTypes.GANGLION:
-            self.soma = Soma(environment)
+            self.soma = Soma(environment, record=record)
             self.spiking = True
 
         # Inputs
@@ -40,14 +40,13 @@ class Neuron:
 
         # Outputs
         self.axons = []
-        self.probe = None
 
         # Active flags
         self.stable = False
         self.axons_stable = []
 
-    def set_probe(self, probe):
-        self.probe = probe
+    def get_record(self):
+        return self.environment.records[self.soma.env_id]
 
     def set_external_current(self, current):
         self.external_current.value = current
@@ -102,14 +101,6 @@ class Neuron:
 
         # If unstable, perform computations.
         if not self.stable:
-            ### Record to probes.
-            # Do it now because of time synchronization.  Recording now ensures
-            #     consistency between thread safe data access and local thread
-            #     data access.
-            try: self.probe.record(soma_voltage, time)
-            except AttributeError: pass
-            for synapse in self.synapses: synapse.record(time)
-
             # Activate the axons
             # If they are releasing, their synapse should be activated
             # The axons will cascade computation to the synaptic cleft, which

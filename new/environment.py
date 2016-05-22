@@ -20,7 +20,8 @@
 #     multiple threads trying to change a value.
 
 from random import betavariate
-from multiprocessing import Value, Array
+from multiprocessing import Value, Array, Manager
+manager = Manager()
 
 def betav(maximum, noise=0.5, rate=1.0):
     if rate < 0.0 or noise < 0.0: raise ValueError
@@ -38,16 +39,21 @@ class Environment:
         self.prev_values = []
         self.next_values = []
         self.dirty = Value('b', True, lock=False)
+        self.records = dict()
 
     def initialize(self):
         # Create thread safe arrays.
         self.prev_values = Array('d', self.prev_values, lock=False)
         self.next_values = Array('d', self.next_values, lock=False)
 
-    def register(self, initial=0.0):
+        for key in self.records:
+            self.records[key] = manager.list()
+
+    def register(self, initial=0.0, record=False):
         env_id = len(self.prev_values)
         self.prev_values.append(initial)
         self.next_values.append(initial)
+        if record: self.records[env_id] = True
         return env_id
 
     def get(self, env_id):
@@ -66,6 +72,10 @@ class Environment:
         Cycles the environment.
         Returns whether the environment is stable (not dirty, no changes)
         """
+        # Record any env_ids that have been set to record.
+        for env_id in self.records:
+            self.records[env_id].append(self.prev_values[env_id])
+
         if self.dirty.value:
             self.dirty.value = False
             for i in xrange(len(self.prev_values)):

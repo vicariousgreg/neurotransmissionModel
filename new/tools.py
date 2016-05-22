@@ -38,19 +38,3 @@ class PulseDriver:
         elif time % self.period == self.length:
             neuron.set_external_current(0.0)
             if self.record: self.data.append(-0.3)
-
-class Probe:
-    def __init__(self):
-        self.data = manager.list()
-        self.length = 0
-
-    def record(self, reading, time):
-        """
-        Records a |reading|.
-        Because neurons will not record while stable, the recorded value is
-            inserted to fill the data array up to |time|.
-        """
-        self.last_reading = reading
-        data = [reading] * (time - self.length)
-        self.length = time
-        self.data += data

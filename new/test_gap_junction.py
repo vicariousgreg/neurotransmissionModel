@@ -8,9 +8,9 @@ from tools import ConstantDriver
 
 def test_gap_junction(strength1 = 0.0015, strength2 = 0.0):
     neuron_factory = NeuronFactory()
-    neuron1 = neuron_factory.create_neuron(probe=True)
-    neuron2 = neuron_factory.create_neuron(probe=True)
-    neuron3 = neuron_factory.create_neuron(probe=True)
+    neuron1 = neuron_factory.create_neuron(record=True)
+    neuron2 = neuron_factory.create_neuron(record=True)
+    neuron3 = neuron_factory.create_neuron(record=True)
 
     rest_time = 10
     driver1 = ConstantDriver(strength1, delay=rest_time)
@@ -25,9 +25,9 @@ def test_gap_junction(strength1 = 0.0015, strength2 = 0.0):
 
     neuron_factory.step(rest_time+args.iterations)
 
-    data = [("Uncoupled", neuron3.probe.data),
-            ("Coupled driven", neuron1.probe.data),
-            ("Coupled undriven", neuron2.probe.data)]
+    data = [("Uncoupled", neuron3.get_record()),
+            ("Coupled driven", neuron1.get_record()),
+            ("Coupled undriven", neuron2.get_record())]
     if not args.silent:
         plot(data, title="Gap junction test")
 

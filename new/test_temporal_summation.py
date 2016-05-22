@@ -10,14 +10,14 @@ def temporal_summation(num_pre = 3):
     data = []
 
     neuron_factory = NeuronFactory()
-    post_neuron = neuron_factory.create_neuron(probe=True)
+    post_neuron = neuron_factory.create_neuron(record=True)
 
     pre_neurons = []
     for i in xrange(num_pre):
 
         pre_neuron = neuron_factory.create_neuron(
             neuron_type=NeuronTypes.GANGLION,
-            probe = True)
+            record = True)
         pre_neurons.append(pre_neuron)
 
         synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
@@ -33,8 +33,8 @@ def temporal_summation(num_pre = 3):
     #print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))
 
     for pre_neuron in pre_neurons:
-        data.append(("Pre", pre_neuron.probe.data))
-    data.append(("Post", post_neuron.probe.data))
+        data.append(("Pre", pre_neuron.get_record()))
+    data.append(("Post", post_neuron.get_record()))
     if not args.silent:
         plot(data, title="Temporal summation test")
 

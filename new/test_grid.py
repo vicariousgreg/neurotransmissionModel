@@ -18,7 +18,7 @@ def test_grid(image=simple_image):
     width = len(image[0])
 
     neuron_factory = NeuronFactory(num_threads=1)
-    neuron_grid = neuron_factory.create_neuron_grid(width, height, base_current=0.0, probe=True)
+    neuron_grid = neuron_factory.create_neuron_grid(width, height, base_current=0.0, record=True)
 
     neuron_data = []
 
@@ -46,7 +46,7 @@ def test_grid(image=simple_image):
     data = []
     for i in xrange(height):
         for j in xrange(width):
-            data.append(("%d %d" % (i,j), neuron_grid[i][j].probe.data))
+            data.append(("%d %d" % (i,j), neuron_grid[i][j].get_record()))
     if not args.silent:
         plot(data, title="Photoreceptor test")
     #print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))

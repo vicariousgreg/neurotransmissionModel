@@ -1,11 +1,11 @@
 # Soma Model
 
 class Soma:
-    def __init__(self, environment=None, resolution=100):
+    def __init__(self, environment=None, record=False, resolution=100):
         self.stable_count = 0
         self.environment = environment
         self.stable_voltage = -70.0
-        self.env_id = environment.register(self.stable_voltage)
+        self.env_id = environment.register(self.stable_voltage, record=record)
         self.resolution = resolution
         self.time_coefficient = 1.0 / resolution
         self.reset(reset_voltage=False)

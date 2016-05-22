@@ -23,8 +23,8 @@ def test_photoreceptor(
         neuron_factory = NeuronFactory()
         photoreceptor = neuron_factory.create_neuron(
             neuron_type=NeuronTypes.PHOTORECEPTOR,
-            probe = True)
-        post = neuron_factory.create_neuron(probe = True)
+            record = True)
+        post = neuron_factory.create_neuron(record = True)
 
         synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=50)
         synapse.set_enzyme_concentration(0.5)
@@ -36,8 +36,8 @@ def test_photoreceptor(
             name = driver_name)
         neuron_factory.step(args.iterations)
 
-        if print_photoreceptor: data.append(("Photoreceptor", photoreceptor.probe.data))
-        if print_postsynaptic: data.append(("Post", post.probe.data))
+        if print_photoreceptor: data.append(("Photoreceptor", photoreceptor.get_record()))
+        if print_postsynaptic: data.append(("Post", post.get_record()))
     data.append(neuron_factory.get_driver_data(driver_name))
     if not args.silent:
         plot(data, title="Photoreceptor test")

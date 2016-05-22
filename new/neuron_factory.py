@@ -5,16 +5,12 @@
 #     components it holds.
 #
 # Drivers can be added to activate particular neurons at each timestep.
-# 
-# Probes can be added to any component to take measurements of voltage, current,
-#     or concentration over the course of the simulation.
 
 from multiprocessing import Array, Process
 from math import ceil
 from environment import Environment
 from neuron import Neuron, NeuronTypes
 from molecule import Transporters, Receptors, Molecule_IDs
-from tools import Probe
 
 class NeuronFactory:
     def __init__(self, num_threads=1):
@@ -24,7 +20,6 @@ class NeuronFactory:
 
         self.drivers = {}
         self.neuron_drivers = {}
-        self.concentration_probes = {}
 
         self.num_threads = num_threads
         self.time = 0
@@ -100,31 +95,31 @@ class NeuronFactory:
                     self.active[neuron_id] = False
 
     def create_neuron(self, base_current=0.0,
-            neuron_type=NeuronTypes.GANGLION, probe=False):
+            neuron_type=NeuronTypes.GANGLION, record=False):
         neuron = Neuron(
             neuron_id=len(self.neurons),
             base_current=base_current,
             neuron_type=neuron_type,
-            environment=self.environment)
+            environment=self.environment,
+            record=record)
         self.neurons.append(neuron)
-        if probe: neuron.set_probe(Probe())
 
         return neuron
 
     def create_neuron_grid(self, width, height, base_current=0.0,
-            neuron_type=NeuronTypes.PHOTORECEPTOR, probe=False):
+            neuron_type=NeuronTypes.PHOTORECEPTOR, record=False):
         output = []
         for i in xrange(height):
             row = []
             for j in xrange(width):
-                row.append(self.create_neuron(base_current, neuron_type, probe=probe))
+                row.append(self.create_neuron(base_current, neuron_type, record=record))
             output.append(row)
         return output
 
     def create_synapse(self, pre_neuron, post_neuron,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             enzyme_concentration=1.0, axon_delay=0, dendrite_strength=25,
-            active_molecules=[Molecule_IDs.GLUTAMATE], probe_name=None):
+            active_molecules=[Molecule_IDs.GLUTAMATE]):
         # If single molecule is true, the synapse will save time and space by
         #     assuming that only one molecule will move through it.  This means
         #     that the proteins must use the same native molecule, and no
@@ -142,9 +137,6 @@ class NeuronFactory:
             active_molecules = active_molecules, enzyme_concentration=enzyme_concentration,
             axon_delay=axon_delay, dendrite_strength=dendrite_strength)
         self.synapses.append(synapse)
-
-        # Set up probe.
-        if probe_name: pass ## CHANGE ME
         return synapse
 
     def create_gap_junction(self, pre_neuron, post_neuron, conductance=1.0):

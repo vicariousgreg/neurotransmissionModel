@@ -19,11 +19,11 @@ def transmit(strength=0.25, delays=[None, 100]):
             synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
                 axon_delay=delay, dendrite_strength=dendrite_strength)
     else:
-        pre_neuron = neuron_factory.create_neuron(probe=True)
+        pre_neuron = neuron_factory.create_neuron(record=True)
 
         post_neurons = []
         for delay in delays:
-            post_neuron = neuron_factory.create_neuron(probe=True)
+            post_neuron = neuron_factory.create_neuron(record=True)
             post_neurons.append(post_neuron)
             synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
                 axon_delay=delay, dendrite_strength=dendrite_strength)
@@ -35,9 +35,9 @@ def transmit(strength=0.25, delays=[None, 100]):
     #print("Saved %d out of %d cycles." % (neuron_factory.stable_count, neuron_factory.time))
 
     if not args.silent:
-        data.append(("Pre neuron", pre_neuron.probe.data))
+        data.append(("Pre neuron", pre_neuron.get_record()))
         for post_neuron in post_neurons:
-            data.append(("Post neuron", post_neuron.probe.data))
+            data.append(("Post neuron", post_neuron.get_record()))
         plot(data, title="Synaptic transmission")
 
 def main():
