@@ -1,14 +1,47 @@
 # Soma Model
+#
+# The parameter a describes the time scale of the recovery variable
+# u. Smaller values result in slower recovery. A typical value is
+# a = 0.02.
+#
+# The parameter b describes the sensitivity of the recovery variable
+# u to the subthreshold fluctuations of the membrane potential v.
+# Greater values couple v and u more strongly resulting in possible
+# subthreshold oscillations and low-threshold spiking dynamics. A
+# typical value is b = 0.2. The case b<a(b>a) corresponds
+# to saddle-node (Andronov-Hopf) bifurcation of the resting state
+# [10].
+#
+# The parameter c describes the after-spike reset value of the membrane
+# potential v caused by the fast high-threshold K+ conductances.
+# A typical value is c = -65 mV
+#
+# The parameter d describes after-spike reset of the recovery variable
+# u caused by slow high-threshold Na+ and K+ conductances.
+# A typical value is d = 2.
+
+from enum import enum
+
+# Parameter constants.
+SOMA_TYPES = enum(
+    DEFAULT       = (0.02, 0.2 , -70.0, 2), # Default
+    REGULAR       = (0.02, 0.2 , -65.0, 8), # Regular Spiking
+    BURSTING      = (0.02, 0.2 , -55.0, 4), # Intrinsically Bursting
+    CHATTERING    = (0.02, 0.2 , -50.0, 2), # Chattering
+    FAST          = (0.1 , 0.2 , -70.0, 2), # Fast Spiking
+    LOW_THRESHOLD = (0.02, 0.25, -70.0, 2), # Low Threshold
+    PHOTORECEPTOR = (0   , 0   , -82.6, 0) # Photoreceptor
+)
 
 class Soma:
-    def __init__(self, environment=None, record=False, resolution=100):
+    def __init__(self, soma_type=SOMA_TYPES.DEFAULT, environment=None, record=False, resolution=100):
         self.stable_count = 0
         self.environment = environment
-        self.stable_voltage = -70.0
-        self.env_id = environment.register(self.stable_voltage, record=record)
         self.resolution = resolution
         self.time_coefficient = 1.0 / resolution
-        self.reset(reset_voltage=False)
+        self.record = record
+        self.soma_type = soma_type
+        self.reset()
 
     def get_voltage(self):
         """
@@ -22,45 +55,29 @@ class Soma:
         """
         self.environment.set(self.env_id, v)
 
-    def reset(self, reset_voltage=True):
-        self.u = -14.0
+    def reset(self):
+        self.a, self.b, self.c, self.d = self.soma_type
+        self.u = self.b * self.c
+        self.prev_voltage = self.c
 
-        # Only reset if indicated
-        # This can break the environment if other neurons aren't yet registered
-        if reset_voltage: self.set_voltage(self.stable_voltage)
-
-        # The parameter a describes the time scale of the recovery variable
-        # u. Smaller values result in slower recovery. A typical value is
-        # a = 0.02.
-        self.a = 0.02
-
-        # The parameter b describes the sensitivity of the recovery variable
-        # u to the subthreshold fluctuations of the membrane potential v.
-        # Greater values couple v and u more strongly resulting in possible
-        # subthreshold oscillations and low-threshold spiking dynamics. A
-        # typical value is b = 0.2. The case b<a(b>a) corresponds
-        # to saddle-node (Andronov-Hopf) bifurcation of the resting state
-        # [10].
-        self.b = 0.2
-
-        # The parameter c describes the after-spike reset value of the membrane
-        # potential v caused by the fast high-threshold K+ conductances.
-        # A typical value is c = -65 mV
-        self.c = -70.0
-
-        # The parameter d describes after-spike reset of the recovery variable
-        # u caused by slow high-threshold Na+ and K+ conductances.
-        # A typical value is d = 2.
-        self.d = 2
+        # Only reset if already registered.
+        # Otherwise, register.
+        try:
+            self.env_id
+            self.set_voltage(self.c)
+        except AttributeError:
+            self.env_id = self.environment.register(self.c,
+                                                    record=self.record)
 
     def step(self, current=0.0):
         voltage = self.get_voltage()
         voltage = self.cycle(voltage, current)
 
-        if abs(voltage-self.stable_voltage) < 0.001:
+        if abs(voltage-self.prev_voltage) < 0.001:
             self.stable_count += 1
         else:
             self.stable_count = 0
+        self.prev_voltage = voltage
 
         return self.stable_count > 10
 
@@ -90,4 +107,4 @@ class Soma:
         return voltage
 
     def get_adjusted_voltage(self):
-        return (min(self.get_voltage(), 30) - self.stable_voltage) / 100
+        return (min(self.get_voltage(), 30) - self.c) / 100

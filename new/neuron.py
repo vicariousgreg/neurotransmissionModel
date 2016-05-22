@@ -2,7 +2,7 @@
 
 from multiprocessing import Value
 from enum import enum
-from soma import Soma
+from soma import Soma, SOMA_TYPES
 from synapse import Synapse
 from molecule import Transporters, Receptors
 from photoreceptor import PhotoreceptorSoma
@@ -21,10 +21,11 @@ class Neuron:
 
         # Soma and axon threshold
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
-            self.soma = PhotoreceptorSoma(environment, record=record)
+            self.soma = Soma(environment=environment,
+                soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record)
             self.spiking = False
         elif neuron_type == NeuronTypes.GANGLION:
-            self.soma = Soma(environment, record=record)
+            self.soma = Soma(environment=environment, record=record)
             self.spiking = True
 
         # Inputs
