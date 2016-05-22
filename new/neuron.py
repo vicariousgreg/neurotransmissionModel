@@ -25,7 +25,8 @@ class Neuron:
                 soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record)
             self.spiking = False
         elif neuron_type == NeuronTypes.GANGLION:
-            self.soma = Soma(environment=environment, record=record)
+            self.soma = Soma(environment=environment,
+                soma_type=SOMA_TYPES.DEFAULT, record=record)
             self.spiking = True
 
         # Inputs

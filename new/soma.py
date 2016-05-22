@@ -24,13 +24,15 @@ from enum import enum
 
 # Parameter constants.
 SOMA_TYPES = enum(
-    DEFAULT       = (0.02, 0.2 , -70.0, 2), # Default
-    REGULAR       = (0.02, 0.2 , -65.0, 8), # Regular Spiking
-    BURSTING      = (0.02, 0.2 , -55.0, 4), # Intrinsically Bursting
-    CHATTERING    = (0.02, 0.2 , -50.0, 2), # Chattering
-    FAST          = (0.1 , 0.2 , -70.0, 2), # Fast Spiking
-    LOW_THRESHOLD = (0.02, 0.25, -70.0, 2), # Low Threshold
-    PHOTORECEPTOR = (0   , 0   , -82.6, 0) # Photoreceptor
+    DEFAULT          = (0.02, 0.2 , -70.0, 2   ), # Default
+    REGULAR          = (0.02, 0.2 , -65.0, 8   ), # Regular Spiking
+    BURSTING         = (0.02, 0.2 , -55.0, 4   ), # Intrinsically Bursting
+    CHATTERING       = (0.02, 0.2 , -50.0, 2   ), # Chattering
+    FAST             = (0.1 , 0.2 , -65.0, 2   ), # Fast Spiking
+    LOW_THRESHOLD    = (0.02, 0.25, -65.0, 2   ), # Low Threshold
+    THALAMO_CORTICAL = (0.02, 0.25, -65.0, 0.05), # Thalamo-cortical
+    RESONATOR        = (0.1 , 0.26, -65.0, 2   ), # Resonator
+    PHOTORECEPTOR    = (0   , 0   , -82.6, 0   )  # Photoreceptor
 )
 
 class Soma:
