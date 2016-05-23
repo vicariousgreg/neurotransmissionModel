@@ -1,4 +1,5 @@
 from matplotlib import pyplot
+import numpy as np
 
 def plot(data_list, title=None, file_name=None):
     """
@@ -11,8 +12,8 @@ def plot(data_list, title=None, file_name=None):
     for name,data in data_list:
         pyplot.plot(range(len(data)), data, label=name)
     pyplot.legend()
-    pyplot.xlabel('iterations')
-    pyplot.ylabel('concentration')
+    pyplot.xlabel('iteration')
+    pyplot.ylabel('voltage')
 
     if title:
         pyplot.title(title)
@@ -21,3 +22,12 @@ def plot(data_list, title=None, file_name=None):
         pyplot.savefig(file_name)
     else:
         pyplot.show()
+
+def draw(datas, titles):
+    f, axes = pyplot.subplots(1, len(datas), sharey=True)
+    if len(datas) == 1:
+        axes = (axes,)
+    for i,(data,title) in enumerate(zip(datas, titles)):
+        heatmap = axes[i].pcolor(data, cmap=pyplot.cm.Blues)
+        axes[i].set_title(title)
+    pyplot.show()

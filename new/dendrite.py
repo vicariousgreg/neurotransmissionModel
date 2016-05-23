@@ -35,6 +35,7 @@ class Dendrite:
         """
         NEEDS TO BE THREAD SAFE
         """
+        #print(concentration)
         self.environment.set(self.env_id, concentration)
 
     def bind(self, concentration):

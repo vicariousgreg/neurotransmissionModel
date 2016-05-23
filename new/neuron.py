@@ -4,12 +4,14 @@ from multiprocessing import Value
 from enum import enum
 from soma import Soma, SOMA_TYPES
 from synapse import Synapse
-from molecule import Transporters, Receptors
-from photoreceptor import PhotoreceptorSoma
+from molecule import Molecules, Transporters, Receptors
 
 NeuronTypes = enum(
     PHOTORECEPTOR = 0,
-    GANGLION = 1
+    HORIZONTAL = 1,
+    BIPOLAR = 2,
+    AMACRINE = 3,
+    GANGLION = 4
 )
 
 class Neuron:
@@ -23,6 +25,10 @@ class Neuron:
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = Soma(environment=environment,
                 soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record)
+            self.spiking = False
+        elif neuron_type == NeuronTypes.HORIZONTAL:
+            self.soma = Soma(environment=environment,
+                soma_type=SOMA_TYPES.HORIZONTAL, record=record)
             self.spiking = False
         elif neuron_type == NeuronTypes.GANGLION:
             self.soma = Soma(environment=environment,
@@ -111,10 +117,11 @@ class Neuron:
             self.stable = self.soma.step(new_current) & axons_stable
 
     @staticmethod
-    def create_synapse(presynaptic, postsynaptic, active_molecules=None,
+    def create_synapse(presynaptic, postsynaptic, enzyme_concentration=1.0,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
-            enzyme_concentration=1.0,
             axon_delay=0, dendrite_strength=0.0015):
+        active_molecules = [x for x in set([mol_id for mol_id in \
+                transporter.affinities.keys() + receptor.affinities.keys()])]
         synapse = Synapse(
             postsynaptic_id=postsynaptic.neuron_id,
             initial_enzyme_concentration=enzyme_concentration,
@@ -123,7 +130,7 @@ class Neuron:
                     transporter=transporter,
                     replenish_rate=0.5,
                     reuptake_rate=0.5,
-                    capacity=1.0,
+                    capacity=10.0,
                     delay=axon_delay,
                     spiking = presynaptic.spiking)
         dendrite = synapse.create_dendrite(

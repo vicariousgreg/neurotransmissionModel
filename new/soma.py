@@ -32,7 +32,8 @@ SOMA_TYPES = enum(
     LOW_THRESHOLD    = (0.02, 0.25, -65.0, 2   ), # Low Threshold
     THALAMO_CORTICAL = (0.02, 0.25, -65.0, 0.05), # Thalamo-cortical
     RESONATOR        = (0.1 , 0.26, -65.0, 2   ), # Resonator
-    PHOTORECEPTOR    = (0   , 0   , -82.6, 0   )  # Photoreceptor
+    PHOTORECEPTOR    = (0   , 0   , -82.6, 0   ), # Photoreceptor
+    HORIZONTAL       = (0   , 0   , -82.6, 0   )  # Horizontal Cell
 )
 
 class Soma:
@@ -99,7 +100,7 @@ class Soma:
 
         for _ in xrange(self.resolution):
             if voltage > 30:
-                print("SPIKE")
+                #print("SPIKE")
                 break
             else:
                 delta_v = (0.04 * voltage * voltage) + (5*voltage) + 140 - self.u + current

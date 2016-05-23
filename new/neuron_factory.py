@@ -107,7 +107,7 @@ class NeuronFactory:
         return neuron
 
     def create_neuron_grid(self, width, height, base_current=0.0,
-            neuron_type=NeuronTypes.PHOTORECEPTOR, record=False):
+            neuron_type=NeuronTypes.GANGLION, record=False):
         output = []
         for i in xrange(height):
             row = []
@@ -116,10 +116,27 @@ class NeuronFactory:
             output.append(row)
         return output
 
+    def connect_grids(self, grid1, grid2,
+            transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
+            enzyme_concentration=1.0, axon_delay=0, dendrite_strength=25):
+        h1,w1 = (len(grid1), len(grid1[0]))
+        h2,w2 = (len(grid2), len(grid2[0]))
+
+        if h1 != h2 or w1 != w1:
+            raise ValueError
+
+        '''
+        for i in xrange(h1):
+            for j in xrange(w1):
+                self.create_synapse(grid1[i][j], grid2[i][[j],
+                    transporter, receptor,
+                    enzyme_concentration,
+                    axon_delay, dendrite_strength)
+        '''
+
     def create_synapse(self, pre_neuron, post_neuron,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
-            enzyme_concentration=1.0, axon_delay=0, dendrite_strength=25,
-            active_molecules=[Molecule_IDs.GLUTAMATE]):
+            enzyme_concentration=1.0, axon_delay=0, dendrite_strength=25):
         # If single molecule is true, the synapse will save time and space by
         #     assuming that only one molecule will move through it.  This means
         #     that the proteins must use the same native molecule, and no
@@ -128,13 +145,11 @@ class NeuronFactory:
         # Then we ensure that the molecule is in active_molecules.
         if transporter.native_mol_id != receptor.native_mol_id:
             raise ValueError
-        if transporter.native_mol_id not in active_molecules:
-            active_molecules.append(transporter.native_mol_id)
 
         # Create synapse.
         synapse = Neuron.create_synapse(pre_neuron, post_neuron,
             transporter=transporter, receptor=receptor,
-            active_molecules = active_molecules, enzyme_concentration=enzyme_concentration,
+            enzyme_concentration=enzyme_concentration,
             axon_delay=axon_delay, dendrite_strength=dendrite_strength)
         self.synapses.append(synapse)
         return synapse
