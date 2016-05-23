@@ -69,8 +69,7 @@ class Soma:
             self.env_id
             self.set_voltage(self.c)
         except AttributeError:
-            self.env_id = self.environment.register(self.c,
-                                                    record=self.record)
+            self.env_id = self.environment.register(self.c, record=self.record)
 
     def step(self, current=0.0):
         voltage = self.get_voltage()

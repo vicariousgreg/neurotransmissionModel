@@ -27,6 +27,7 @@ class Neuron:
                 soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record)
             self.spiking = False
         elif neuron_type == NeuronTypes.HORIZONTAL:
+            base_current = -100
             self.soma = Soma(environment=environment,
                 soma_type=SOMA_TYPES.HORIZONTAL, record=record)
             self.spiking = False

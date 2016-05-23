@@ -6,7 +6,7 @@ from neuron import NeuronTypes
 from neuron_factory import NeuronFactory
 from tools import PulseDriver
 
-def temporal_summation(num_pre = 3):
+def spatial_summation(num_pre = 3):
     data = []
 
     neuron_factory = NeuronFactory()
@@ -36,10 +36,10 @@ def temporal_summation(num_pre = 3):
         data.append(("Pre", pre_neuron.get_record()))
     data.append(("Post", post_neuron.get_record()))
     if not args.silent:
-        plot(data, title="Temporal summation test")
+        plot(data, title="Spatial summation test")
 
 def main():
-    temporal_summation()
+    spatial_summation()
 
 def set_options():
     """
