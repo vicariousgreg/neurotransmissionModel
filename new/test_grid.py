@@ -1,7 +1,8 @@
 import argparse
 from random import random
 
-from plot import plot, draw
+#from plot import plot, draw
+from numpy import array
 
 from molecule import Transporters, Receptors
 from neuron import NeuronTypes
@@ -10,9 +11,13 @@ from tools import ConstantDriver
 
 import matplotlib.image as mpimg
 
-#img = mpimg.imread('../_static/stinkbug.png')
-#lum_img = img[:,:,0]
+img = mpimg.imread('./bird.png')
+lum_img = img[:,:,0]
 #imgplot = plt.imshow(lum_img)
+print(lum_img)
+
+def save(data):
+    mpimg.imsave('./output.png', array(data))
 
 simple_image = [
     [0, 100, 255],
@@ -28,38 +33,45 @@ light_image = [[255 for _ in xrange(width)] for __ in xrange(height)]
 
 def test_grid(
         #image=random_image):
-        image=graded_image):
+        #image=graded_image):
+        image=lum_img):
         #image=light_image):
         #image=dark_image):
     height = len(image)
     width = len(image[0])
+    print(height,width)
+    height,width = (57,57)
 
-    neuron_factory = NeuronFactory(num_threads=1)
+    neuron_factory = NeuronFactory(num_threads=20)
     photoreceptor_grid = neuron_factory.create_neuron_grid(width, height,
-                        neuron_type=NeuronTypes.PHOTORECEPTOR, record=True)
-    ganglion_grid = neuron_factory.create_neuron_grid(width, height, record=True)
+                        neuron_type=NeuronTypes.PHOTORECEPTOR, record=False)
+    ganglion_grid = neuron_factory.create_neuron_grid(width, height, record=False)
 
     neuron_data = []
 
     # Create drivers and Connect ganglion cells.
     for i in xrange(height):
-        print(image[i])
+        print(image[i][:width])
         for j in xrange(width):
             neuron_factory.create_synapse(photoreceptor_grid[i][j], ganglion_grid[i][j],
                 dendrite_strength=100)
             neuron_factory.register_driver(
                 photoreceptor_grid[i][j],
-                ConstantDriver(current=-image[i][j], delay=10))
+                ConstantDriver(current=-image[i][j]*255, delay=10))
+            print(image[i][j]*255)
 
     for _ in xrange(args.iterations):
         neuron_factory.step()
     neuron_factory.close()
 
+    '''
     photo_activity = []
     for row in photoreceptor_grid:
         d = [neuron.get_record()[-1] for neuron in row]
+        print(d)
         photo_activity.append(d)
         #print(d)
+    '''
 
     ganglion_activity = []
     for row in ganglion_grid:
@@ -68,7 +80,16 @@ def test_grid(
         ganglion_activity.append(d)
         #print(d)
 
-    draw((image, photo_activity, ganglion_activity), ("Input", "Photoreceptors", "Ganglion"))
+    maximum = max(max(row) for row in ganglion_activity)
+    print(maximum)
+    for row in xrange(len(ganglion_activity)):
+        print(ganglion_activity[row])
+        for col in xrange(len(ganglion_activity[row])):
+            ganglion_activity[row][col] = float(ganglion_activity[row][col]) / maximum
+
+    save(ganglion_activity)
+
+    #draw((image, photo_activity, ganglion_activity), ("Input", "Photoreceptors", "Ganglion"))
     #draw((image, photo_activity), ("Input", "Photoreceptors"))
     #draw((image,), ("Input",))
 
