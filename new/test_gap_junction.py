@@ -1,7 +1,6 @@
 import argparse
 from plot import plot
 
-from synapse import Synapse
 from neuron import Neuron
 from neuron_factory import NeuronFactory
 from tools import ConstantDriver

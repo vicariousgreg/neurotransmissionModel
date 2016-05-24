@@ -40,6 +40,7 @@ class Environment:
         self.next_values = []
         self.dirty = Value('b', True, lock=False)
         self.records = dict()
+        self.spikes = dict()
 
     def initialize(self):
         # Create thread safe arrays.
@@ -48,12 +49,18 @@ class Environment:
 
         for key in self.records:
             self.records[key] = manager.list()
+        for key in self.spikes:
+            self.spikes[key] = manager.list()
 
-    def register(self, initial=0.0, record=False):
+    def register(self, initial=0.0, record=False, spiking=False):
         env_id = len(self.prev_values)
         self.prev_values.append(initial)
         self.next_values.append(initial)
-        if record: self.records[env_id] = True
+        if record:
+            if spiking:
+                self.spikes[env_id] = True
+            else:
+                self.records[env_id] = True
         return env_id
 
     def get(self, env_id):
@@ -75,6 +82,8 @@ class Environment:
         # Record any env_ids that have been set to record.
         for env_id in self.records:
             self.records[env_id].append(self.prev_values[env_id])
+        for env_id in self.spikes:
+            self.spikes[env_id].append(1 if self.prev_values[env_id] >= 30.0 else 0)
 
         if self.dirty.value:
             self.dirty.value = False

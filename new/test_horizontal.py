@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from synapse import Synapse
 from neuron import Neuron
 from soma import Soma
 from neuron_factory import NeuronFactory
@@ -13,7 +12,7 @@ from molecule import Transporters, Receptors
 def transmit(strengths=[-255, -100, -50, -10, 0]):
     data = []
     neuron_factory = NeuronFactory()
-    dendrite_strength = 1000
+    dendrite_strength = 100
     if args.silent:
         photoreceptor = neuron_factory.create_neuron(neuron_type=NeuronTypes.PHOTORECEPTOR)
         horizontal = neuron_factory.create_neuron(neuron_type=NeuronTypes.HORIZONTAL)

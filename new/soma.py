@@ -37,12 +37,14 @@ SOMA_TYPES = enum(
 )
 
 class Soma:
-    def __init__(self, soma_type=SOMA_TYPES.DEFAULT, environment=None, record=False, resolution=100):
+    def __init__(self, soma_type=SOMA_TYPES.DEFAULT, environment=None,
+                            record=False, spiking=False, resolution=10):
         self.stable_count = 0
         self.environment = environment
         self.resolution = resolution
         self.time_coefficient = 1.0 / resolution
         self.record = record
+        self.spiking = spiking
         self.soma_type = soma_type
         self.reset()
 
@@ -69,7 +71,7 @@ class Soma:
             self.env_id
             self.set_voltage(self.c)
         except AttributeError:
-            self.env_id = self.environment.register(self.c, record=self.record)
+            self.env_id = self.environment.register(self.c, record=self.record, spiking=self.spiking)
 
     def step(self, current=0.0):
         voltage = self.get_voltage()

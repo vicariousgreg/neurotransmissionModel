@@ -73,7 +73,7 @@ class NeuronFactory:
             # Step the environment.
             self.environment.step()
             self.time += 1
-            if self.time % 100 == 0: print(self.time)
+            if True or self.time % 100 == 0: print(self.time)
 
             # Activate neurons and wait for workers.
             if self.multithreaded:

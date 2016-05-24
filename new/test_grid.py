@@ -1,7 +1,7 @@
 import argparse
 from random import random
 
-#from plot import plot, draw
+from plot import plot, draw
 from numpy import array
 
 from molecule import Transporters, Receptors
@@ -24,28 +24,29 @@ simple_image = [
     [255, 100, 0],
     [100, 0, 255],
 ]
-width = 10
+width = 25
 height = 10
-random_image = [[random() * 255 for _ in xrange(width)] for __ in xrange(height)]
-graded_image = [[10*i for i in xrange(width)] for __ in xrange(height)]
+random_image = [[random() for _ in xrange(width)] for __ in xrange(height)]
+random_row = [[random() for _ in xrange(width)]]
+#graded_image = [[10*i for i in xrange(width)] for __ in xrange(height)]
+graded_image = [[10.0*i/255 for i in xrange(width)]]
 dark_image = [[0 for _ in xrange(width)] for __ in xrange(height)]
 light_image = [[255 for _ in xrange(width)] for __ in xrange(height)]
 
 def test_grid(
         #image=random_image):
         #image=graded_image):
+        #image=random_row):
         image=lum_img):
         #image=light_image):
         #image=dark_image):
     height = len(image)
     width = len(image[0])
-    print(height,width)
-    height,width = (57,57)
 
-    neuron_factory = NeuronFactory(num_threads=20)
+    neuron_factory = NeuronFactory(num_threads=1)
     photoreceptor_grid = neuron_factory.create_neuron_grid(width, height,
                         neuron_type=NeuronTypes.PHOTORECEPTOR, record=False)
-    ganglion_grid = neuron_factory.create_neuron_grid(width, height, record=False)
+    ganglion_grid = neuron_factory.create_neuron_grid(width, height, record=True)
 
     neuron_data = []
 
@@ -75,21 +76,26 @@ def test_grid(
 
     ganglion_activity = []
     for row in ganglion_grid:
-        d = [len(tuple(x for x in neuron.get_record() if x > 30.0)) for neuron in row]
+        #for neuron in row:
+        #    plot([("ganglion", neuron.get_record())])
+        d = [neuron.get_record().count(1) for neuron in row]
         #print([x for x in row[0].get_record()])
         ganglion_activity.append(d)
-        #print(d)
+
+        #for neuron in row:
+        #    ganglion_activity.append(neuron.get_record())
 
     maximum = max(max(row) for row in ganglion_activity)
-    print(maximum)
+    minimum = min(max(row) for row in ganglion_activity)
     for row in xrange(len(ganglion_activity)):
         print(ganglion_activity[row])
         for col in xrange(len(ganglion_activity[row])):
-            ganglion_activity[row][col] = float(ganglion_activity[row][col]) / maximum
+            ganglion_activity[row][col] = float(ganglion_activity[row][col]-minimum) / maximum
 
     save(ganglion_activity)
 
     #draw((image, photo_activity, ganglion_activity), ("Input", "Photoreceptors", "Ganglion"))
+    draw((image, ganglion_activity), ("Input", "Ganglion"))
     #draw((image, photo_activity), ("Input", "Photoreceptors"))
     #draw((image,), ("Input",))
 
@@ -115,7 +121,7 @@ def set_options():
     """print table""")
     parser.add_argument("-s", "--silent", action = "store_true", help = 
     """do not display graphs""")
-    parser.add_argument("-i", "--iterations", type = int, default = 100, help = 
+    parser.add_argument("-i", "--iterations", type = int, default = 50, help = 
     """table""")
 
     return parser.parse_args()

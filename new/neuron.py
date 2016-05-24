@@ -3,7 +3,8 @@
 from multiprocessing import Value
 from enum import enum
 from soma import Soma, SOMA_TYPES
-from synapse import Synapse
+from chemical_synapse import ChemicalSynapse
+from simple_synapse import SimpleSynapse
 from molecule import Molecules, Transporters, Receptors
 
 NeuronTypes = enum(
@@ -24,16 +25,16 @@ class Neuron:
         # Soma
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = Soma(environment=environment,
-                soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record)
+                soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record, spiking=False)
             self.spiking = False
         elif neuron_type == NeuronTypes.HORIZONTAL:
-            base_current = -100
+            base_current = -10
             self.soma = Soma(environment=environment,
-                soma_type=SOMA_TYPES.HORIZONTAL, record=record)
+                soma_type=SOMA_TYPES.HORIZONTAL, record=record, spiking=False)
             self.spiking = False
         elif neuron_type == NeuronTypes.GANGLION:
             self.soma = Soma(environment=environment,
-                soma_type=SOMA_TYPES.DEFAULT, record=record)
+                soma_type=SOMA_TYPES.DEFAULT, record=record, spiking=True)
             self.spiking = True
 
         # Synapses
@@ -55,7 +56,10 @@ class Neuron:
         self.synapses_stable = []
 
     def get_record(self):
-        return self.environment.records[self.soma.env_id]
+        if self.spiking:
+            return self.environment.spikes[self.soma.env_id]
+        else:
+            return self.environment.records[self.soma.env_id]
 
     def set_external_current(self, current):
         self.external_current.value = current
@@ -119,9 +123,30 @@ class Neuron:
     def create_synapse(presynaptic, postsynaptic, enzyme_concentration=1.0,
             transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
             axon_delay=0, dendrite_strength=0.0015):
+        return Neuron.create_simple_synapse(presynaptic, postsynaptic, enzyme_concentration,
+            transporter, receptor, axon_delay, dendrite_strength)
+        #return Neuron.create_chemical_synapse(presynaptic, postsynaptic, enzyme_concentration,
+        #    transporter, receptor, axon_delay, dendrite_strength)
+
+    @staticmethod
+    def create_simple_synapse(presynaptic, postsynaptic, enzyme_concentration=1.0,
+            transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
+            axon_delay=0, dendrite_strength=0.0015):
+        synapse =  SimpleSynapse(postsynaptic.neuron_id, receptor, 
+            presynaptic.spiking, axon_delay, dendrite_strength,
+            presynaptic.environment)
+
+        presynaptic.out_synapses.append(synapse)
+        postsynaptic.in_synapses.append(synapse)
+        return synapse
+
+    @staticmethod
+    def create_chemical_synapse(presynaptic, postsynaptic, enzyme_concentration=1.0,
+            transporter=Transporters.GLUTAMATE, receptor=Receptors.AMPA,
+            axon_delay=0, dendrite_strength=0.0015):
         active_molecules = [x for x in set([mol_id for mol_id in \
                 transporter.affinities.keys() + receptor.affinities.keys()])]
-        synapse = Synapse(
+        synapse = ChemicalSynapse(
             postsynaptic_id=postsynaptic.neuron_id,
             initial_enzyme_concentration=enzyme_concentration,
             active_molecules=active_molecules)

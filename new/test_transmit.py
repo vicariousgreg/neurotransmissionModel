@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from synapse import Synapse
 from neuron import Neuron
 from soma import Soma
 from neuron_factory import NeuronFactory
@@ -11,7 +10,7 @@ from tools import PulseDriver
 def transmit(strength=0.25, delays=[None, 100]):
     data = []
     neuron_factory = NeuronFactory()
-    dendrite_strength = 25
+    dendrite_strength = 1
     if args.silent:
         pre_neuron = neuron_factory.create_neuron()
         for delay in delays:

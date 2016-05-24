@@ -2,7 +2,6 @@ import argparse
 
 from plot import plot
 
-from synapse import Synapse
 from neuron_factory import NeuronFactory
 from tools import PulseDriver
 

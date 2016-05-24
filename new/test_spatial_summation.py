@@ -21,8 +21,7 @@ def spatial_summation(num_pre = 3):
         pre_neurons.append(pre_neuron)
 
         synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
-            dendrite_strength=100, axon_delay=5)
-        synapse.set_enzyme_concentration(0.5)
+            dendrite_strength=10, axon_delay=5)
 
         neuron_factory.register_driver(pre_neuron,
             PulseDriver(current=100, period=100*(i+1),
