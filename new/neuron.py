@@ -21,7 +21,7 @@ class Neuron:
         self.neuron_id = neuron_id
         self.synapses = []
 
-        # Soma and axon threshold
+        # Soma
         if neuron_type == NeuronTypes.PHOTORECEPTOR:
             self.soma = Soma(environment=environment,
                 soma_type=SOMA_TYPES.PHOTORECEPTOR, record=record)
@@ -36,8 +36,11 @@ class Neuron:
                 soma_type=SOMA_TYPES.DEFAULT, record=record)
             self.spiking = True
 
-        # Inputs
-        self.dendrites = []
+        # Synapses
+        self.in_synapses = []
+        self.out_synapses = []
+
+        # Gap junctions
         self.gap_junctions = []
         self.active_gap_junctions = False
 
@@ -47,12 +50,9 @@ class Neuron:
         self.ligand_current = 0.0
         self.external_current = Value('d', 0.0)
 
-        # Outputs
-        self.axons = []
-
         # Active flags
         self.stable = False
-        self.axons_stable = []
+        self.synapses_stable = []
 
     def get_record(self):
         return self.environment.records[self.soma.env_id]
@@ -73,8 +73,8 @@ class Neuron:
         # This will check the receptor type and decide how to modify the neuron
         # * This operation has side effects!
         self.ligand_current = 0.0
-        for dendrite in self.dendrites:
-            dendrite.activate(self)
+        for synapse in self.in_synapses:
+            synapse.activate_dendrites(self)
         return self.ligand_current
 
     def activate_gap_junctions(self, soma_voltage):
@@ -110,12 +110,10 @@ class Neuron:
 
         # If unstable, perform computations.
         if not self.stable:
-            # Activate the axons
-            # If they are releasing, their synapse should be activated
-            # The axons will cascade computation to the synaptic cleft, which
-            #     will modify postsynaptic dendrites.
-            axons_stable = all([axon.step(soma_voltage) for axon in self.axons])
-            self.stable = self.soma.step(new_current) & axons_stable
+            # Activate the output synapses
+            output_stable = all([synapse.step(soma_voltage) for synapse in self.out_synapses])
+            # Activate the soma
+            self.stable = self.soma.step(new_current) & output_stable
 
     @staticmethod
     def create_synapse(presynaptic, postsynaptic, enzyme_concentration=1.0,
@@ -140,9 +138,8 @@ class Neuron:
                     strength=dendrite_strength,
                     environment=presynaptic.environment)
 
-        presynaptic.axons.append(axon)
-        presynaptic.synapses.append(synapse)
-        postsynaptic.dendrites.append(dendrite)
+        presynaptic.out_synapses.append(synapse)
+        postsynaptic.in_synapses.append(synapse)
         return synapse
 
     @staticmethod

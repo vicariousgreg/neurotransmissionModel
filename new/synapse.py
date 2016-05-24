@@ -20,12 +20,21 @@ class Synapse:
             time and space by only checking for that molecule.
         """
         self.postsynaptic_id = postsynaptic_id
+        self.axon = None
+        self.dendrites = []
         self.probe = None
 
         self.synaptic_cleft = SynapticCleft(
             enzyme_concentration=initial_enzyme_concentration,
             active_molecules = active_molecules,
             verbose=verbose)
+
+    def step(self, voltage):
+        return self.axon.step(voltage)
+
+    def activate_dendrites(self, neuron):
+        for dendrite in self.dendrites:
+            dendrite.activate(neuron)
 
     def set_probe(self, probe):
         self.probe = probe
@@ -48,10 +57,11 @@ class Synapse:
         """
         Creates an axon and adds it to the synapse.
         """
-        if self.synaptic_cleft.axon is not None:
+        if self.axon is not None:
             raise ValueError("Cannot have two axons on one synapse!")
         axon = Axon(self.synaptic_cleft, **args)
         self.synaptic_cleft.axon = axon
+        self.axon = axon
         return axon
 
     def create_dendrite(self, **args):
@@ -60,4 +70,5 @@ class Synapse:
         """
         dendrite = Dendrite(**args)
         self.synaptic_cleft.dendrites.append(dendrite)
+        self.dendrites.append(dendrite)
         return dendrite
