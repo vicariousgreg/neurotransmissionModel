@@ -54,10 +54,7 @@ class Neuron:
         self.stable = False
 
     def get_record(self, spikes=False):
-        if spikes:
-            return self.environment.spikes[self.soma.env_id]
-        else:
-            return self.environment.records[self.soma.env_id]
+        return self.environment.get_record(self.soma.env_id, spikes)
 
     def set_external_current(self, current):
         self.external_current.value = current

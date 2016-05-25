@@ -42,7 +42,7 @@ def test_grid(
     height = len(image)
     width = len(image[0])
 
-    neuron_factory = NeuronFactory(num_threads=1)
+    neuron_factory = NeuronFactory(num_threads=4)
     photoreceptor_grid = neuron_factory.create_neuron_grid(width, height,
                         neuron_type=NeuronTypes.PHOTORECEPTOR, record=False)
     ganglion_grid = neuron_factory.create_neuron_grid(width, height, record=True)
@@ -89,7 +89,7 @@ def test_grid(
     for row in xrange(len(ganglion_activity)):
         print(ganglion_activity[row])
         for col in xrange(len(ganglion_activity[row])):
-            ganglion_activity[row][col] = float(ganglion_activity[row][col]-minimum) / maximum
+            ganglion_activity[row][col] = float(ganglion_activity[row][col])-minimum / maximum
 
     #save(ganglion_activity)
 

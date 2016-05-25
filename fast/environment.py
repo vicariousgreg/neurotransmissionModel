@@ -54,6 +54,15 @@ class Environment:
             for key in self.spikes:
                 self.spikes[key] = Value('i', 0, lock=False)
 
+    def get_record(self, env_id, spikes=False):
+        if spikes:
+            if self.multithreaded:
+                return self.spikes[env_id].value
+            else:
+                return self.spikes[env_id]
+        else:
+            return self.records[env_id]
+
     def register(self, initial=0.0, record=False, spiking=False):
         env_id = len(self.prev_values)
         self.prev_values.append(initial)

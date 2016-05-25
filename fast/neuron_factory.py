@@ -34,7 +34,7 @@ class NeuronFactory:
         else:
             self.multithreaded = True
             # Create the boolean buffers
-            self.active = Array('b', [True] * len(self.neurons), lock=False)
+            self.active = Array('b', [True] * self.num_threads, lock=False)
             length = int(ceil(float(len(self.neurons)) / self.num_threads))
 
             # Create workers
@@ -43,7 +43,7 @@ class NeuronFactory:
                 start_index,stop_index = (i * length, min(len(self.neurons), (i+1)*length))
                 self.workers.append(Process(
                     target=self.work,
-                    args=(start_index, stop_index)))
+                    args=(i, start_index, stop_index)))
 
         # Activate drivers
         self.drive()
@@ -87,12 +87,12 @@ class NeuronFactory:
             # Activate drivers
             self.drive()
 
-    def work(self, start_index, stop_index):
+    def work(self, worker_id, start_index, stop_index):
         while True:
-            for neuron_id in xrange(start_index, stop_index):
-                if self.active[neuron_id]:
+            if self.active[worker_id]:
+                for neuron_id in xrange(start_index, stop_index):
                     self.neurons[neuron_id].step(self.time)
-                    self.active[neuron_id] = False
+                self.active[worker_id] = False
 
     def create_neuron(self, base_current=0.0,
             neuron_type=NeuronTypes.GANGLION, record=False):
