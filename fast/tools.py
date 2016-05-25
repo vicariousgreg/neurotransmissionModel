@@ -3,9 +3,6 @@
 # Probes can be added to any component to take measurements of voltage, current,
 #     or concentration over the course of the simulation.
 
-from multiprocessing import Manager
-manager = Manager()
-
 class ConstantDriver:
     def __init__(self, current=0.0, delay=0):
         self.current = current

@@ -1,6 +1,5 @@
 # Neuron Model
 
-from multiprocessing import Value
 from enum import enum
 from soma import Soma, SOMA_TYPES
 from synapse import SpikingSynapse, GradedSynapse
@@ -48,7 +47,7 @@ class Neuron:
         self.current = base_current
         self.base_current = base_current
         self.ligand_current = 0.0
-        self.external_current = Value('d', 0.0)
+        self.external_current = 0.0
 
         # Active flags
         self.stable = False
@@ -57,7 +56,7 @@ class Neuron:
         return self.environment.get_record(self.soma.env_id, spikes)
 
     def set_external_current(self, current):
-        self.external_current.value = current
+        self.external_current = current
 
     def clear_ligand_current(self):
         old = self.ligand_current
@@ -100,13 +99,8 @@ class Neuron:
         new_current += self.activate_dendrites()
 
         # Add external current.
-        new_current += self.external_current.value
+        new_current += self.external_current
 
-        for synapse in self.out_synapses:
-            synapse.step(soma_voltage)
-        self.soma.step(new_current)
-
-        '''
         # Destabilize if the current has changed.
         if abs(old_current - new_current) > 0.000001:
             self.current = new_current
@@ -115,10 +109,10 @@ class Neuron:
         # If unstable, perform computations.
         if not self.stable:
             # Activate the output synapses
-            all([synapse.step(soma_voltage) for synapse in self.out_synapses])
+            for synapse in self.out_synapses:
+                synapse.step(soma_voltage)
             # Activate the soma
             self.stable = self.soma.step(new_current)
-        '''
 
     @staticmethod
     def create_synapse(pre, post, receptor=epsp, delay=0, strength=1):

@@ -6,55 +6,21 @@
 #
 # Drivers can be added to activate particular neurons at each timestep.
 
-from multiprocessing import Array, Process
 from math import ceil
 from environment import Environment
 from neuron import Neuron, NeuronTypes
 from receptor import epsp
 
 class NeuronFactory:
-    def __init__(self, num_threads=1):
-        self.environment = Environment(multithreaded=num_threads>1)
+    def __init__(self):
+        self.environment = Environment()
         self.neurons = []
         self.synapses = []
 
         self.drivers = {}
         self.neuron_drivers = {}
 
-        self.num_threads = num_threads
         self.time = 0
-
-    def initialize(self):
-        self.environment.initialize()
-        self.num_threads = min(self.num_threads, len(self.neurons))
-
-        if self.num_threads == 1:
-            self.multithreaded = False
-            self.active = [True] * len(self.neurons)
-        else:
-            self.multithreaded = True
-            # Create the boolean buffers
-            self.active = Array('b', [True] * self.num_threads, lock=False)
-            length = int(ceil(float(len(self.neurons)) / self.num_threads))
-
-            # Create workers
-            self.workers = []
-            for i in xrange(self.num_threads):
-                start_index,stop_index = (i * length, min(len(self.neurons), (i+1)*length))
-                self.workers.append(Process(
-                    target=self.work,
-                    args=(i, start_index, stop_index)))
-
-        # Activate drivers
-        self.drive()
-
-        # Start worker threads
-        if self.multithreaded:
-            for worker in self.workers: worker.start()
-
-    def close(self):
-        if self.multithreaded:
-            for worker in self.workers: worker.terminate()
 
     def drive(self):
         # Activate drivers
@@ -65,34 +31,19 @@ class NeuronFactory:
             driver.drive(neuron, self.time)
 
     def step(self, count=1):
-        # Hacky way of initializing without placing burden on caller.
-        try: self.active
-        except: self.initialize()
-
         for _ in xrange(count):
-            # Step the environment.
-            self.environment.step()
-            self.time += 1
-            if True or self.time % 100 == 0: print(self.time)
-
-            # Activate neurons and wait for workers.
-            if self.multithreaded:
-                for i in xrange(len(self.active)):
-                    self.active[i] = True
-                while any(x == True for x in self.active): pass
-            # If no other threads, do it yourself
-            else:
-                for neuron in self.neurons: neuron.step(self.time)
-
             # Activate drivers
             self.drive()
 
-    def work(self, worker_id, start_index, stop_index):
-        while True:
-            if self.active[worker_id]:
-                for neuron_id in xrange(start_index, stop_index):
-                    self.neurons[neuron_id].step(self.time)
-                self.active[worker_id] = False
+            # Step the environment
+            self.environment.step()
+
+            # Log time
+            self.time += 1
+            if True or self.time % 100 == 0: print(self.time)
+
+            # Activate neurons
+            for neuron in self.neurons: neuron.step(self.time)
 
     def create_neuron(self, base_current=0.0,
             neuron_type=NeuronTypes.GANGLION, record=False):
