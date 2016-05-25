@@ -10,7 +10,7 @@ from multiprocessing import Array, Process
 from math import ceil
 from environment import Environment
 from neuron import Neuron, NeuronTypes
-from receptor import Receptors
+from receptor import epsp
 
 class NeuronFactory:
     def __init__(self, num_threads=1):
@@ -117,7 +117,7 @@ class NeuronFactory:
         return output
 
     def connect_grids(self, grid1, grid2,
-            receptor=Receptors.AMPA, axon_delay=0, dendrite_strength=25):
+            receptor=epsp, delay=0, strength=25):
         h1,w1 = (len(grid1), len(grid1[0]))
         h2,w2 = (len(grid2), len(grid2[0]))
 
@@ -130,13 +130,13 @@ class NeuronFactory:
                 self.create_synapse(grid1[i][j], grid2[i][[j],
                     transporter, receptor,
                     enzyme_concentration,
-                    axon_delay, dendrite_strength)
+                    delay, strength)
         '''
 
     def create_synapse(self, pre_neuron, post_neuron,
-            receptor=Receptors.AMPA, axon_delay=0, dendrite_strength=0.0015):
-        synapse = Neuron.create_synapse(pre_neuron, post_neuron, receptor=receptor,
-                            axon_delay=axon_delay, dendrite_strength=dendrite_strength)
+            receptor=epsp, delay=0, strength=1):
+        synapse = Neuron.create_synapse(pre_neuron, post_neuron,
+            receptor=receptor, delay=delay, strength=strength)
         self.synapses.append(synapse)
         return synapse
 

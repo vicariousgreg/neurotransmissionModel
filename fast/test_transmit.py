@@ -16,7 +16,7 @@ def transmit(strength=0.25, delays=[None, 100]):
         for delay in delays:
             post_neuron = neuron_factory.create_neuron()
             synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
-                axon_delay=delay, dendrite_strength=dendrite_strength)
+                delay=delay, strength=dendrite_strength)
     else:
         pre_neuron = neuron_factory.create_neuron(record=True)
 
@@ -25,7 +25,7 @@ def transmit(strength=0.25, delays=[None, 100]):
             post_neuron = neuron_factory.create_neuron(record=True)
             post_neurons.append(post_neuron)
             synapse = neuron_factory.create_synapse(pre_neuron, post_neuron,
-                axon_delay=delay, dendrite_strength=dendrite_strength)
+                delay=delay, strength=dendrite_strength)
 
     neuron_factory.register_driver(pre_neuron,
         PulseDriver(current=strength, period=100, length=1, delay=25))

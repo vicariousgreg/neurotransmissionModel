@@ -26,7 +26,7 @@ def test_photoreceptor(
             record = True)
         post = neuron_factory.create_neuron(record = True)
 
-        synapse = neuron_factory.create_synapse(photoreceptor, post, dendrite_strength=10)
+        synapse = neuron_factory.create_synapse(photoreceptor, post, strength=10)
 
         driver_name = "Light activation %f" % strength
         neuron_factory.register_driver(photoreceptor,

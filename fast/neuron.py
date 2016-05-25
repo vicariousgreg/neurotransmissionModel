@@ -3,8 +3,8 @@
 from multiprocessing import Value
 from enum import enum
 from soma import Soma, SOMA_TYPES
-from synapse import Synapse
-from receptor import Receptors
+from synapse import SpikingSynapse, GradedSynapse
+from receptor import epsp
 
 NeuronTypes = enum(
     PHOTORECEPTOR = 0,
@@ -52,7 +52,6 @@ class Neuron:
 
         # Active flags
         self.stable = False
-        self.synapses_stable = []
 
     def get_record(self, spikes=False):
         if spikes:
@@ -106,6 +105,11 @@ class Neuron:
         # Add external current.
         new_current += self.external_current.value
 
+        for synapse in self.out_synapses:
+            synapse.step(soma_voltage)
+        self.soma.step(new_current)
+
+        '''
         # Destabilize if the current has changed.
         if abs(old_current - new_current) > 0.000001:
             self.current = new_current
@@ -114,24 +118,25 @@ class Neuron:
         # If unstable, perform computations.
         if not self.stable:
             # Activate the output synapses
-            output_stable = all([synapse.step(soma_voltage) for synapse in self.out_synapses])
+            all([synapse.step(soma_voltage) for synapse in self.out_synapses])
             # Activate the soma
-            self.stable = self.soma.step(new_current) & output_stable
+            self.stable = self.soma.step(new_current)
+        '''
 
     @staticmethod
-    def create_synapse(presynaptic, postsynaptic, receptor=Receptors.AMPA,
-                                        axon_delay=0, dendrite_strength=0.0015):
-        synapse =  Synapse(postsynaptic.neuron_id, receptor, 
-            presynaptic.spiking, axon_delay, dendrite_strength,
-            presynaptic.environment)
+    def create_synapse(pre, post, receptor=epsp, delay=0, strength=1):
+        if pre.spiking:
+            synapse = SpikingSynapse(receptor, delay, strength, pre.environment)
+        else:
+            synapse = GradedSynapse(receptor, delay, strength, pre.environment)
 
-        presynaptic.out_synapses.append(synapse)
-        postsynaptic.in_synapses.append(synapse)
+        pre.out_synapses.append(synapse)
+        post.in_synapses.append(synapse)
         return synapse
 
     @staticmethod
-    def create_gap_junction(presynaptic, postsynaptic, conductance):
-        presynaptic.gap_junctions.append((postsynaptic,conductance))
-        postsynaptic.gap_junctions.append((presynaptic,conductance))
-        presynaptic.active_gap_junctions = True
-        postsynaptic.active_gap_junctions = True
+    def create_gap_junction(pre, post, conductance):
+        pre.gap_junctions.append((post,conductance))
+        post.gap_junctions.append((pre,conductance))
+        pre.active_gap_junctions = True
+        post.active_gap_junctions = True

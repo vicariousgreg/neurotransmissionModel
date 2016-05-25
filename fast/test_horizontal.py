@@ -7,7 +7,7 @@ from soma import Soma
 from neuron_factory import NeuronFactory
 from neuron import NeuronTypes
 from tools import ConstantDriver
-from receptor import Receptors
+from receptor import epsp, ipsp
 
 def horizontal(strengths=[-255, -100, -50, -10, 0]):
     data = []
@@ -18,14 +18,14 @@ def horizontal(strengths=[-255, -100, -50, -10, 0]):
     photoreceptor2 = neuron_factory.create_neuron(neuron_type=NeuronTypes.PHOTORECEPTOR, record=True)
     horizontal = neuron_factory.create_neuron(neuron_type=NeuronTypes.HORIZONTAL, record=True)
     synapse = neuron_factory.create_synapse(photoreceptor1, horizontal,
-        dendrite_strength=dendrite_strength)
+        strength=dendrite_strength)
     synapse = neuron_factory.create_synapse(horizontal, photoreceptor1,
-        receptor=Receptors.GABA, dendrite_strength=dendrite_strength*5)
+        receptor=ipsp, strength=dendrite_strength*5)
 
     synapse = neuron_factory.create_synapse(photoreceptor2, horizontal,
-        dendrite_strength=dendrite_strength)
+        strength=dendrite_strength)
     synapse = neuron_factory.create_synapse(horizontal, photoreceptor2,
-        receptor=Receptors.GABA, dendrite_strength=dendrite_strength*5)
+        receptor=ipsp, strength=dendrite_strength*5)
 
     #driver = ConstantDriver(current=-255, delay=100)
     #neuron_factory.register_driver(photoreceptor2, driver)
